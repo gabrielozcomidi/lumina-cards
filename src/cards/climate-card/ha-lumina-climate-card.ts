@@ -32,6 +32,16 @@ const MODE_COLORS: Record<string, string> = {
   off: 'var(--lumina-outline)',
 };
 
+const MODE_LABELS: Record<string, string> = {
+  off: 'Off',
+  heat: 'Heating',
+  cool: 'Cooling',
+  heat_cool: 'Heat/Cool',
+  auto: 'Auto',
+  dry: 'Drying',
+  fan_only: 'Fan',
+};
+
 @customElement('ha-lumina-climate-card')
 export class HaLuminaClimateCard extends LitElement {
   @property({ attribute: false }) hass!: HomeAssistant;
@@ -132,6 +142,10 @@ export class HaLuminaClimateCard extends LitElement {
     return this._entity?.attributes.current_humidity as number | undefined;
   }
 
+  private get _statusLabel(): string {
+    return MODE_LABELS[this._mode] || this._mode.charAt(0).toUpperCase() + this._mode.slice(1).replaceAll('_', ' ');
+  }
+
   // ─── Actions ──────────────────────────────────────
 
   private _setMode(mode: string): void {
@@ -172,7 +186,17 @@ export class HaLuminaClimateCard extends LitElement {
       <div class="climate-card" style="position:relative;">
         ${render3dBackground(this.config.image, true)}
         <div class="lumina-3d-content">
-        <!-- Hero Ring — Target Temperature (adjustable with +/−) -->
+
+        <!-- Header with status badge -->
+        <div class="climate-header">
+          <span class="header-title">HVAC Control</span>
+          <div class="status-badge" style="--badge-color: ${this._modeColor}">
+            <span class="status-dot"></span>
+            <span class="status-text">${this._statusLabel.toUpperCase()}</span>
+          </div>
+        </div>
+
+        <!-- Hero Ring — Current Temperature -->
         <div class="hero-section">
           <lumina-icon-button
             icon="mdi:minus"
@@ -183,15 +207,15 @@ export class HaLuminaClimateCard extends LitElement {
 
           <div class="hero-ring-wrapper">
             <lumina-ring
-              .value=${this._targetTempPercent}
+              .value=${this._tempPercent}
               .size=${180}
               .strokeWidth=${4}
               color=${this._modeColor}
               ?inactive=${!isActive}
             >
               <div class="hero-center">
-                <span class="hero-temp">${this._targetTemp !== undefined ? formatTemperature(this._targetTemp) : '--°'}</span>
-                <span class="hero-label">Target</span>
+                <span class="hero-label">CURRENT</span>
+                <span class="hero-temp">${this._currentTemp !== undefined ? formatTemperature(this._currentTemp) : '--°'}</span>
               </div>
             </lumina-ring>
           </div>
@@ -204,70 +228,72 @@ export class HaLuminaClimateCard extends LitElement {
           ></lumina-icon-button>
         </div>
 
-        <!-- Current Temperature -->
+        <!-- Target Temperature (below ring) -->
         <div class="target-section">
-          <div>
-            <div class="target-value">${this._currentTemp !== undefined ? formatTemperature(this._currentTemp) : '--°'}</div>
-            <div class="target-label">Current</div>
-          </div>
+          <span class="target-label">Target</span>
+          <span class="target-value">${this._targetTemp !== undefined ? formatTemperature(this._targetTemp) : '--°'}</span>
         </div>
 
-        <!-- HVAC Modes -->
+        <!-- HVAC Modes — Circular Icon Buttons -->
         <div class="mode-section">
           <span class="section-label">Mode</span>
-          <div class="mode-chips">
+          <div class="mode-buttons">
             ${this._hvacModes.map((mode) => {
               const icon = MODE_ICONS[mode] || 'mdi:thermostat';
               const label = mode.charAt(0).toUpperCase() + mode.slice(1).replaceAll('_', ' ');
               return html`
-                <lumina-chip
-                  .icon=${icon}
-                  .label=${label}
-                  ?active=${this._mode === mode}
-                  @click=${() => this._setMode(mode)}
-                ></lumina-chip>
+                <div class="mode-btn ${this._mode === mode ? 'active' : ''}"
+                     style="--mode-color: ${MODE_COLORS[mode] || 'var(--lumina-outline)'}"
+                     @click=${() => this._setMode(mode)}>
+                  <div class="mode-btn-circle">
+                    <ha-icon icon="${icon}"></ha-icon>
+                  </div>
+                  <span class="mode-btn-label">${label}</span>
+                </div>
               `;
             })}
           </div>
         </div>
 
-        <!-- Fan Speed -->
-        ${this.config.show_fan_speed && this._fanModes.length
-          ? html`
-              <div class="fan-section">
-                <span class="section-label">Fan Speed</span>
-                <div class="fan-chips">
-                  ${this._fanModes.map((fm) => html`
-                    <lumina-chip
-                      .label=${fm.charAt(0).toUpperCase() + fm.slice(1)}
-                      ?active=${this._currentFanMode === fm}
-                      size="sm"
-                      @click=${() => this._setFanMode(fm)}
-                    ></lumina-chip>
-                  `)}
+        <!-- Bottom Row: Fan Speed + Humidity side by side -->
+        <div class="bottom-row">
+          ${this.config.show_fan_speed && this._fanModes.length
+            ? html`
+                <div class="fan-section">
+                  <span class="section-label">Fan Speed</span>
+                  <div class="fan-chips">
+                    ${this._fanModes.map((fm) => html`
+                      <lumina-chip
+                        .label=${fm.charAt(0).toUpperCase() + fm.slice(1)}
+                        ?active=${this._currentFanMode === fm}
+                        size="sm"
+                        @click=${() => this._setFanMode(fm)}
+                      ></lumina-chip>
+                    `)}
+                  </div>
                 </div>
-              </div>
-            `
-          : nothing}
+              `
+            : nothing}
 
-        <!-- Humidity -->
-        ${this.config.show_humidity && this._humidity !== undefined
-          ? html`
-              <div class="humidity-section">
-                <lumina-ring
-                  .value=${this._humidity}
-                  .size=${56}
-                  .strokeWidth=${3}
-                  color="var(--lumina-primary)"
-                >
-                </lumina-ring>
-                <div class="humidity-info">
-                  <span class="humidity-value">${this._humidity}%</span>
-                  <span class="humidity-label">Humidity</span>
+          ${this.config.show_humidity && this._humidity !== undefined
+            ? html`
+                <div class="humidity-section">
+                  <lumina-ring
+                    .value=${this._humidity}
+                    .size=${56}
+                    .strokeWidth=${3}
+                    color="var(--lumina-primary)"
+                  >
+                  </lumina-ring>
+                  <div class="humidity-info">
+                    <span class="humidity-value">${this._humidity}%</span>
+                    <span class="humidity-label">Humidity</span>
+                  </div>
                 </div>
-              </div>
-            `
-          : nothing}
+              `
+            : nothing}
+        </div>
+
       </div><!-- /lumina-3d-content -->
       </div>
     `;

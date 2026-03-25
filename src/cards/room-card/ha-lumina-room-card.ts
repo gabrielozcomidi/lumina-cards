@@ -268,7 +268,6 @@ export class HaLuminaRoomCard extends LitElement {
           <!-- Header: Room Name + Device Count + Sensors -->
           <div class="room-header">
             <span class="room-name">${this._config.name}</span>
-            <span class="device-count">${this._activeDeviceCount} device${this._activeDeviceCount !== 1 ? 's' : ''} active</span>
             ${this._temperatureValue || this._humidityValue ? html`
               <div class="room-sensors">
                 ${this._temperatureValue ? html`
@@ -283,6 +282,7 @@ export class HaLuminaRoomCard extends LitElement {
                 ` : nothing}
               </div>
             ` : nothing}
+            <span class="device-count">${this._activeDeviceCount} device${this._activeDeviceCount !== 1 ? 's' : ''} active</span>
           </div>
 
           <!-- Action Buttons -->

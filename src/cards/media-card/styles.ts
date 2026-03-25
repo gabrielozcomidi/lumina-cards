@@ -168,79 +168,65 @@ export const mediaCardStyles = css`
     flex: 1;
   }
 
-  /* ─── Browse / Queue Buttons ────────────────────── */
-  .action-buttons-row {
-    display: flex;
-    gap: var(--lumina-space-3);
-  }
-
-  .action-card {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: var(--lumina-space-3);
-    padding: var(--lumina-space-4);
-    background: var(--lumina-surface-container-high);
-    border-radius: var(--lumina-radius-lg);
-    cursor: pointer;
-    transition: background var(--lumina-transition-fast);
-    position: relative;
-  }
-
-  .action-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: var(--lumina-radius-lg);
-    border: 1px solid var(--lumina-ghost-border);
-    pointer-events: none;
-  }
-
-  .action-card:hover {
-    background: var(--lumina-surface-container-highest);
-  }
-
-  .action-card-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--lumina-radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .action-card-icon.browse {
-    background: rgba(254, 203, 0, 0.15);
-    color: var(--lumina-secondary);
-  }
-
-  .action-card-icon.queue {
-    background: rgba(111, 251, 133, 0.15);
-    color: var(--lumina-tertiary);
-  }
-
-  .action-card-icon ha-icon {
-    --mdc-icon-size: 20px;
-  }
-
-  .action-card-text {
+  /* ─── Sources Section ──────────────────────────── */
+  .sources-section {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: var(--lumina-space-3);
   }
 
-  .action-card-title {
-    font-size: 0.8125rem;
+  .sources-label {
+    font-family: var(--lumina-font-headline);
+    font-size: 0.9375rem;
     font-weight: 600;
     color: var(--lumina-on-surface);
   }
 
-  .action-card-sub {
-    font-size: 0.625rem;
-    color: var(--lumina-outline);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+  .sources-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumina-space-1);
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .source-item {
+    display: flex;
+    align-items: center;
+    gap: var(--lumina-space-3);
+    padding: var(--lumina-space-3) var(--lumina-space-4);
+    background: var(--lumina-surface-container-high);
+    border-radius: var(--lumina-radius-lg);
+    cursor: pointer;
+    transition: background var(--lumina-transition-fast);
+  }
+
+  .source-item:hover {
+    background: var(--lumina-surface-container-highest);
+  }
+
+  .source-item.active {
+    background: rgba(133, 173, 255, 0.1);
+    border: 1px solid rgba(133, 173, 255, 0.2);
+  }
+
+  .source-item ha-icon {
+    --mdc-icon-size: 20px;
+    color: var(--lumina-on-surface-variant);
+  }
+
+  .source-item.active ha-icon {
+    color: var(--lumina-primary);
+  }
+
+  .source-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--lumina-on-surface);
+  }
+
+  .source-item.active .source-name {
+    color: var(--lumina-primary);
   }
 
   /* ─── Manage Rooms ──────────────────────────────── */
@@ -323,28 +309,6 @@ export const mediaCardStyles = css`
 
   .room-item-volume ha-icon {
     --mdc-icon-size: 18px;
-  }
-
-  /* ─── Source Selector ───────────────────────────── */
-  .source-section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--lumina-space-3);
-  }
-
-  .source-label {
-    font-family: var(--lumina-font-headline);
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: var(--lumina-on-surface);
-  }
-
-  .source-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--lumina-space-2);
-    max-height: 120px;
-    overflow-y: auto;
   }
 
   /* ─── Idle State ────────────────────────────────── */

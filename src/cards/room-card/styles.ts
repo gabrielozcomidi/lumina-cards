@@ -56,6 +56,18 @@ export const roomCardStyles = css`
     object-position: center right;
     filter: drop-shadow(0 0 50px rgba(0, 0, 0, 0.7));
     opacity: 0.75;
+    mask-image: radial-gradient(
+      ellipse 80% 80% at 60% 50%,
+      black 30%,
+      rgba(0, 0, 0, 0.4) 60%,
+      transparent 100%
+    );
+    -webkit-mask-image: radial-gradient(
+      ellipse 80% 80% at 60% 50%,
+      black 30%,
+      rgba(0, 0, 0, 0.4) 60%,
+      transparent 100%
+    );
   }
 
   /* Multi-directional gradient dissolve */

@@ -13,6 +13,45 @@ export const climateCardStyles = css`
     gap: var(--lumina-space-6);
   }
 
+  /* ─── Header with Status Badge ───────────────────── */
+  .climate-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header-title {
+    font-family: var(--lumina-font-headline);
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--lumina-on-surface);
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    background: var(--lumina-surface-container-high);
+    border: 1px solid var(--lumina-ghost-border);
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--badge-color, var(--lumina-outline));
+    box-shadow: 0 0 6px var(--badge-color, transparent);
+  }
+
+  .status-text {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--lumina-on-surface-variant);
+  }
+
   /* ─── Hero Ring Section ─────────────────────────── */
   .hero-section {
     display: flex;
@@ -52,28 +91,28 @@ export const climateCardStyles = css`
   /* ─── Target Temperature ────────────────────────── */
   .target-section {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--lumina-space-4);
+    gap: 2px;
   }
 
   .target-value {
     font-family: var(--lumina-font-headline);
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: var(--lumina-on-surface);
-    min-width: 80px;
-    text-align: center;
   }
 
   .target-label {
-    font-size: 0.75rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     color: var(--lumina-on-surface-variant);
-    text-align: center;
-    margin-top: var(--lumina-space-1);
   }
 
-  /* ─── HVAC Mode Selector ────────────────────────── */
+  /* ─── HVAC Mode Buttons (Circular Icons) ─────────── */
   .mode-section {
     display: flex;
     flex-direction: column;
@@ -87,10 +126,69 @@ export const climateCardStyles = css`
     color: var(--lumina-on-surface);
   }
 
-  .mode-chips {
+  .mode-buttons {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--lumina-space-2);
+    gap: var(--lumina-space-4);
+    justify-content: center;
+  }
+
+  .mode-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mode-btn-circle {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 2px solid var(--lumina-outline-variant);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+  }
+
+  .mode-btn-circle ha-icon {
+    --mdc-icon-size: 22px;
+    color: var(--lumina-on-surface-variant);
+    transition: color 0.25s ease;
+  }
+
+  .mode-btn-label {
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--lumina-outline);
+    transition: color 0.25s ease;
+  }
+
+  /* Active mode button */
+  .mode-btn.active .mode-btn-circle {
+    border-color: var(--mode-color);
+    background: color-mix(in srgb, var(--mode-color) 12%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--mode-color) 25%, transparent);
+  }
+
+  .mode-btn.active .mode-btn-circle ha-icon {
+    color: var(--mode-color);
+  }
+
+  .mode-btn.active .mode-btn-label {
+    color: var(--mode-color);
+  }
+
+  /* ─── Bottom Row: Fan + Humidity ─────────────────── */
+  .bottom-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--lumina-space-5);
   }
 
   /* ─── Fan Speed ─────────────────────────────────── */
@@ -98,6 +196,8 @@ export const climateCardStyles = css`
     display: flex;
     flex-direction: column;
     gap: var(--lumina-space-3);
+    flex: 1;
+    min-width: 0;
   }
 
   .fan-chips {
@@ -109,12 +209,14 @@ export const climateCardStyles = css`
   /* ─── Humidity ──────────────────────────────────── */
   .humidity-section {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: var(--lumina-space-4);
-    padding: var(--lumina-space-4);
+    gap: 6px;
+    padding: var(--lumina-space-3);
     background: var(--lumina-surface-container-high);
     border-radius: var(--lumina-radius-lg);
     position: relative;
+    flex-shrink: 0;
   }
 
   .humidity-section::before {
@@ -129,36 +231,21 @@ export const climateCardStyles = css`
   .humidity-info {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    align-items: center;
+    gap: 1px;
   }
 
   .humidity-value {
     font-family: var(--lumina-font-headline);
-    font-size: 1.25rem;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--lumina-on-surface);
   }
 
   .humidity-label {
-    font-size: 0.75rem;
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
     color: var(--lumina-on-surface-variant);
   }
-
-  /* ─── Mode Icon Colors ──────────────────────────── */
-  .mode-icon {
-    display: flex;
-    align-items: center;
-    gap: var(--lumina-space-2);
-  }
-
-  .mode-icon ha-icon {
-    --mdc-icon-size: 18px;
-  }
-
-  .mode-cool { color: var(--lumina-primary); }
-  .mode-heat { color: var(--lumina-secondary); }
-  .mode-auto { color: var(--lumina-tertiary); }
-  .mode-off { color: var(--lumina-outline); }
-  .mode-dry { color: var(--lumina-on-surface-variant); }
-  .mode-fan { color: var(--lumina-primary); }
 `;

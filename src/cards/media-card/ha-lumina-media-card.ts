@@ -143,10 +143,18 @@ export class HaLuminaMediaCard extends LitElement {
     callService(this.hass, 'media_player', 'select_source', { entity_id: this.config.entity, source });
   }
 
-  private _browseMedia(): void {
-    // Navigate to HA's built-in media browser
-    history.pushState(null, '', '/media-browser');
-    window.dispatchEvent(new Event('location-changed'));
+  private _getSourceIcon(source: string): string {
+    const s = source.toLowerCase();
+    if (s.includes('spotify')) return 'mdi:spotify';
+    if (s.includes('airplay')) return 'mdi:apple';
+    if (s.includes('bluetooth')) return 'mdi:bluetooth';
+    if (s.includes('tv') || s.includes('hdmi')) return 'mdi:television';
+    if (s.includes('aux') || s.includes('line')) return 'mdi:audio-input-stereo-minijack';
+    if (s.includes('radio') || s.includes('tunein')) return 'mdi:radio';
+    if (s.includes('youtube')) return 'mdi:youtube';
+    if (s.includes('amazon') || s.includes('alexa')) return 'mdi:amazon';
+    if (s.includes('apple') || s.includes('music')) return 'mdi:music-box';
+    return 'mdi:speaker';
   }
 
   // ─── Render ───────────────────────────────────────
@@ -244,18 +252,21 @@ export class HaLuminaMediaCard extends LitElement {
           <span class="volume-icon"><ha-icon icon="mdi:volume-high"></ha-icon></span>
         </div>
 
-        <!-- Browse Music -->
-        <div class="action-buttons-row">
-          <div class="action-card" @click=${this._browseMedia}>
-            <div class="action-card-icon browse">
-              <ha-icon icon="mdi:music-box-multiple"></ha-icon>
-            </div>
-            <div class="action-card-text">
-              <span class="action-card-title">Browse Music</span>
-              <span class="action-card-sub">Media Browser</span>
+        <!-- Sources -->
+        ${sourceList.length ? html`
+          <div class="sources-section">
+            <span class="sources-label">Sources</span>
+            <div class="sources-list">
+              ${sourceList.map((source) => html`
+                <div class="source-item ${currentSource === source ? 'active' : ''}"
+                  @click=${() => this._selectSource(source)}>
+                  <ha-icon icon="${this._getSourceIcon(source)}"></ha-icon>
+                  <span class="source-name">${source}</span>
+                </div>
+              `)}
             </div>
           </div>
-        </div>
+        ` : nothing}
 
         <!-- Manage Rooms (if grouped or multiple speakers) -->
         ${this._groupMembers.length > 0
@@ -284,20 +295,6 @@ export class HaLuminaMediaCard extends LitElement {
             `
           : nothing}
 
-        <!-- Source Selector -->
-        ${this.config.show_source && sourceList.length
-          ? html`
-              <div class="source-section">
-                <span class="source-label">Source</span>
-                <div class="source-chips">
-                  ${sourceList.map((source) => html`
-                    <lumina-chip .label=${source} ?active=${currentSource === source} size="sm"
-                      @click=${() => this._selectSource(source)}></lumina-chip>
-                  `)}
-                </div>
-              </div>
-            `
-          : nothing}
       </div><!-- /lumina-3d-content -->
       </div>
     `;
