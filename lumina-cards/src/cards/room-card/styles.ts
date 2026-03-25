@@ -1,0 +1,284 @@
+import { css } from 'lit';
+
+export const roomCardStyles = css`
+  :host {
+    display: block;
+  }
+
+  ha-card {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .room-card {
+    position: relative;
+    background: var(--lumina-surface-container);
+    border-radius: var(--lumina-radius-xl);
+    padding: var(--lumina-space-6);
+    font-family: var(--lumina-font-body);
+    color: var(--lumina-on-surface);
+    overflow: hidden;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .room-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--lumina-radius-xl);
+    border: 1px solid var(--lumina-ghost-border);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* ─── 3D Background Image — Full Height ──────────── */
+  .room-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: var(--lumina-radius-xl);
+  }
+
+  .room-bg img {
+    position: absolute;
+    right: -5%;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 65%;
+    height: 90%;
+    object-fit: contain;
+    object-position: center right;
+    filter: drop-shadow(0 0 40px rgba(0, 0, 0, 0.6));
+    opacity: 0.9;
+  }
+
+  /* Multi-directional gradient dissolve — strong and visible */
+  .room-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      /* Left fade — heavy, protects the text area */
+      linear-gradient(
+        to right,
+        var(--lumina-surface-container) 0%,
+        var(--lumina-surface-container) 20%,
+        rgba(25, 25, 28, 0.92) 38%,
+        rgba(25, 25, 28, 0.6) 52%,
+        rgba(25, 25, 28, 0.15) 70%,
+        transparent 85%
+      ),
+      /* Bottom fade — heavier, protects action buttons */
+      linear-gradient(
+        to top,
+        var(--lumina-surface-container) 0%,
+        rgba(25, 25, 28, 0.9) 15%,
+        rgba(25, 25, 28, 0.5) 30%,
+        transparent 50%
+      ),
+      /* Top fade — visible blend */
+      linear-gradient(
+        to bottom,
+        rgba(25, 25, 28, 0.5) 0%,
+        transparent 25%
+      );
+    pointer-events: none;
+  }
+
+  /* ─── Header ────────────────────────────────────── */
+  .room-header {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumina-space-1);
+  }
+
+  .room-name {
+    font-family: var(--lumina-font-headline);
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: var(--lumina-on-surface);
+    line-height: 1.2;
+  }
+
+  .device-count {
+    font-size: 0.8125rem;
+    color: var(--lumina-on-surface-variant);
+  }
+
+  /* ─── Action Buttons Row ────────────────────────── */
+  .action-buttons {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-end;
+    gap: var(--lumina-space-4);
+    padding-top: var(--lumina-space-6);
+  }
+
+  .action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--lumina-space-2);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    transition: transform var(--lumina-transition-fast);
+  }
+
+  .action-btn:active {
+    transform: scale(0.92);
+  }
+
+  /* ─── Circular Icon with Ring ───────────────────── */
+  .action-ring-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .action-icon-circle {
+    width: 52px;
+    height: 52px;
+    border-radius: var(--lumina-radius-full);
+    background: var(--lumina-surface-container-high);
+    border: 1.5px solid var(--lumina-outline-variant);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--lumina-transition-normal);
+    position: relative;
+    z-index: 1;
+  }
+
+  .action-icon-circle ha-icon {
+    --mdc-icon-size: 22px;
+    color: var(--lumina-on-surface-variant);
+    transition: color var(--lumina-transition-normal);
+  }
+
+  /* Active state: glowing ring */
+  .action-btn.active .action-icon-circle {
+    border-color: var(--lumina-primary);
+    background: rgba(133, 173, 255, 0.08);
+    box-shadow: 0 0 16px rgba(133, 173, 255, 0.25),
+                0 0 4px rgba(133, 173, 255, 0.4);
+  }
+
+  .action-btn.active .action-icon-circle ha-icon {
+    color: var(--lumina-primary);
+  }
+
+  /* Per-domain active colors */
+  .action-btn.lights-active .action-icon-circle {
+    border-color: var(--lumina-secondary);
+    background: rgba(254, 203, 0, 0.08);
+    box-shadow: 0 0 16px rgba(254, 203, 0, 0.2),
+                0 0 4px rgba(254, 203, 0, 0.35);
+  }
+
+  .action-btn.lights-active .action-icon-circle ha-icon {
+    color: var(--lumina-secondary);
+  }
+
+  .action-btn.climate-active .action-icon-circle {
+    border-color: var(--lumina-primary);
+    background: rgba(133, 173, 255, 0.08);
+    box-shadow: 0 0 16px rgba(133, 173, 255, 0.25),
+                0 0 4px rgba(133, 173, 255, 0.4);
+  }
+
+  .action-btn.climate-active .action-icon-circle ha-icon {
+    color: var(--lumina-primary);
+  }
+
+  .action-btn.media-active .action-icon-circle {
+    border-color: var(--lumina-primary);
+    background: rgba(133, 173, 255, 0.08);
+    box-shadow: 0 0 16px rgba(133, 173, 255, 0.25),
+                0 0 4px rgba(133, 173, 255, 0.4);
+  }
+
+  .action-btn.media-active .action-icon-circle ha-icon {
+    color: var(--lumina-primary);
+  }
+
+  .action-btn.vacuum-active .action-icon-circle {
+    border-color: var(--lumina-tertiary);
+    background: rgba(111, 251, 133, 0.08);
+    box-shadow: 0 0 16px rgba(111, 251, 133, 0.2),
+                0 0 4px rgba(111, 251, 133, 0.35);
+  }
+
+  .action-btn.vacuum-active .action-icon-circle ha-icon {
+    color: var(--lumina-tertiary);
+  }
+
+  /* ─── SVG Ring Overlay ──────────────────────────── */
+  .action-ring-svg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .action-ring-svg .track {
+    fill: none;
+    stroke-linecap: round;
+    opacity: 0;
+  }
+
+  .action-btn.active .action-ring-svg .track,
+  .action-btn.lights-active .action-ring-svg .track,
+  .action-btn.climate-active .action-ring-svg .track,
+  .action-btn.media-active .action-ring-svg .track,
+  .action-btn.vacuum-active .action-ring-svg .track {
+    opacity: 0.15;
+  }
+
+  .action-ring-svg .value-arc {
+    fill: none;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ─── Action Label ──────────────────────────────── */
+  .action-label {
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--lumina-outline);
+    transition: color var(--lumina-transition-normal);
+  }
+
+  .action-btn.active .action-label,
+  .action-btn.media-active .action-label,
+  .action-btn.climate-active .action-label {
+    color: var(--lumina-primary);
+  }
+
+  .action-btn.lights-active .action-label {
+    color: var(--lumina-secondary);
+  }
+
+  .action-btn.vacuum-active .action-label {
+    color: var(--lumina-tertiary);
+  }
+
+  /* ─── Hidden ────────────────────────────────────── */
+  .action-btn.hidden {
+    display: none;
+  }
+`;

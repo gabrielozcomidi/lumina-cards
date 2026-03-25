@@ -1,0 +1,6 @@
+{
+  "name": "Lumina Cards",
+  "render_readme": true,
+  "filename": "lumina-cards.js",
+  "homeassistant": "2024.1.0"
+}

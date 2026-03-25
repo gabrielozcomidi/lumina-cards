@@ -1,0 +1,197 @@
+############################################################
+#  LUMINA — Ethereal Conductor Theme for Home Assistant
+#  Extracted from Stitch "Lumina Graphite" Design System
+#
+#  Place in config/themes/lumina.yaml
+#  configuration.yaml:
+#    frontend:
+#      themes: !include_dir_merge_named themes
+############################################################
+
+Lumina:
+
+  # ─── Core Background & Surface ─────────────────────
+  # Stitch: surface #0e0e10 | surface_container #19191c
+  lovelace-background: "#0e0e10"
+  primary-background-color: "#0e0e10"
+  secondary-background-color: "#131315"
+  card-background-color: "#19191c"
+  ha-card-background: "#19191c"
+  ha-card-border-radius: "1.5rem"
+  ha-card-border-color: "rgba(72, 71, 74, 0.15)"
+  ha-card-border-width: "1px"
+  ha-card-box-shadow: "none"
+
+  # ─── Primary Accent ────────────────────────────────
+  # Stitch: primary #85adff | primary_dim #0070eb | primary_container #6c9fff
+  primary-color: "#85adff"
+  accent-color: "#85adff"
+  light-primary-color: "#6c9fff"
+  dark-primary-color: "#0070eb"
+
+  # ─── Text ──────────────────────────────────────────
+  # Stitch: on_surface #fefbfe | on_surface_variant #acaaad
+  primary-text-color: "#fefbfe"
+  secondary-text-color: "#acaaad"
+  text-primary-color: "#fefbfe"
+  text-accent-color: "#85adff"
+  disabled-text-color: "#48474a"
+
+  # ─── State Colors ──────────────────────────────────
+  # Stitch: primary #85adff | secondary #fecb00 | tertiary #b8ffb9
+  state-active-color: "#85adff"
+  state-icon-active-color: "#85adff"
+  state-icon-color: "#767577"
+  state-on-color: "#fecb00"
+  state-off-color: "#48474a"
+
+  # Light domain — secondary (warm yellow)
+  state-light-active-color: "#fecb00"
+  state-light-on-color: "#fecb00"
+
+  # Climate domain
+  state-climate-auto-color: "#b8ffb9"
+  state-climate-cool-color: "#85adff"
+  state-climate-heat-color: "#fecb00"
+  state-climate-idle-color: "#48474a"
+
+  # Media domain
+  state-media_player-active-color: "#85adff"
+  state-media_player-paused-color: "#6c9fff"
+
+  # Vacuum domain — tertiary (green)
+  state-vacuum-active-color: "#6ffb85"
+
+  # ─── Switches & Toggles ────────────────────────────
+  # Stitch: primary #85adff | surface_container_highest #252528
+  switch-checked-button-color: "#85adff"
+  switch-checked-track-color: "rgba(133, 173, 255, 0.3)"
+  switch-unchecked-button-color: "#48474a"
+  switch-unchecked-track-color: "#252528"
+
+  # ─── Sliders ───────────────────────────────────────
+  paper-slider-active-color: "#85adff"
+  paper-slider-knob-color: "#85adff"
+  paper-slider-container-color: "#252528"
+  paper-slider-secondary-color: "#0070eb"
+
+  # ─── Sidebar ───────────────────────────────────────
+  # Stitch: surface #0e0e10 | on_surface #fefbfe | outline #767577
+  sidebar-background-color: "#0e0e10"
+  sidebar-text-color: "#fefbfe"
+  sidebar-icon-color: "#767577"
+  sidebar-selected-background-color: "rgba(133, 173, 255, 0.08)"
+  sidebar-selected-icon-color: "#85adff"
+  sidebar-selected-text-color: "#85adff"
+
+  # ─── Header / App Bar ──────────────────────────────
+  # Stitch: surface #0e0e10
+  app-header-background-color: "#0e0e10"
+  app-header-text-color: "#fefbfe"
+  app-header-edit-background-color: "#131315"
+  app-header-edit-text-color: "#85adff"
+
+  # ─── Dividers & Borders ────────────────────────────
+  # Stitch: outline_variant #48474a at 15% opacity (ghost border)
+  divider-color: "rgba(72, 71, 74, 0.15)"
+  outline-color: "#767577"
+  outline-hover-color: "#acaaad"
+
+  # ─── Dialogs & Popups ──────────────────────────────
+  # Stitch: surface_container #19191c
+  popup-background-color: "#19191c"
+  paper-dialog-background-color: "#19191c"
+  paper-dialog-color: "#fefbfe"
+  dialog-backdrop-color: "rgba(0, 0, 0, 0.6)"
+  ha-dialog-border-radius: "1.5rem"
+
+  # ─── Tables & Lists ────────────────────────────────
+  # Stitch: surface_container_low #131315 | surface_container #19191c
+  table-row-background-color: "#131315"
+  table-row-alternative-background-color: "#19191c"
+  data-table-background-color: "#0e0e10"
+
+  # ─── Inputs ────────────────────────────────────────
+  # Stitch: surface_container_high #1f1f22 | outline_variant #48474a
+  input-fill-color: "#1f1f22"
+  input-ink-color: "#fefbfe"
+  input-label-ink-color: "#acaaad"
+  input-idle-line-color: "#48474a"
+  input-hover-line-color: "#767577"
+  input-disabled-fill-color: "#131315"
+  input-disabled-ink-color: "#48474a"
+  input-dropdown-icon-color: "#acaaad"
+
+  # ─── Chips & Badges ────────────────────────────────
+  # Stitch: surface_container_high #1f1f22
+  ha-chip-background-color: "#1f1f22"
+  ha-chip-text-color: "#fefbfe"
+
+  # ─── Error / Warning / Success ─────────────────────
+  # Stitch: error #ff716c | secondary #fecb00 | tertiary_container #6ffb85
+  error-color: "#ff716c"
+  warning-color: "#fecb00"
+  success-color: "#6ffb85"
+  info-color: "#85adff"
+
+  # ─── Scrollbar ─────────────────────────────────────
+  # Stitch: outline_variant #48474a
+  scrollbar-thumb-color: "#48474a"
+
+  # ─── Code Editor ───────────────────────────────────
+  code-editor-background-color: "#131315"
+  codemirror-keyword: "#85adff"
+  codemirror-string: "#6ffb85"
+  codemirror-number: "#fecb00"
+  codemirror-comment: "#767577"
+  codemirror-meta: "#acaaad"
+  codemirror-property: "#b8ffb9"
+
+  # ─── RGB Tokens (Mushroom / Button-card compat) ────
+  # Derived from Stitch named colors
+  rgb-primary-color: "133, 173, 255"
+  rgb-accent-color: "133, 173, 255"
+  rgb-primary-text-color: "254, 251, 254"
+  rgb-secondary-text-color: "172, 170, 173"
+  rgb-card-background-color: "25, 25, 28"
+  rgb-state-light-color: "254, 203, 0"
+  rgb-state-climate-cool-color: "133, 173, 255"
+  rgb-state-climate-heat-color: "254, 203, 0"
+  rgb-state-default-color: "133, 173, 255"
+
+  # ─── Fonts ─────────────────────────────────────────
+  # Stitch: headlineFont MANROPE | bodyFont INTER | labelFont INTER
+  primary-font-family: "'Inter', 'Roboto', sans-serif"
+  paper-font-common-base_-_font-family: "'Inter', 'Roboto', sans-serif"
+  ha-heading-font-family: "'Manrope', 'Inter', sans-serif"
+
+  # ─── Card-Mod Integration ──────────────────────────
+  card-mod-theme: Lumina
+  card-mod-root-yaml: |
+    ha-app-layout$: |
+      #view {
+        background: #0e0e10 !important;
+      }
+    .: |
+      /* Global font injection for Manrope + Inter */
+      @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+
+      /* Force dark surfaces everywhere */
+      :host {
+        --mdc-theme-surface: #19191c;
+        --mdc-theme-background: #0e0e10;
+        --mdc-theme-on-surface: #fefbfe;
+        --mdc-theme-primary: #85adff;
+        --mdc-theme-on-primary: #002c65;
+      }
+  card-mod-card-yaml: |
+    .: |
+      ha-card {
+        border: 1px solid rgba(72, 71, 74, 0.15) !important;
+        box-shadow: none !important;
+        font-family: 'Inter', 'Roboto', sans-serif !important;
+      }
+      ha-card .card-header {
+        font-family: 'Manrope', 'Inter', sans-serif !important;
+        letter-spacing: -0.01em;
+      }

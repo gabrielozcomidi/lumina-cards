@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__stitch__list_projects",
+      "mcp__stitch__list_screens",
+      "WebSearch",
+      "mcp__stitch__get_screen",
+      "WebFetch(domain:contribution.usercontent.google.com)",
+      "WebFetch(domain:lh3.googleusercontent.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "mcp__stitch__generate_screen_from_text",
+      "WebFetch(domain:developers.home-assistant.io)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:gist.github.com)",
+      "WebFetch(domain:community.home-assistant.io)",
+      "mcp__stitch__list_design_systems",
+      "Bash(where gh:*)",
+      "Bash(gh auth:*)"
+    ]
+  }
+}
