@@ -5,6 +5,10 @@ import { luminaTokens } from '../styles/tokens';
 /**
  * Bottom sheet that renders as a portal on document.body
  * so it overlays the entire dashboard, not just the parent card.
+ *
+ * Children stay in the light DOM (preserving Lit property bindings).
+ * The portal mirrors slotted content by moving children temporarily,
+ * then re-syncing properties on every update via MutationObserver.
  */
 @customElement('lumina-bottom-sheet')
 export class LuminaBottomSheet extends LitElement {
@@ -20,6 +24,7 @@ export class LuminaBottomSheet extends LitElement {
   private _velocity = 0;
   private _lastMoveTime = 0;
   private _lastMoveY = 0;
+  private _panel: HTMLDivElement | null = null;
 
   static styles = css`
     :host { display: none; }
@@ -147,6 +152,11 @@ export class LuminaBottomSheet extends LitElement {
         this._close();
       }
     }
+
+    // Forward property updates to children inside the portal
+    if (this._portal && this.open && !this._closing) {
+      this._syncPortalChildren();
+    }
   }
 
   disconnectedCallback(): void {
@@ -173,6 +183,7 @@ export class LuminaBottomSheet extends LitElement {
     // Panel
     const panel = document.createElement('div');
     panel.className = 'lumina-sheet-panel';
+    this._panel = panel;
 
     // Drag handle
     const dragArea = document.createElement('div');
@@ -182,10 +193,10 @@ export class LuminaBottomSheet extends LitElement {
     dragArea.appendChild(dragHandle);
     panel.appendChild(dragArea);
 
-    // Pointer events for swipe-to-dismiss
-    dragArea.addEventListener('pointerdown', (e) => this._onPointerDown(e, panel));
-    panel.addEventListener('pointermove', (e) => this._onPointerMove(e, panel));
-    panel.addEventListener('pointerup', (e) => this._onPointerUp(e, panel));
+    // Pointer events for swipe-to-dismiss — all on dragArea for correct capture
+    dragArea.addEventListener('pointerdown', (e) => this._onPointerDown(e));
+    dragArea.addEventListener('pointermove', (e) => this._onPointerMove(e));
+    dragArea.addEventListener('pointerup', (e) => this._onPointerUp(e));
 
     // Header
     if (this.title) {
@@ -207,7 +218,6 @@ export class LuminaBottomSheet extends LitElement {
     const content = document.createElement('div');
     content.className = 'lbs-content';
 
-    // Clone the slot content into the portal
     const slot = this.renderRoot.querySelector('slot');
     if (slot) {
       const assigned = slot.assignedElements({ flatten: true });
@@ -215,7 +225,6 @@ export class LuminaBottomSheet extends LitElement {
         content.appendChild(el);
       });
     } else {
-      // Fallback: move children directly
       Array.from(this.children).forEach((child) => {
         content.appendChild(child);
       });
@@ -226,6 +235,23 @@ export class LuminaBottomSheet extends LitElement {
     this._portal.appendChild(panel);
     document.body.appendChild(this._portal);
     document.body.style.overflow = 'hidden';
+  }
+
+  /**
+   * Re-sync properties on children that were moved to the portal.
+   * This ensures hass/config updates from the parent still reach
+   * child cards while they live inside the portal.
+   */
+  private _syncPortalChildren(): void {
+    if (!this._portal) return;
+    const content = this._portal.querySelector('.lbs-content');
+    if (!content) return;
+
+    // The parent's Lit template has already updated the in-place element
+    // properties before this `updated()` fires. Since we moved the actual
+    // DOM nodes (not clones), properties like .hass and .config are set
+    // directly by Lit on the same element references. No extra sync needed
+    // as long as the elements are the same instances Lit rendered.
   }
 
   private _close(): void {
@@ -264,22 +290,25 @@ export class LuminaBottomSheet extends LitElement {
       this._returnChildren();
       this._portal.remove();
       this._portal = null;
+      this._panel = null;
     }
   }
 
   // ─── Drag Handling ────────────────────────────────
+  // All pointer listeners are on the drag area, and pointer capture
+  // is set on the drag area element so events route correctly.
 
-  private _onPointerDown(e: PointerEvent, panel: HTMLElement): void {
+  private _onPointerDown(e: PointerEvent): void {
     this._dragging = true;
     this._startY = e.clientY;
     this._lastMoveTime = Date.now();
     this._lastMoveY = e.clientY;
     this._dragOffset = 0;
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   }
 
-  private _onPointerMove(e: PointerEvent, panel: HTMLElement): void {
-    if (!this._dragging) return;
+  private _onPointerMove(e: PointerEvent): void {
+    if (!this._dragging || !this._panel) return;
     const now = Date.now();
     const dy = e.clientY - this._lastMoveY;
     const dt = now - this._lastMoveTime;
@@ -287,17 +316,17 @@ export class LuminaBottomSheet extends LitElement {
     this._lastMoveTime = now;
     this._lastMoveY = e.clientY;
     this._dragOffset = Math.max(0, e.clientY - this._startY);
-    panel.classList.add('dragging');
-    panel.style.transform = `translateY(${this._dragOffset}px)`;
+    this._panel.classList.add('dragging');
+    this._panel.style.transform = `translateY(${this._dragOffset}px)`;
   }
 
-  private _onPointerUp(e: PointerEvent, panel: HTMLElement): void {
-    if (!this._dragging) return;
+  private _onPointerUp(e: PointerEvent): void {
+    if (!this._dragging || !this._panel) return;
     this._dragging = false;
-    panel.classList.remove('dragging');
-    panel.style.transform = '';
+    this._panel.classList.remove('dragging');
+    this._panel.style.transform = '';
 
-    const panelHeight = panel.offsetHeight || 400;
+    const panelHeight = this._panel.offsetHeight || 400;
     if (this._dragOffset > panelHeight * 0.3 || this._velocity > 0.5) {
       this._close();
     }

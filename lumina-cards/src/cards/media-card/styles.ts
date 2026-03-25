@@ -104,6 +104,41 @@ export const mediaCardStyles = css`
     color: var(--lumina-on-surface-variant);
   }
 
+  /* ─── Progress Bar ─────────────────────────────── */
+  .progress-section {
+    display: flex;
+    align-items: center;
+    gap: var(--lumina-space-3);
+    padding: 0 var(--lumina-space-2);
+  }
+
+  .progress-time {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--lumina-outline);
+    min-width: 32px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .progress-time:last-child {
+    text-align: right;
+  }
+
+  .progress-bar {
+    flex: 1;
+    height: 3px;
+    border-radius: var(--lumina-radius-full);
+    background: var(--lumina-surface-container-highest);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: var(--lumina-radius-full);
+    background: var(--lumina-primary);
+    transition: width 1s linear;
+  }
+
   /* ─── Playback Controls ─────────────────────────── */
   .playback-controls {
     display: flex;
@@ -131,6 +166,11 @@ export const mediaCardStyles = css`
 
   .volume-slider-wrapper {
     flex: 1;
+  }
+
+  /* All sliders 20% shorter */
+  lumina-slider {
+    max-width: 80%;
   }
 
   /* ─── Browse / Queue Buttons ────────────────────── */

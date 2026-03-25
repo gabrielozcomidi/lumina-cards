@@ -24,6 +24,7 @@ export interface LuminaRoomCardConfig extends LovelaceCardConfig {
   name: string;
   image?: string;
   temperature_entity?: string;
+  humidity_entity?: string;
   light_entities?: string[];
   climate_entity?: string;
   media_entity?: string;
@@ -36,6 +37,8 @@ export interface LuminaRoomCardConfig extends LovelaceCardConfig {
   climate_label?: string;
   media_label?: string;
   vacuum_label?: string;
+  // Scenes shown in the light popup
+  light_scenes?: SceneConfig[];
 }
 
 // ─── Room Popup Config ───────────────────────────────────────
@@ -59,6 +62,7 @@ export interface LuminaRoomPopupConfig extends LovelaceCardConfig {
 export interface LightEntityConfig {
   entity: string;
   name?: string;
+  icon?: string;
 }
 
 export interface LuminaLightCardConfig extends LovelaceCardConfig {

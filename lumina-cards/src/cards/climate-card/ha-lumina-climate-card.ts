@@ -103,7 +103,17 @@ export class HaLuminaClimateCard extends LitElement {
   private get _tempPercent(): number {
     const current = this._currentTemp;
     if (current === undefined) return 0;
-    return Math.round(((current - this._minTemp) / (this._maxTemp - this._minTemp)) * 100);
+    const range = this._maxTemp - this._minTemp;
+    if (range === 0) return 0;
+    return Math.round(((current - this._minTemp) / range) * 100);
+  }
+
+  private get _targetTempPercent(): number {
+    const target = this._targetTemp;
+    if (target === undefined) return 0;
+    const range = this._maxTemp - this._minTemp;
+    if (range === 0) return 0;
+    return Math.round(((target - this._minTemp) / range) * 100);
   }
 
   private get _hvacModes(): string[] {
@@ -162,7 +172,7 @@ export class HaLuminaClimateCard extends LitElement {
       <div class="climate-card" style="position:relative;">
         ${render3dBackground(this.config.image, true)}
         <div class="lumina-3d-content">
-        <!-- Hero Ring -->
+        <!-- Hero Ring — Target Temperature (adjustable with +/−) -->
         <div class="hero-section">
           <lumina-icon-button
             icon="mdi:minus"
@@ -173,15 +183,15 @@ export class HaLuminaClimateCard extends LitElement {
 
           <div class="hero-ring-wrapper">
             <lumina-ring
-              .value=${this._tempPercent}
+              .value=${this._targetTempPercent}
               .size=${180}
               .strokeWidth=${4}
               color=${this._modeColor}
               ?inactive=${!isActive}
             >
               <div class="hero-center">
-                <span class="hero-temp">${this._currentTemp !== undefined ? formatTemperature(this._currentTemp) : '--°'}</span>
-                <span class="hero-label">Current</span>
+                <span class="hero-temp">${this._targetTemp !== undefined ? formatTemperature(this._targetTemp) : '--°'}</span>
+                <span class="hero-label">Target</span>
               </div>
             </lumina-ring>
           </div>
@@ -194,11 +204,11 @@ export class HaLuminaClimateCard extends LitElement {
           ></lumina-icon-button>
         </div>
 
-        <!-- Target Temperature -->
+        <!-- Current Temperature -->
         <div class="target-section">
           <div>
-            <div class="target-value">${this._targetTemp !== undefined ? formatTemperature(this._targetTemp) : '--°'}</div>
-            <div class="target-label">Target</div>
+            <div class="target-value">${this._currentTemp !== undefined ? formatTemperature(this._currentTemp) : '--°'}</div>
+            <div class="target-label">Current</div>
           </div>
         </div>
 
@@ -208,7 +218,7 @@ export class HaLuminaClimateCard extends LitElement {
           <div class="mode-chips">
             ${this._hvacModes.map((mode) => {
               const icon = MODE_ICONS[mode] || 'mdi:thermostat';
-              const label = mode.charAt(0).toUpperCase() + mode.slice(1).replace('_', ' ');
+              const label = mode.charAt(0).toUpperCase() + mode.slice(1).replaceAll('_', ' ');
               return html`
                 <lumina-chip
                   .icon=${icon}

@@ -11,11 +11,22 @@ import {
   lightsOnCount,
   lightsOnPercentage,
   getVolumePercent,
+  formatTemperature,
 } from '../../utils/ha-helpers';
 import { computeArcDash } from '../../utils/svg-helpers';
 import { resolveImageUrl } from '../../utils/assets-3d';
 
 import '../../components/lumina-bottom-sheet';
+
+// Climate mode → ring color mapping (matches climate card MODE_COLORS)
+const CLIMATE_RING_COLORS: Record<string, string> = {
+  cool: 'var(--lumina-primary)',       // blue
+  heat: 'var(--lumina-secondary)',     // yellow
+  heat_cool: 'var(--lumina-tertiary)', // green
+  auto: 'var(--lumina-tertiary)',      // green
+  dry: 'var(--lumina-on-surface-variant)',
+  fan_only: 'var(--lumina-primary)',   // blue
+};
 
 // Ring geometry for the 52px action buttons
 const RING_SIZE = 60;
@@ -29,6 +40,13 @@ export class HaLuminaRoomCard extends LitElement {
   @state() private _config!: LuminaRoomCardConfig;
   @state() private _activeSheet: 'lights' | 'climate' | 'media' | 'vacuum' | 'room' | null = null;
 
+  // Cached sub-card configs to avoid creating new objects on every render
+  private _lightConfig: Record<string, unknown> | null = null;
+  private _climateConfig: Record<string, unknown> | null = null;
+  private _mediaConfig: Record<string, unknown> | null = null;
+  private _vacuumConfig: Record<string, unknown> | null = null;
+  private _roomPopupConfig: Record<string, unknown> | null = null;
+
   static styles = [luminaTokens, sharedStyles, roomCardStyles];
 
   public setConfig(config: LuminaRoomCardConfig): void {
@@ -40,6 +58,25 @@ export class HaLuminaRoomCard extends LitElement {
       show_media: true,
       show_vacuum: true,
       ...config,
+    };
+    this._rebuildSubConfigs();
+  }
+
+  private _rebuildSubConfigs(): void {
+    const c = this._config;
+    this._lightConfig = { type: 'custom:ha-lumina-light-card', entities: c.light_entities || [], image: c.image, scenes: c.light_scenes };
+    this._climateConfig = { type: 'custom:ha-lumina-climate-card', entity: c.climate_entity || '', image: c.image };
+    this._mediaConfig = { type: 'custom:ha-lumina-media-card', entity: c.media_entity || '', image: c.image };
+    this._vacuumConfig = { type: 'custom:ha-lumina-vacuum-card', entity: c.vacuum_entity || '', image: c.image };
+    this._roomPopupConfig = {
+      type: 'custom:ha-lumina-room-popup',
+      name: c.name,
+      image: c.image,
+      temperature_entity: c.temperature_entity,
+      light_entities: c.light_entities,
+      climate_entity: c.climate_entity,
+      media_entity: c.media_entity,
+      vacuum_entity: c.vacuum_entity,
     };
   }
 
@@ -72,6 +109,7 @@ export class HaLuminaRoomCard extends LitElement {
 
     const trackedEntities = [
       this._config.temperature_entity,
+      this._config.humidity_entity,
       ...(this._config.light_entities || []),
       this._config.climate_entity,
       this._config.media_entity,
@@ -138,6 +176,31 @@ export class HaLuminaRoomCard extends LitElement {
     return count;
   }
 
+  private get _temperatureValue(): string | null {
+    const entity = getEntity(this.hass, this._config.temperature_entity);
+    if (!entity || !isEntityAvailable(entity)) return null;
+    const val = parseFloat(entity.state);
+    if (isNaN(val)) return null;
+    const unit = entity.attributes.unit_of_measurement || '°';
+    return `${Math.round(val)}${unit}`;
+  }
+
+  private get _humidityValue(): string | null {
+    const entity = getEntity(this.hass, this._config.humidity_entity);
+    if (!entity || !isEntityAvailable(entity)) return null;
+    const val = parseFloat(entity.state);
+    if (isNaN(val)) return null;
+    return `${Math.round(val)}%`;
+  }
+
+  private get _climateMode(): string {
+    return this._climateEntity?.state || 'off';
+  }
+
+  private get _climateRingColor(): string {
+    return CLIMATE_RING_COLORS[this._climateMode] || 'var(--lumina-primary)';
+  }
+
   // ─── Ring SVG Helper ──────────────────────────────
 
   private _renderActionRing(value: number, color: string) {
@@ -195,9 +258,23 @@ export class HaLuminaRoomCard extends LitElement {
               `
             : nothing}
 
-          <!-- Header: Room Name + Device Count -->
+          <!-- Header: Room Name + Sensors + Device Count -->
           <div class="room-header">
             <span class="room-name">${this._config.name}</span>
+            ${this._temperatureValue || this._humidityValue ? html`
+              <div class="room-sensors">
+                ${this._temperatureValue ? html`
+                  <span class="sensor-item">
+                    <ha-icon icon="mdi:thermometer"></ha-icon>${this._temperatureValue}
+                  </span>
+                ` : nothing}
+                ${this._humidityValue ? html`
+                  <span class="sensor-item">
+                    <ha-icon icon="mdi:water-percent"></ha-icon>${this._humidityValue}
+                  </span>
+                ` : nothing}
+              </div>
+            ` : nothing}
             <span class="device-count">${this._activeDeviceCount} device${this._activeDeviceCount !== 1 ? 's' : ''} active</span>
           </div>
 
@@ -219,14 +296,14 @@ export class HaLuminaRoomCard extends LitElement {
 
             <!-- Climate -->
             <div
-              class="action-btn ${climateActive ? 'climate-active' : ''} ${!this._config.show_climate || !this._config.climate_entity ? 'hidden' : ''}"
+              class="action-btn ${climateActive ? `climate-active climate-${this._climateMode}` : ''} ${!this._config.show_climate || !this._config.climate_entity ? 'hidden' : ''}"
               @click=${() => this._openSheet('climate')}
             >
               <div class="action-ring-wrapper">
                 <div class="action-icon-circle">
                   <ha-icon icon="mdi:thermometer"></ha-icon>
                 </div>
-                ${climateActive ? this._renderActionRing(50, 'var(--lumina-primary)') : nothing}
+                ${climateActive ? this._renderActionRing(50, this._climateRingColor) : nothing}
               </div>
               <span class="action-label">${this._config.climate_label || 'Climate'}</span>
             </div>
@@ -268,7 +345,7 @@ export class HaLuminaRoomCard extends LitElement {
         >
           <ha-lumina-light-card
             .hass=${this.hass}
-            .config=${{ type: 'custom:ha-lumina-light-card', entities: this._config.light_entities || [], image: this._config.image }}
+            .config=${this._lightConfig}
           ></ha-lumina-light-card>
         </lumina-bottom-sheet>
 
@@ -279,7 +356,7 @@ export class HaLuminaRoomCard extends LitElement {
         >
           <ha-lumina-climate-card
             .hass=${this.hass}
-            .config=${{ type: 'custom:ha-lumina-climate-card', entity: this._config.climate_entity || '', image: this._config.image }}
+            .config=${this._climateConfig}
           ></ha-lumina-climate-card>
         </lumina-bottom-sheet>
 
@@ -290,7 +367,7 @@ export class HaLuminaRoomCard extends LitElement {
         >
           <ha-lumina-media-card
             .hass=${this.hass}
-            .config=${{ type: 'custom:ha-lumina-media-card', entity: this._config.media_entity || '', image: this._config.image }}
+            .config=${this._mediaConfig}
           ></ha-lumina-media-card>
         </lumina-bottom-sheet>
 
@@ -301,7 +378,7 @@ export class HaLuminaRoomCard extends LitElement {
         >
           <ha-lumina-vacuum-card
             .hass=${this.hass}
-            .config=${{ type: 'custom:ha-lumina-vacuum-card', entity: this._config.vacuum_entity || '', image: this._config.image }}
+            .config=${this._vacuumConfig}
           ></ha-lumina-vacuum-card>
         </lumina-bottom-sheet>
 
@@ -312,16 +389,7 @@ export class HaLuminaRoomCard extends LitElement {
         >
           <ha-lumina-room-popup
             .hass=${this.hass}
-            .config=${{
-              type: 'custom:ha-lumina-room-popup',
-              name: this._config.name,
-              image: this._config.image,
-              temperature_entity: this._config.temperature_entity,
-              light_entities: this._config.light_entities,
-              climate_entity: this._config.climate_entity,
-              media_entity: this._config.media_entity,
-              vacuum_entity: this._config.vacuum_entity,
-            }}
+            .config=${this._roomPopupConfig}
           ></ha-lumina-room-popup>
         </lumina-bottom-sheet>
       </ha-card>

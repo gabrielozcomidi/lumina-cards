@@ -133,6 +133,7 @@ export const lightCardStyles = css`
     flex-shrink: 0;
     transition: all var(--lumina-transition-normal);
     -webkit-tap-highlight-color: transparent;
+    touch-action: none;
     position: relative;
     padding: 0;
   }
@@ -206,6 +207,15 @@ export const lightCardStyles = css`
   .light-item-slider lumina-slider {
     --lumina-slider-height: 4px;
     --lumina-slider-thumb: 12px;
+  }
+
+  /* All sliders 20% shorter */
+  lumina-slider {
+    max-width: 80%;
+  }
+
+  .light-item-slider lumina-slider {
+    max-width: 100%; /* per-light sliders fill their already-constrained container */
   }
 
   .light-item-pct {

@@ -116,7 +116,9 @@ export class HaLuminaRoomPopup extends LitElement {
     const isActive = mode !== 'off';
 
     const hvacModes = (entity.attributes.hvac_modes as string[]) || [];
-    const modeLabel = mode.charAt(0).toUpperCase() + mode.slice(1).replace('_', ' ');
+    const fanModes = (entity.attributes.fan_modes as string[]) || [];
+    const currentFanMode = (entity.attributes.fan_mode as string) || '';
+    const modeLabel = mode.charAt(0).toUpperCase() + mode.slice(1).replaceAll('_', ' ');
 
     return html`
       <div class="section">
@@ -151,7 +153,7 @@ export class HaLuminaRoomPopup extends LitElement {
         <div class="climate-chips">
           ${hvacModes.map((m) => html`
             <lumina-chip
-              .label=${m.charAt(0).toUpperCase() + m.slice(1).replace('_', ' ')}
+              .label=${m.charAt(0).toUpperCase() + m.slice(1).replaceAll('_', ' ')}
               ?active=${mode === m}
               size="sm"
               @click=${() => callService(this.hass, 'climate', 'set_hvac_mode', {
@@ -161,6 +163,25 @@ export class HaLuminaRoomPopup extends LitElement {
             ></lumina-chip>
           `)}
         </div>
+
+        ${fanModes.length ? html`
+          <div class="climate-fan">
+            <span class="climate-fan-label"><ha-icon icon="mdi:fan"></ha-icon> Fan</span>
+            <div class="climate-chips">
+              ${fanModes.map((fm) => html`
+                <lumina-chip
+                  .label=${fm.charAt(0).toUpperCase() + fm.slice(1)}
+                  ?active=${currentFanMode === fm}
+                  size="sm"
+                  @click=${() => callService(this.hass, 'climate', 'set_fan_mode', {
+                    entity_id: this.config.climate_entity,
+                    fan_mode: fm,
+                  })}
+                ></lumina-chip>
+              `)}
+            </div>
+          </div>
+        ` : nothing}
       </div>
     `;
   }
@@ -240,7 +261,7 @@ export class HaLuminaRoomPopup extends LitElement {
 
     const state = entity.state;
     const battery = (entity.attributes.battery_level as number) || 0;
-    const stateLabel = state.charAt(0).toUpperCase() + state.slice(1).replace('_', ' ');
+    const stateLabel = state.charAt(0).toUpperCase() + state.slice(1).replaceAll('_', ' ');
     const isCleaning = state === 'cleaning';
 
     return html`

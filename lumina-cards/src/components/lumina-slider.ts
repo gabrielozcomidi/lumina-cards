@@ -120,7 +120,9 @@ export class LuminaSlider extends LitElement {
   ];
 
   private _getPercent(): number {
-    return ((this.value - this.min) / (this.max - this.min)) * 100;
+    const range = this.max - this.min;
+    if (range === 0) return 0;
+    return ((this.value - this.min) / range) * 100;
   }
 
   private _onInput(e: Event): void {

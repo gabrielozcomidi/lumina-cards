@@ -46,7 +46,8 @@ export function valueToAngle(
   endAngle: number,
 ): number {
   const clamped = Math.min(Math.max(value, min), max);
-  const ratio = (clamped - min) / (max - min);
+  const range = max - min;
+  const ratio = range === 0 ? 0 : (clamped - min) / range;
   return startAngle + ratio * (endAngle - startAngle);
 }
 
@@ -64,7 +65,8 @@ export function computeArcDash(
   const fullCircumference = 2 * Math.PI * radius;
   const arcLength = (arcSpanDeg / 360) * fullCircumference;
   const clamped = Math.min(Math.max(value, min), max);
-  const ratio = (clamped - min) / (max - min);
+  const range = max - min;
+  const ratio = range === 0 ? 0 : (clamped - min) / range;
   const filledLength = ratio * arcLength;
   const offset = arcLength - filledLength;
 

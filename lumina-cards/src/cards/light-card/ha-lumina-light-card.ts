@@ -31,10 +31,10 @@ const COLOR_PRESETS: Array<{ name: string; rgb: [number, number, number]; css: s
   { name: 'Pink', rgb: [255, 80, 180], css: '#ff50b4' },
 ];
 
-/** Normalize entity config: supports both "light.x" string and {entity, name} object */
-function normalizeEntity(cfg: string | LightEntityConfig): { id: string; customName?: string } {
+/** Normalize entity config: supports both "light.x" string and {entity, name, icon} object */
+function normalizeEntity(cfg: string | LightEntityConfig): { id: string; customName?: string; customIcon?: string } {
   if (typeof cfg === 'string') return { id: cfg };
-  return { id: cfg.entity, customName: cfg.name };
+  return { id: cfg.entity, customName: cfg.name, customIcon: cfg.icon };
 }
 
 @customElement('ha-lumina-light-card')
@@ -91,7 +91,7 @@ export class HaLuminaLightCard extends LitElement {
 
   // ─── Normalized entities ──────────────────────────
 
-  private get _normalized(): Array<{ id: string; customName?: string }> {
+  private get _normalized(): Array<{ id: string; customName?: string; customIcon?: string }> {
     return (this.config.entities || []).map(normalizeEntity);
   }
 
@@ -156,29 +156,46 @@ export class HaLuminaLightCard extends LitElement {
 
   // ─── Press Handling ───────────────────────────────
 
+  private _pressTarget: HTMLElement | null = null;
+
   private _onPointerDown(id: string, e: PointerEvent): void {
     this._didLongPress = false;
     this._pressedId = id;
-    (e.currentTarget as HTMLElement).classList.add('pressing');
+    const target = e.currentTarget as HTMLElement;
+    this._pressTarget = target;
+    target.classList.add('pressing');
+    // Capture pointer so scrolling doesn't steal it
+    target.setPointerCapture(e.pointerId);
     this._pressTimer = setTimeout(() => {
       this._didLongPress = true;
-      (e.currentTarget as HTMLElement).classList.remove('pressing');
+      target.classList.remove('pressing');
       this._expandedId = this._expandedId === id ? null : id;
     }, 500);
   }
 
   private _onPointerUp(id: string, e: PointerEvent): void {
-    (e.currentTarget as HTMLElement).classList.remove('pressing');
+    const target = this._pressTarget || e.currentTarget as HTMLElement;
+    target.classList.remove('pressing');
     if (this._pressTimer) { clearTimeout(this._pressTimer); this._pressTimer = undefined; }
     if (!this._didLongPress && this._pressedId === id) this._toggleLight(id);
     this._pressedId = null;
+    this._pressTarget = null;
     this._didLongPress = false;
   }
 
-  private _onPointerLeave(e: PointerEvent): void {
-    (e.currentTarget as HTMLElement).classList.remove('pressing');
+  private _onPointerCancel(): void {
+    if (this._pressTarget) this._pressTarget.classList.remove('pressing');
     if (this._pressTimer) { clearTimeout(this._pressTimer); this._pressTimer = undefined; }
     this._pressedId = null;
+    this._pressTarget = null;
+  }
+
+  private _onPointerLeave(e: PointerEvent): void {
+    // With pointer capture, pointerleave only fires when capture is released
+    if (this._pressTarget) this._pressTarget.classList.remove('pressing');
+    if (this._pressTimer) { clearTimeout(this._pressTimer); this._pressTimer = undefined; }
+    this._pressedId = null;
+    this._pressTarget = null;
   }
 
   // ─── Render: Expand Panel ─────────────────────────
@@ -316,13 +333,14 @@ export class HaLuminaLightCard extends LitElement {
           <div class="lights-section">
             <span class="lights-section-header">${onCount}/${total} Lights On</span>
 
-            ${this._normalized.map(({ id, customName }) => {
+            ${this._normalized.map(({ id, customName, customIcon }) => {
               const entity = this._getEntity(id);
               if (!entity) return nothing;
               const isOn = entity.state === 'on';
               const brightness = isOn ? Math.round(((entity.attributes.brightness as number) || 0) / 255 * 100) : 0;
               const hasExpand = this._isGroup(entity) || this._hasColor(entity) || this._hasEffects(entity);
               const displayName = this._getName(id, customName);
+              const icon = customIcon || 'mdi:lightbulb';
 
               return html`
                 <div class="light-item ${isOn ? 'on' : ''}">
@@ -330,8 +348,9 @@ export class HaLuminaLightCard extends LitElement {
                     <button class="light-circle ${isOn ? 'on' : ''}"
                       @pointerdown=${(e: PointerEvent) => this._onPointerDown(id, e)}
                       @pointerup=${(e: PointerEvent) => this._onPointerUp(id, e)}
+                      @pointercancel=${this._onPointerCancel}
                       @pointerleave=${this._onPointerLeave}>
-                      <ha-icon icon="mdi:lightbulb"></ha-icon>
+                      <ha-icon icon="${icon}"></ha-icon>
                     </button>
 
                     <div class="light-item-info">

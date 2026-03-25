@@ -162,6 +162,32 @@ export const roomPopupStyles = css`
     margin-top: var(--lumina-space-3);
   }
 
+  .climate-fan {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumina-space-2);
+    margin-top: var(--lumina-space-3);
+    padding-top: var(--lumina-space-3);
+    border-top: 1px solid var(--lumina-ghost-border);
+  }
+
+  .climate-fan-label {
+    display: flex;
+    align-items: center;
+    gap: var(--lumina-space-2);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--lumina-on-surface-variant);
+  }
+
+  .climate-fan-label ha-icon {
+    --mdc-icon-size: 16px;
+  }
+
+  .climate-fan .climate-chips {
+    margin-top: 0;
+  }
+
   /* ─── Media Section ─────────────────────────────── */
   .media-row {
     display: flex;

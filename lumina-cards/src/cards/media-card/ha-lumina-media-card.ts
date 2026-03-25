@@ -84,9 +84,9 @@ export class HaLuminaMediaCard extends LitElement {
   private _startPositionTracking(): void {
     this._stopPositionTracking();
     this._positionTimer = setInterval(() => {
-      if (this._entity?.state === 'playing') {
+      // Only tick when playing and we have a valid duration
+      if (this._entity?.state === 'playing' && this._duration > 0) {
         this._currentPosition += 1;
-        this.requestUpdate();
       }
     }, 1000);
   }
@@ -141,6 +141,37 @@ export class HaLuminaMediaCard extends LitElement {
   private _onVolume(e: CustomEvent): void { this._debouncedVolume(e.detail.value); }
   private _selectSource(source: string): void {
     callService(this.hass, 'media_player', 'select_source', { entity_id: this.config.entity, source });
+  }
+
+  private _browseMedia(): void {
+    // Navigate to HA's built-in media browser for this entity
+    const mediaEntityId = this.config.entity;
+    // Try firing on HA's root element so it works even from portal DOM
+    const haRoot = document.querySelector('home-assistant') ||
+                   document.querySelector('hc-main');
+    if (haRoot) {
+      haRoot.dispatchEvent(new CustomEvent('hass-more-info', {
+        bubbles: true,
+        composed: true,
+        detail: { entityId: mediaEntityId },
+      }));
+    } else {
+      // Fallback: navigate to media browser panel
+      history.pushState(null, '', '/media-browser/' + mediaEntityId);
+      window.dispatchEvent(new Event('location-changed'));
+    }
+  }
+
+  private _openMoreInfo(): void {
+    const haRoot = document.querySelector('home-assistant') ||
+                   document.querySelector('hc-main');
+    if (haRoot) {
+      haRoot.dispatchEvent(new CustomEvent('hass-more-info', {
+        bubbles: true,
+        composed: true,
+        detail: { entityId: this.config.entity },
+      }));
+    }
   }
 
   // ─── Render ───────────────────────────────────────
@@ -200,6 +231,17 @@ export class HaLuminaMediaCard extends LitElement {
           <span class="track-artist">${artist}${album ? ` \u2014 ${album}` : ''}</span>
         </div>
 
+        <!-- Progress Bar -->
+        ${this.config.show_progress && this._duration > 0 ? html`
+          <div class="progress-section">
+            <span class="progress-time">${formatDuration(this._currentPosition)}</span>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${progressPct}%"></div>
+            </div>
+            <span class="progress-time">${formatDuration(this._duration)}</span>
+          </div>
+        ` : nothing}
+
         <!-- Playback Controls -->
         <div class="playback-controls">
           <lumina-icon-button icon="mdi:skip-previous" @click=${this._prev}></lumina-icon-button>
@@ -229,7 +271,7 @@ export class HaLuminaMediaCard extends LitElement {
 
         <!-- Browse Music / View Queue -->
         <div class="action-buttons-row">
-          <div class="action-card">
+          <div class="action-card" @click=${this._browseMedia}>
             <div class="action-card-icon browse">
               <ha-icon icon="mdi:music-box-multiple"></ha-icon>
             </div>
@@ -238,7 +280,7 @@ export class HaLuminaMediaCard extends LitElement {
               <span class="action-card-sub">Sources</span>
             </div>
           </div>
-          <div class="action-card">
+          <div class="action-card" @click=${this._openMoreInfo}>
             <div class="action-card-icon queue">
               <ha-icon icon="mdi:playlist-music"></ha-icon>
             </div>

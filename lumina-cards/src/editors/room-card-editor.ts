@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { LuminaRoomCardConfig } from '../types';
+import { LuminaRoomCardConfig, SceneConfig } from '../types';
 import { HomeAssistant } from '../types/ha-types';
 import { ASSETS_3D, resolveImageUrl } from '../utils/assets-3d';
 import { loadHaElements, fireConfigChanged } from '../utils/editor-helpers';
@@ -105,6 +105,8 @@ export class HaLuminaRoomCardEditor extends LitElement {
 
     .custom-url-note { font-size: 0.75rem; color: var(--secondary-text-color); margin-top: 4px; }
     .loading { padding: 24px; text-align: center; color: var(--secondary-text-color); }
+    .scene-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .scene-row ha-textfield, .scene-row ha-entity-picker { flex: 1; }
 
     /* ─── Label Inputs Row ────────────────────────── */
     .label-row {
@@ -149,6 +151,16 @@ export class HaLuminaRoomCardEditor extends LitElement {
   private _removeLight(i: number): void {
     const e = [...(this._config.light_entities || [])]; e.splice(i, 1);
     this._set('light_entities', e);
+  }
+
+  private _addScene(): void {
+    this._set('light_scenes', [...(this._config.light_scenes || []), { name: '', icon: 'mdi:palette', entity_id: '' }]);
+  }
+  private _removeScene(i: number): void {
+    const s = [...(this._config.light_scenes || [])]; s.splice(i, 1); this._set('light_scenes', s);
+  }
+  private _sceneChanged(i: number, field: keyof SceneConfig, v: string): void {
+    const s = [...(this._config.light_scenes || [])]; s[i] = { ...s[i], [field]: v }; this._set('light_scenes', s);
   }
 
   protected render() {
@@ -217,12 +229,18 @@ export class HaLuminaRoomCardEditor extends LitElement {
             @input=${(e: Event) => this._set('vacuum_label', (e.target as HTMLInputElement).value)}></ha-textfield>
         </div>
 
-        <!-- ─── Temperature ────────────────────────── -->
-        <div class="editor-section">Temperature</div>
+        <!-- ─── Sensors ───────────────────────────── -->
+        <div class="editor-section">Sensors</div>
         <div class="editor-row">
           <ha-entity-picker .hass=${this.hass} label="Temperature Entity"
             .value=${this._config.temperature_entity || ''} .includeDomains=${['sensor']}
             @value-changed=${(e: CustomEvent) => this._set('temperature_entity', e.detail.value)}
+            allow-custom-entity></ha-entity-picker>
+        </div>
+        <div class="editor-row">
+          <ha-entity-picker .hass=${this.hass} label="Humidity Entity"
+            .value=${this._config.humidity_entity || ''} .includeDomains=${['sensor']}
+            @value-changed=${(e: CustomEvent) => this._set('humidity_entity', e.detail.value)}
             allow-custom-entity></ha-entity-picker>
         </div>
 
@@ -238,6 +256,21 @@ export class HaLuminaRoomCardEditor extends LitElement {
           </div>
         `)}
         <div class="add-btn" @click=${this._addLight}>+ Add Light Entity</div>
+
+        <!-- ─── Light Scenes ─────────────────────── -->
+        <div class="editor-section">Light Scenes</div>
+        ${(this._config.light_scenes || []).map((scene, i) => html`
+          <div class="scene-row">
+            <ha-textfield label="Name" .value=${scene.name}
+              @input=${(e: Event) => this._sceneChanged(i, 'name', (e.target as HTMLInputElement).value)}></ha-textfield>
+            <ha-entity-picker .hass=${this.hass} label="Scene" .value=${scene.entity_id}
+              .includeDomains=${['scene']}
+              @value-changed=${(e: CustomEvent) => this._sceneChanged(i, 'entity_id', e.detail.value)}
+              allow-custom-entity></ha-entity-picker>
+            <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removeScene(i)}></ha-icon>
+          </div>
+        `)}
+        <div class="add-btn" @click=${this._addScene}>+ Add Scene</div>
 
         <!-- ─── Climate ────────────────────────────── -->
         <div class="editor-section">Climate</div>

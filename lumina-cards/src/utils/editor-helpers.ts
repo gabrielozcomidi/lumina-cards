@@ -12,17 +12,23 @@ export async function loadHaElements(): Promise<void> {
   if (_loadPromise) return _loadPromise;
 
   _loadPromise = (async () => {
-    // Wait for custom elements registry to have the entities card
-    // which triggers loading of ha-entity-picker and other form elements
-    const helpers = await (window as any).loadCardHelpers?.();
-    if (helpers) {
-      // Creating a built-in card forces HA to load its form components
-      const entitiesCard = await helpers.createCardElement({ type: 'entities', entities: [] });
-      if (entitiesCard) {
-        await entitiesCard.constructor?.getConfigElement?.();
+    try {
+      // Wait for custom elements registry to have the entities card
+      // which triggers loading of ha-entity-picker and other form elements
+      const helpers = await (window as any).loadCardHelpers?.();
+      if (helpers) {
+        // Creating a built-in card forces HA to load its form components
+        const entitiesCard = await helpers.createCardElement({ type: 'entities', entities: [] });
+        if (entitiesCard) {
+          await entitiesCard.constructor?.getConfigElement?.();
+        }
       }
+      _loaded = true;
+    } catch {
+      // Reset so a future call can retry
+      _loadPromise = null;
+      throw new Error('Failed to load HA editor elements');
     }
-    _loaded = true;
   })();
 
   return _loadPromise;
@@ -32,10 +38,9 @@ export async function loadHaElements(): Promise<void> {
  * Fire a config-changed event the way HA expects it.
  */
 export function fireConfigChanged(el: HTMLElement, config: Record<string, unknown>): void {
-  const event = new Event('config-changed', {
+  el.dispatchEvent(new CustomEvent('config-changed', {
     bubbles: true,
     composed: true,
-  });
-  (event as any).detail = { config };
-  el.dispatchEvent(event);
+    detail: { config },
+  }));
 }

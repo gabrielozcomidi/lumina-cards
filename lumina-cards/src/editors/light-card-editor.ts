@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { LuminaLightCardConfig, SceneConfig } from '../types';
+import { LuminaLightCardConfig, LightEntityConfig, SceneConfig } from '../types';
 import { HomeAssistant } from '../types/ha-types';
 import { loadHaElements, fireConfigChanged } from '../utils/editor-helpers';
 
@@ -14,8 +14,10 @@ export class HaLuminaLightCardEditor extends LitElement {
     :host { display: block; }
     .editor { display: flex; flex-direction: column; gap: 16px; padding: 16px 0; }
     .editor-section { font-size: 1rem; font-weight: 600; color: var(--primary-text-color); margin-top: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--divider-color); }
+    .entity-block { background: var(--card-background-color, #1a1a1d); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
     .entity-row { display: flex; gap: 8px; align-items: center; }
     .entity-row ha-entity-picker { flex: 1; }
+    .entity-extras { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .remove-btn { cursor: pointer; color: var(--error-color, #db4437); --mdc-icon-size: 20px; }
     .add-btn { cursor: pointer; color: var(--primary-color); font-size: 0.875rem; font-weight: 500; padding: 8px; }
     .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
@@ -39,10 +41,47 @@ export class HaLuminaLightCardEditor extends LitElement {
     this._config = { ...this._config, [field]: value }; this._dispatch();
   }
 
-  private _entityChanged(i: number, v: string): void {
-    const e = [...(this._config.entities || [])]; e[i] = v; this._set('entities', e);
+  private _toObj(entry: string | LightEntityConfig): LightEntityConfig {
+    return typeof entry === 'string' ? { entity: entry } : { ...entry };
   }
-  private _addEntity(): void { this._set('entities', [...(this._config.entities || []), '']); }
+
+  private _getEntityId(entry: string | LightEntityConfig): string {
+    return typeof entry === 'string' ? entry : entry.entity;
+  }
+
+  private _getEntityName(entry: string | LightEntityConfig): string {
+    return typeof entry === 'string' ? '' : entry.name || '';
+  }
+
+  private _getEntityIcon(entry: string | LightEntityConfig): string {
+    return typeof entry === 'string' ? '' : entry.icon || '';
+  }
+
+  private _entityChanged(i: number, v: string): void {
+    const e = [...(this._config.entities || [])];
+    const obj = this._toObj(e[i]);
+    obj.entity = v;
+    e[i] = obj;
+    this._set('entities', e);
+  }
+
+  private _entityNameChanged(i: number, v: string): void {
+    const e = [...(this._config.entities || [])];
+    const obj = this._toObj(e[i]);
+    obj.name = v || undefined;
+    e[i] = obj;
+    this._set('entities', e);
+  }
+
+  private _entityIconChanged(i: number, v: string): void {
+    const e = [...(this._config.entities || [])];
+    const obj = this._toObj(e[i]);
+    obj.icon = v || undefined;
+    e[i] = obj;
+    this._set('entities', e);
+  }
+
+  private _addEntity(): void { this._set('entities', [...(this._config.entities || []), { entity: '' }]); }
   private _removeEntity(i: number): void {
     const e = [...(this._config.entities || [])]; e.splice(i, 1); this._set('entities', e);
   }
@@ -64,13 +103,21 @@ export class HaLuminaLightCardEditor extends LitElement {
     return html`
       <div class="editor">
         <div class="editor-section">Light Entities</div>
-        ${(this._config.entities || []).map((id, i) => html`
-          <div class="entity-row">
-            <ha-entity-picker .hass=${this.hass} label="Light ${i + 1}" .value=${id}
-              .includeDomains=${['light']}
-              @value-changed=${(e: CustomEvent) => this._entityChanged(i, e.detail.value)}
-              allow-custom-entity></ha-entity-picker>
-            <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removeEntity(i)}></ha-icon>
+        ${(this._config.entities || []).map((entry, i) => html`
+          <div class="entity-block">
+            <div class="entity-row">
+              <ha-entity-picker .hass=${this.hass} label="Light ${i + 1}" .value=${this._getEntityId(entry)}
+                .includeDomains=${['light']}
+                @value-changed=${(e: CustomEvent) => this._entityChanged(i, e.detail.value)}
+                allow-custom-entity></ha-entity-picker>
+              <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removeEntity(i)}></ha-icon>
+            </div>
+            <div class="entity-extras">
+              <ha-textfield label="Custom Name" .value=${this._getEntityName(entry)}
+                @input=${(e: Event) => this._entityNameChanged(i, (e.target as HTMLInputElement).value)}></ha-textfield>
+              <ha-textfield label="Icon (e.g. mdi:desk-lamp)" .value=${this._getEntityIcon(entry)}
+                @input=${(e: Event) => this._entityIconChanged(i, (e.target as HTMLInputElement).value)}></ha-textfield>
+            </div>
           </div>
         `)}
         <div class="add-btn" @click=${this._addEntity}>+ Add Light</div>

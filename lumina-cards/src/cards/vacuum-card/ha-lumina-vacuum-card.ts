@@ -71,7 +71,7 @@ export class HaLuminaVacuumCard extends LitElement {
   }
 
   private get _stateLabel(): string {
-    return this._state.charAt(0).toUpperCase() + this._state.slice(1).replace('_', ' ');
+    return this._state.charAt(0).toUpperCase() + this._state.slice(1).replaceAll('_', ' ');
   }
 
   private get _stateIcon(): string {

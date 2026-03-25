@@ -54,39 +54,51 @@ export const roomCardStyles = css`
     height: 90%;
     object-fit: contain;
     object-position: center right;
-    filter: drop-shadow(0 0 40px rgba(0, 0, 0, 0.6));
-    opacity: 0.9;
+    filter: drop-shadow(0 0 50px rgba(0, 0, 0, 0.7)) blur(1px);
+    opacity: 0.7;
+    mask-image: radial-gradient(
+      ellipse 90% 85% at 68% 50%,
+      black 25%,
+      rgba(0, 0, 0, 0.6) 55%,
+      transparent 100%
+    );
+    -webkit-mask-image: radial-gradient(
+      ellipse 90% 85% at 68% 50%,
+      black 25%,
+      rgba(0, 0, 0, 0.6) 55%,
+      transparent 100%
+    );
   }
 
-  /* Multi-directional gradient dissolve — strong and visible */
+  /* Multi-directional gradient dissolve */
   .room-bg::after {
     content: '';
     position: absolute;
     inset: 0;
     background:
-      /* Left fade — heavy, protects the text area */
+      /* Left fade — protects the text area */
       linear-gradient(
         to right,
         var(--lumina-surface-container) 0%,
-        var(--lumina-surface-container) 20%,
-        rgba(25, 25, 28, 0.92) 38%,
-        rgba(25, 25, 28, 0.6) 52%,
-        rgba(25, 25, 28, 0.15) 70%,
+        var(--lumina-surface-container) 15%,
+        rgba(25, 25, 28, 0.95) 32%,
+        rgba(25, 25, 28, 0.65) 48%,
+        rgba(25, 25, 28, 0.2) 68%,
         transparent 85%
       ),
-      /* Bottom fade — heavier, protects action buttons */
+      /* Bottom fade — protects action buttons */
       linear-gradient(
         to top,
         var(--lumina-surface-container) 0%,
-        rgba(25, 25, 28, 0.9) 15%,
-        rgba(25, 25, 28, 0.5) 30%,
-        transparent 50%
+        rgba(25, 25, 28, 0.92) 12%,
+        rgba(25, 25, 28, 0.55) 28%,
+        transparent 48%
       ),
-      /* Top fade — visible blend */
+      /* Top fade */
       linear-gradient(
         to bottom,
-        rgba(25, 25, 28, 0.5) 0%,
-        transparent 25%
+        rgba(25, 25, 28, 0.45) 0%,
+        transparent 22%
       );
     pointer-events: none;
   }
@@ -106,6 +118,27 @@ export const roomCardStyles = css`
     font-weight: 700;
     color: var(--lumina-on-surface);
     line-height: 1.2;
+  }
+
+  .room-sensors {
+    display: flex;
+    align-items: center;
+    gap: var(--lumina-space-4);
+    margin-top: var(--lumina-space-1);
+  }
+
+  .sensor-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--lumina-on-surface-variant);
+  }
+
+  .sensor-item ha-icon {
+    --mdc-icon-size: 15px;
+    color: var(--lumina-outline);
   }
 
   .device-count {
@@ -190,6 +223,7 @@ export const roomCardStyles = css`
     color: var(--lumina-secondary);
   }
 
+  /* Climate — default (cool / fan_only) */
   .action-btn.climate-active .action-icon-circle {
     border-color: var(--lumina-primary);
     background: rgba(133, 173, 255, 0.08);
@@ -199,6 +233,41 @@ export const roomCardStyles = css`
 
   .action-btn.climate-active .action-icon-circle ha-icon {
     color: var(--lumina-primary);
+  }
+
+  /* Climate — heat mode (yellow) */
+  .action-btn.climate-heat .action-icon-circle {
+    border-color: var(--lumina-secondary);
+    background: rgba(254, 203, 0, 0.08);
+    box-shadow: 0 0 16px rgba(254, 203, 0, 0.2),
+                0 0 4px rgba(254, 203, 0, 0.35);
+  }
+
+  .action-btn.climate-heat .action-icon-circle ha-icon {
+    color: var(--lumina-secondary);
+  }
+
+  .action-btn.climate-heat .action-label {
+    color: var(--lumina-secondary);
+  }
+
+  /* Climate — heat_cool / auto mode (green) */
+  .action-btn.climate-heat_cool .action-icon-circle,
+  .action-btn.climate-auto .action-icon-circle {
+    border-color: var(--lumina-tertiary);
+    background: rgba(111, 251, 133, 0.08);
+    box-shadow: 0 0 16px rgba(111, 251, 133, 0.2),
+                0 0 4px rgba(111, 251, 133, 0.35);
+  }
+
+  .action-btn.climate-heat_cool .action-icon-circle ha-icon,
+  .action-btn.climate-auto .action-icon-circle ha-icon {
+    color: var(--lumina-tertiary);
+  }
+
+  .action-btn.climate-heat_cool .action-label,
+  .action-btn.climate-auto .action-label {
+    color: var(--lumina-tertiary);
   }
 
   .action-btn.media-active .action-icon-circle {

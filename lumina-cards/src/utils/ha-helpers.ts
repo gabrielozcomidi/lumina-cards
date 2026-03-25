@@ -108,7 +108,7 @@ export function getVolumePercent(entity: HassEntity | undefined): number {
  * Format seconds to mm:ss.
  */
 export function formatDuration(seconds: number | undefined): string {
-  if (!seconds || seconds < 0) return '0:00';
+  if (seconds === undefined || seconds === null || seconds < 0) return '0:00';
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -118,9 +118,7 @@ export function formatDuration(seconds: number | undefined): string {
  * Fire haptic feedback event (for HA Companion app).
  */
 export function fireHaptic(el: HTMLElement, type: 'success' | 'warning' | 'failure' | 'light' | 'medium' | 'heavy' | 'selection' = 'light'): void {
-  const event = new Event('haptic', { bubbles: true, composed: true });
-  (event as any).detail = type;
-  el.dispatchEvent(event);
+  el.dispatchEvent(new CustomEvent('haptic', { bubbles: true, composed: true, detail: type }));
 }
 
 /**
