@@ -144,34 +144,9 @@ export class HaLuminaMediaCard extends LitElement {
   }
 
   private _browseMedia(): void {
-    // Navigate to HA's built-in media browser for this entity
-    const mediaEntityId = this.config.entity;
-    // Try firing on HA's root element so it works even from portal DOM
-    const haRoot = document.querySelector('home-assistant') ||
-                   document.querySelector('hc-main');
-    if (haRoot) {
-      haRoot.dispatchEvent(new CustomEvent('hass-more-info', {
-        bubbles: true,
-        composed: true,
-        detail: { entityId: mediaEntityId },
-      }));
-    } else {
-      // Fallback: navigate to media browser panel
-      history.pushState(null, '', '/media-browser/' + mediaEntityId);
-      window.dispatchEvent(new Event('location-changed'));
-    }
-  }
-
-  private _openMoreInfo(): void {
-    const haRoot = document.querySelector('home-assistant') ||
-                   document.querySelector('hc-main');
-    if (haRoot) {
-      haRoot.dispatchEvent(new CustomEvent('hass-more-info', {
-        bubbles: true,
-        composed: true,
-        detail: { entityId: this.config.entity },
-      }));
-    }
+    // Navigate to HA's built-in media browser
+    history.pushState(null, '', '/media-browser');
+    window.dispatchEvent(new Event('location-changed'));
   }
 
   // ─── Render ───────────────────────────────────────
@@ -269,7 +244,7 @@ export class HaLuminaMediaCard extends LitElement {
           <span class="volume-icon"><ha-icon icon="mdi:volume-high"></ha-icon></span>
         </div>
 
-        <!-- Browse Music / View Queue -->
+        <!-- Browse Music -->
         <div class="action-buttons-row">
           <div class="action-card" @click=${this._browseMedia}>
             <div class="action-card-icon browse">
@@ -277,16 +252,7 @@ export class HaLuminaMediaCard extends LitElement {
             </div>
             <div class="action-card-text">
               <span class="action-card-title">Browse Music</span>
-              <span class="action-card-sub">Sources</span>
-            </div>
-          </div>
-          <div class="action-card" @click=${this._openMoreInfo}>
-            <div class="action-card-icon queue">
-              <ha-icon icon="mdi:playlist-music"></ha-icon>
-            </div>
-            <div class="action-card-text">
-              <span class="action-card-title">View Queue</span>
-              <span class="action-card-sub">Tracklist</span>
+              <span class="action-card-sub">Media Browser</span>
             </div>
           </div>
         </div>

@@ -129,6 +129,12 @@ export class HaLuminaLightCard extends LitElement {
 
   // ─── Light helpers ────────────────────────────────
 
+  private _hasBrightness(entity: LightEntity): boolean {
+    const modes = entity.attributes.supported_color_modes || [];
+    // 'onoff' is the only mode that doesn't support brightness
+    return modes.length > 0 && !modes.every((m) => m === 'onoff');
+  }
+
   private _isGroup(entity: LightEntity): boolean {
     return Array.isArray(entity.attributes.entity_id) && entity.attributes.entity_id.length > 0;
   }
@@ -233,7 +239,7 @@ export class HaLuminaLightCard extends LitElement {
             <div class="effect-select-wrapper">
               <select class="effect-select"
                 @change=${(e: Event) => this._setEffect(id, (e.target as HTMLSelectElement).value)}>
-                <option value="" ?selected=${!currentEffect}>None</option>
+                <option value="solid" ?selected=${!currentEffect || currentEffect === 'solid'}>Solid</option>
                 ${(entity.attributes.effect_list || []).map((effect) => html`
                   <option value="${effect}" ?selected=${currentEffect === effect}>${effect}</option>
                 `)}
@@ -337,7 +343,8 @@ export class HaLuminaLightCard extends LitElement {
               const entity = this._getEntity(id);
               if (!entity) return nothing;
               const isOn = entity.state === 'on';
-              const brightness = isOn ? Math.round(((entity.attributes.brightness as number) || 0) / 255 * 100) : 0;
+              const hasBrightness = this._hasBrightness(entity);
+              const brightness = isOn && hasBrightness ? Math.round(((entity.attributes.brightness as number) || 0) / 255 * 100) : 0;
               const hasExpand = this._isGroup(entity) || this._hasColor(entity) || this._hasEffects(entity);
               const displayName = this._getName(id, customName);
               const icon = customIcon || 'mdi:lightbulb';
@@ -355,7 +362,7 @@ export class HaLuminaLightCard extends LitElement {
 
                     <div class="light-item-info">
                       <span class="light-item-name">${displayName}</span>
-                      ${isOn ? html`
+                      ${isOn && hasBrightness ? html`
                         <div class="light-item-slider">
                           <lumina-slider .value=${brightness} .min=${1} .max=${100}
                             color="var(--lumina-secondary)"
@@ -365,7 +372,10 @@ export class HaLuminaLightCard extends LitElement {
                       ` : nothing}
                     </div>
 
-                    <span class="light-item-pct ${isOn ? 'on' : ''}">${isOn ? `${brightness}%` : 'Off'}</span>
+                    ${hasBrightness
+                      ? html`<span class="light-item-pct ${isOn ? 'on' : ''}">${isOn ? `${brightness}%` : 'Off'}</span>`
+                      : html`<span class="light-item-toggle ${isOn ? 'on' : ''}" @click=${(e: Event) => { e.stopPropagation(); this._toggleLight(id); }}>${isOn ? 'On' : 'Off'}</span>`
+                    }
                   </div>
 
                   ${hasExpand ? this._renderExpandPanel(id, entity) : nothing}

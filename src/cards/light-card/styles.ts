@@ -209,15 +209,6 @@ export const lightCardStyles = css`
     --lumina-slider-thumb: 12px;
   }
 
-  /* All sliders 20% shorter */
-  lumina-slider {
-    max-width: 80%;
-  }
-
-  .light-item-slider lumina-slider {
-    max-width: 100%; /* per-light sliders fill their already-constrained container */
-  }
-
   .light-item-pct {
     font-size: 0.6875rem;
     font-weight: 600;
@@ -229,6 +220,25 @@ export const lightCardStyles = css`
 
   .light-item-pct.on {
     color: var(--lumina-secondary);
+  }
+
+  .light-item-toggle {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--lumina-on-surface-variant);
+    min-width: 28px;
+    text-align: right;
+    flex-shrink: 0;
+    cursor: pointer;
+    padding: var(--lumina-space-1) var(--lumina-space-2);
+    border-radius: var(--lumina-radius-sm);
+    transition: all var(--lumina-transition-fast);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .light-item-toggle.on {
+    color: var(--lumina-secondary);
+    background: rgba(254, 203, 0, 0.1);
   }
 
   /* ─── Inline Expand Panel ───────────────────────── */

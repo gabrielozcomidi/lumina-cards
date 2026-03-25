@@ -3,7 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { luminaTokens } from '../../styles/tokens';
 import { sharedStyles } from '../../styles/shared';
 import { roomCardStyles } from './styles';
-import { LuminaRoomCardConfig } from '../../types';
+import { LuminaRoomCardConfig, LightEntityConfig } from '../../types';
 import { HomeAssistant } from '../../types/ha-types';
 import {
   getEntity,
@@ -65,9 +65,9 @@ export class HaLuminaRoomCard extends LitElement {
   private _rebuildSubConfigs(): void {
     const c = this._config;
     this._lightConfig = { type: 'custom:ha-lumina-light-card', entities: c.light_entities || [], image: c.image, scenes: c.light_scenes };
-    this._climateConfig = { type: 'custom:ha-lumina-climate-card', entity: c.climate_entity || '', image: c.image };
-    this._mediaConfig = { type: 'custom:ha-lumina-media-card', entity: c.media_entity || '', image: c.image };
-    this._vacuumConfig = { type: 'custom:ha-lumina-vacuum-card', entity: c.vacuum_entity || '', image: c.image };
+    this._climateConfig = { type: 'custom:ha-lumina-climate-card', entity: c.climate_entity || '', image: c.image, show_fan_speed: true, show_humidity: true };
+    this._mediaConfig = { type: 'custom:ha-lumina-media-card', entity: c.media_entity || '', image: c.image, show_source: true, show_progress: true };
+    this._vacuumConfig = { type: 'custom:ha-lumina-vacuum-card', entity: c.vacuum_entity || '', image: c.image, show_fan_speed: true };
     this._roomPopupConfig = {
       type: 'custom:ha-lumina-room-popup',
       name: c.name,
@@ -110,7 +110,7 @@ export class HaLuminaRoomCard extends LitElement {
     const trackedEntities = [
       this._config.temperature_entity,
       this._config.humidity_entity,
-      ...(this._config.light_entities || []),
+      ...this._lightEntityIds,
       this._config.climate_entity,
       this._config.media_entity,
       this._config.vacuum_entity,
@@ -123,16 +123,23 @@ export class HaLuminaRoomCard extends LitElement {
 
   // ─── Computed State ───────────────────────────────
 
+  /** Extract entity IDs from the mixed string/object array */
+  private get _lightEntityIds(): string[] {
+    return (this._config.light_entities || []).map(
+      (e) => typeof e === 'string' ? e : e.entity,
+    );
+  }
+
   private get _lightsOn(): number {
-    return lightsOnCount(this.hass, this._config.light_entities || []);
+    return lightsOnCount(this.hass, this._lightEntityIds);
   }
 
   private get _lightsTotal(): number {
-    return (this._config.light_entities || []).length;
+    return this._lightEntityIds.length;
   }
 
   private get _lightsPercent(): number {
-    return lightsOnPercentage(this.hass, this._config.light_entities || []);
+    return lightsOnPercentage(this.hass, this._lightEntityIds);
   }
 
   private get _climateEntity() {
@@ -258,9 +265,10 @@ export class HaLuminaRoomCard extends LitElement {
               `
             : nothing}
 
-          <!-- Header: Room Name + Sensors + Device Count -->
+          <!-- Header: Room Name + Device Count + Sensors -->
           <div class="room-header">
             <span class="room-name">${this._config.name}</span>
+            <span class="device-count">${this._activeDeviceCount} device${this._activeDeviceCount !== 1 ? 's' : ''} active</span>
             ${this._temperatureValue || this._humidityValue ? html`
               <div class="room-sensors">
                 ${this._temperatureValue ? html`
@@ -275,7 +283,6 @@ export class HaLuminaRoomCard extends LitElement {
                 ` : nothing}
               </div>
             ` : nothing}
-            <span class="device-count">${this._activeDeviceCount} device${this._activeDeviceCount !== 1 ? 's' : ''} active</span>
           </div>
 
           <!-- Action Buttons -->

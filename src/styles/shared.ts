@@ -20,20 +20,8 @@ export const sharedStyles = css`
     height: 95%;
     object-fit: contain;
     object-position: center right;
-    filter: drop-shadow(0 0 40px rgba(0, 0, 0, 0.6)) blur(1.5px);
-    opacity: 0.55;
-    mask-image: radial-gradient(
-      ellipse 85% 80% at 70% 50%,
-      black 30%,
-      rgba(0, 0, 0, 0.5) 60%,
-      transparent 100%
-    );
-    -webkit-mask-image: radial-gradient(
-      ellipse 85% 80% at 70% 50%,
-      black 30%,
-      rgba(0, 0, 0, 0.5) 60%,
-      transparent 100%
-    );
+    filter: drop-shadow(0 0 40px rgba(0, 0, 0, 0.6));
+    opacity: 0.6;
   }
 
   .lumina-3d-bg::after {
@@ -45,50 +33,32 @@ export const sharedStyles = css`
       linear-gradient(
         to right,
         var(--lumina-3d-bg-color, var(--lumina-surface-container)) 0%,
-        var(--lumina-3d-bg-color, var(--lumina-surface-container)) 15%,
-        rgba(25, 25, 28, 0.95) 30%,
-        rgba(25, 25, 28, 0.7) 45%,
-        rgba(25, 25, 28, 0.25) 65%,
+        var(--lumina-3d-bg-color, var(--lumina-surface-container)) 20%,
+        rgba(25, 25, 28, 0.97) 35%,
+        rgba(25, 25, 28, 0.8) 48%,
+        rgba(25, 25, 28, 0.35) 65%,
         transparent 85%
       ),
       /* Bottom fade */
       linear-gradient(
         to top,
         var(--lumina-3d-bg-color, var(--lumina-surface-container)) 0%,
-        rgba(25, 25, 28, 0.9) 10%,
-        rgba(25, 25, 28, 0.5) 25%,
-        transparent 45%
+        rgba(25, 25, 28, 0.95) 12%,
+        rgba(25, 25, 28, 0.6) 28%,
+        transparent 50%
       ),
       /* Top fade */
       linear-gradient(
         to bottom,
-        rgba(25, 25, 28, 0.5) 0%,
-        transparent 20%
+        rgba(25, 25, 28, 0.6) 0%,
+        transparent 25%
       );
     pointer-events: none;
   }
 
-  /* Popup variant — deeper blend, image emerges from dark surface */
+  /* Popup variant — hidden (no 3D in popups) */
   .lumina-3d-bg.popup {
-    --lumina-3d-bg-color: #19191c;
-  }
-
-  .lumina-3d-bg.popup img {
-    opacity: 0.35;
-    width: 50%;
-    filter: drop-shadow(0 0 50px rgba(0, 0, 0, 0.7)) blur(2.5px);
-    mask-image: radial-gradient(
-      ellipse 80% 75% at 72% 50%,
-      black 20%,
-      rgba(0, 0, 0, 0.4) 50%,
-      transparent 90%
-    );
-    -webkit-mask-image: radial-gradient(
-      ellipse 80% 75% at 72% 50%,
-      black 20%,
-      rgba(0, 0, 0, 0.4) 50%,
-      transparent 90%
-    );
+    display: none;
   }
 
   /* Card content sits above the 3D bg */

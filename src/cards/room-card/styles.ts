@@ -54,20 +54,8 @@ export const roomCardStyles = css`
     height: 90%;
     object-fit: contain;
     object-position: center right;
-    filter: drop-shadow(0 0 50px rgba(0, 0, 0, 0.7)) blur(1px);
-    opacity: 0.7;
-    mask-image: radial-gradient(
-      ellipse 90% 85% at 68% 50%,
-      black 25%,
-      rgba(0, 0, 0, 0.6) 55%,
-      transparent 100%
-    );
-    -webkit-mask-image: radial-gradient(
-      ellipse 90% 85% at 68% 50%,
-      black 25%,
-      rgba(0, 0, 0, 0.6) 55%,
-      transparent 100%
-    );
+    filter: drop-shadow(0 0 50px rgba(0, 0, 0, 0.7));
+    opacity: 0.75;
   }
 
   /* Multi-directional gradient dissolve */
@@ -80,25 +68,25 @@ export const roomCardStyles = css`
       linear-gradient(
         to right,
         var(--lumina-surface-container) 0%,
-        var(--lumina-surface-container) 15%,
-        rgba(25, 25, 28, 0.95) 32%,
-        rgba(25, 25, 28, 0.65) 48%,
-        rgba(25, 25, 28, 0.2) 68%,
+        var(--lumina-surface-container) 20%,
+        rgba(25, 25, 28, 0.97) 36%,
+        rgba(25, 25, 28, 0.75) 50%,
+        rgba(25, 25, 28, 0.3) 68%,
         transparent 85%
       ),
       /* Bottom fade — protects action buttons */
       linear-gradient(
         to top,
         var(--lumina-surface-container) 0%,
-        rgba(25, 25, 28, 0.92) 12%,
-        rgba(25, 25, 28, 0.55) 28%,
-        transparent 48%
+        rgba(25, 25, 28, 0.95) 15%,
+        rgba(25, 25, 28, 0.6) 30%,
+        transparent 50%
       ),
       /* Top fade */
       linear-gradient(
         to bottom,
-        rgba(25, 25, 28, 0.45) 0%,
-        transparent 22%
+        rgba(25, 25, 28, 0.55) 0%,
+        transparent 25%
       );
     pointer-events: none;
   }

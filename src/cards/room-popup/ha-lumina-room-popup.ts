@@ -43,11 +43,12 @@ export class HaLuminaRoomPopup extends LitElement {
   // ─── Lights ───────────────────────────────────────
 
   private _renderLightsSection() {
-    const entities = this.config.light_entities || [];
-    if (!entities.length) return nothing;
+    const rawEntities = this.config.light_entities || [];
+    if (!rawEntities.length) return nothing;
 
-    const onCount = lightsOnCount(this.hass, entities);
-    const avgBright = averageBrightness(this.hass, entities);
+    const entityIds = rawEntities.map((e) => typeof e === 'string' ? e : e.entity);
+    const onCount = lightsOnCount(this.hass, entityIds);
+    const avgBright = averageBrightness(this.hass, entityIds);
 
     return html`
       <div class="section">
@@ -61,7 +62,7 @@ export class HaLuminaRoomPopup extends LitElement {
 
         <div class="lights-summary">
           <lumina-ring
-            .value=${entities.length ? Math.round((onCount / entities.length) * 100) : 0}
+            .value=${entityIds.length ? Math.round((onCount / entityIds.length) * 100) : 0}
             .size=${56}
             .strokeWidth=${3}
             color="var(--lumina-secondary)"
@@ -69,13 +70,13 @@ export class HaLuminaRoomPopup extends LitElement {
           >
           </lumina-ring>
           <div class="lights-text">
-            <span class="lights-count">${onCount}/${entities.length}</span>
+            <span class="lights-count">${onCount}/${entityIds.length}</span>
             <span class="lights-subtitle">${onCount > 0 ? `Avg ${avgBright}% brightness` : 'All lights off'}</span>
           </div>
         </div>
 
         <div class="light-list">
-          ${entities.map((id) => {
+          ${entityIds.map((id) => {
             const entity = getEntity(this.hass, id);
             if (!entity) return nothing;
             const isOn = entity.state === 'on';

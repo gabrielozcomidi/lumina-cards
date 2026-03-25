@@ -168,11 +168,6 @@ export const mediaCardStyles = css`
     flex: 1;
   }
 
-  /* All sliders 20% shorter */
-  lumina-slider {
-    max-width: 80%;
-  }
-
   /* ─── Browse / Queue Buttons ────────────────────── */
   .action-buttons-row {
     display: flex;

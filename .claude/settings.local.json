@@ -17,7 +17,13 @@
       "WebFetch(domain:community.home-assistant.io)",
       "mcp__stitch__list_design_systems",
       "Bash(where gh:*)",
-      "Bash(gh auth:*)"
+      "Bash(gh auth:*)",
+      "Bash(mv lumina-cards/node_modules node_modules)",
+      "Bash(mv lumina-cards/dist dist)",
+      "Bash(rmdir lumina-cards:*)",
+      "Bash(gh release:*)",
+      "Bash(gh run:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

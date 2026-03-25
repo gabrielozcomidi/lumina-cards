@@ -25,7 +25,7 @@ export interface LuminaRoomCardConfig extends LovelaceCardConfig {
   image?: string;
   temperature_entity?: string;
   humidity_entity?: string;
-  light_entities?: string[];
+  light_entities?: (string | LightEntityConfig)[];
   climate_entity?: string;
   media_entity?: string;
   vacuum_entity?: string;
@@ -50,7 +50,7 @@ export interface LuminaRoomPopupConfig extends LovelaceCardConfig {
   name: string;
   image?: string;
   temperature_entity?: string;
-  light_entities?: string[];
+  light_entities?: (string | LightEntityConfig)[];
   climate_entity?: string;
   media_entity?: string;
   vacuum_entity?: string;
