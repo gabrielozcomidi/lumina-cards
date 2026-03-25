@@ -9,17 +9,16 @@ Lumina Cards is a premium Home Assistant (HA) custom Lovelace card collection bu
 ## Build Commands
 
 ```bash
-cd lumina-cards
 npm run build          # Production build (minified, no sourcemaps)
 npm run watch          # Dev build with file watching and sourcemaps
 npm run start          # Dev build + local server on port 5000 (for HA resource URL pointing at dev machine)
 ```
 
-Rollup is the bundler. Config is in `lumina-cards/rollup.config.js`. The single entry point is `src/lumina-cards.ts` which outputs to `dist/lumina-cards.js`.
+Rollup is the bundler. Config is in `rollup.config.js`. The single entry point is `src/lumina-cards.ts` which outputs to `dist/lumina-cards.js`.
 
 ## Architecture
 
-All source code lives under `lumina-cards/src/`.
+All source code lives under `src/`.
 
 **Entry point**: `lumina-cards.ts` — imports all components/cards, injects fonts, registers cards with HA's card picker via `window.customCards`.
 
@@ -47,4 +46,4 @@ All source code lives under `lumina-cards/src/`.
 - Each card must implement `setConfig()` and `set hass()` per HA custom card API. Cards also expose a static `getConfigElement()` returning the editor tag name.
 - The design system ("Ethereal Conductor") uses a dark base (`#0e0e10`), glassmorphism effects, and the `--lumina-*` CSS custom property namespace defined in `styles/tokens.ts`.
 - TypeScript strict mode is enabled. Target is ES2021 with experimental decorators (for Lit's `@customElement`, `@property`, `@state`).
-- A companion HA theme file lives at `lumina-cards/themes/lumina.yaml`.
+- A companion HA theme file lives at `themes/lumina.yaml`.

@@ -69,7 +69,6 @@ A companion theme is included at `themes/lumina.yaml`. Copy it to your HA `theme
 **Requirements:** Node.js 20+
 
 ```bash
-cd lumina-cards
 npm install
 ```
 
@@ -84,7 +83,7 @@ Output is a single ES module at `dist/lumina-cards.js`.
 ## Project Structure
 
 ```
-lumina-cards/src/
+src/
 ├── lumina-cards.ts          # Entry point — registers all cards
 ├── cards/                   # Card components (ha-lumina-*)
 │   ├── room-card/
