@@ -914,6 +914,11 @@ export const mediaCardStyles = css`
     font-size: 0.875rem;
     color: var(--lumina-on-surface-variant);
   }
+  .idle-actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--lumina-space-3);
+  }
   .idle-last-played {
     display: flex;
     flex-direction: column;

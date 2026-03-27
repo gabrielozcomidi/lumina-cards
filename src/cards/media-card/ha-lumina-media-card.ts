@@ -536,15 +536,37 @@ export class HaLuminaMediaCard extends LitElement {
               </div>
             ` : html`<span class="idle-text">No media playing</span>`}
           </div>
-          <!-- Source selector available in idle state too -->
-          ${this.config.show_source && sourceList.length
-            ? isSpeaker
-              ? this._renderSpeakerSources(sourceList, currentSource)
-              : this._renderTvApps(sourceList, currentSource)
-            : nothing}
+          <!-- Idle actions row -->
+          <div class="idle-actions">
+            ${this.config.show_source && sourceList.length ? html`
+              <div class="header-action-wrapper">
+                <button class="header-action-btn" @click=${() => { this._sourcesExpanded = !this._sourcesExpanded; }}>
+                  <ha-icon icon="${isSpeaker ? 'mdi:speaker' : 'mdi:apps'}"></ha-icon>
+                  <span class="header-action-label">${currentSource || 'Source'}</span>
+                </button>
+                ${this._sourcesExpanded ? html`
+                  <div class="source-dropdown">
+                    ${sourceList.map((source) => html`
+                      <button class="source-dropdown-item ${currentSource === source ? 'active' : ''}"
+                        @click=${() => this._selectSource(source)}>
+                        <ha-icon icon="${isSpeaker ? getSpeakerSourceIcon(source) : getAppIcon(source)}"></ha-icon>
+                        <span>${source}</span>
+                      </button>
+                    `)}
+                  </div>
+                ` : nothing}
+              </div>
+            ` : nothing}
+            ${isSpeaker ? html`
+              <button class="header-action-btn" @click=${() => this._enterBrowseMode()}>
+                <ha-icon icon="mdi:folder-music"></ha-icon>
+                <span class="header-action-label">Browse</span>
+              </button>
+            ` : nothing}
+          </div>
           ${isSpeaker ? this._renderShortcuts() : nothing}
-          ${isSpeaker ? this._renderBrowseMedia() : nothing}
           ${isSpeaker && this.config.show_speaker_management !== false ? this._renderSpeakerManagement() : nothing}
+          ${this._renderBrowseOverlay()}
         </div>
       `;
     }
