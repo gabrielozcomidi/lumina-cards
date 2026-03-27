@@ -222,23 +222,122 @@ export const lightCardStyles = css`
     color: var(--lumina-secondary);
   }
 
-  .light-item-toggle {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    color: var(--lumina-on-surface-variant);
-    min-width: 28px;
-    text-align: right;
-    flex-shrink: 0;
+  /* ─── Toggle Switch (non-dimmable) ─────────────── */
+  .light-item-switch {
+    width: 36px;
+    height: 20px;
+    border-radius: 10px;
+    border: none;
+    background: var(--lumina-outline-variant);
     cursor: pointer;
-    padding: var(--lumina-space-1) var(--lumina-space-2);
-    border-radius: var(--lumina-radius-sm);
-    transition: all var(--lumina-transition-fast);
+    flex-shrink: 0;
+    padding: 2px;
+    transition: background var(--lumina-transition-fast);
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .light-item-switch .switch-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: var(--lumina-radius-full);
+    background: var(--lumina-surface);
+    transition: transform var(--lumina-transition-fast);
+    display: block;
+  }
+
+  .light-item-switch.on {
+    background: var(--lumina-secondary);
+  }
+
+  .light-item-switch.on .switch-thumb {
+    transform: translateX(16px);
+  }
+
+  /* ─── Expand Chevron Button ──────────────────────── */
+  .light-expand-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--lumina-radius-full);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+    transition: transform var(--lumina-transition-fast);
+    -webkit-tap-highlight-color: transparent;
+    color: var(--lumina-on-surface-variant);
+  }
+
+  .light-expand-btn ha-icon {
+    --mdc-icon-size: 16px;
+    transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .light-expand-btn.open ha-icon {
+    transform: rotate(180deg);
+  }
+
+  .light-expand-btn:hover {
+    background: var(--lumina-surface-container-highest);
+  }
+
+  /* ─── Light Groups ─────────────────────────────── */
+  .light-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumina-space-2);
+  }
+
+  .light-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--lumina-space-2) var(--lumina-space-1);
+    cursor: pointer;
+    border: none;
+    background: transparent;
     -webkit-tap-highlight-color: transparent;
   }
 
-  .light-item-toggle.on {
-    color: var(--lumina-secondary);
-    background: rgba(254, 203, 0, 0.1);
+  .light-group-name {
+    font-family: var(--lumina-font-headline);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--lumina-on-surface-variant);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .light-group-chevron {
+    --mdc-icon-size: 18px;
+    color: var(--lumina-on-surface-variant);
+    transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .light-group-chevron.open {
+    transform: rotate(180deg);
+  }
+
+  .light-group-items {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumina-space-2);
+    overflow: hidden;
+    max-height: 1000px;
+    opacity: 1;
+    transition: max-height 300ms cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 200ms ease;
+  }
+
+  .light-group-items.collapsed {
+    max-height: 0;
+    opacity: 0;
   }
 
   /* ─── Inline Expand Panel ───────────────────────── */

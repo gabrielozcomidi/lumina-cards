@@ -247,10 +247,6 @@ export const roomCardStyles = css`
     color: var(--lumina-secondary);
   }
 
-  .action-btn.climate-heat .action-label {
-    color: var(--lumina-secondary);
-  }
-
   /* Climate — heat_cool / auto mode (green) */
   .action-btn.climate-heat_cool .action-icon-circle,
   .action-btn.climate-auto .action-icon-circle {
@@ -262,11 +258,6 @@ export const roomCardStyles = css`
 
   .action-btn.climate-heat_cool .action-icon-circle ha-icon,
   .action-btn.climate-auto .action-icon-circle ha-icon {
-    color: var(--lumina-tertiary);
-  }
-
-  .action-btn.climate-heat_cool .action-label,
-  .action-btn.climate-auto .action-label {
     color: var(--lumina-tertiary);
   }
 
@@ -332,18 +323,13 @@ export const roomCardStyles = css`
     transition: color var(--lumina-transition-normal);
   }
 
+  /* All active states → white label */
   .action-btn.active .action-label,
+  .action-btn.lights-active .action-label,
+  .action-btn.climate-active .action-label,
   .action-btn.media-active .action-label,
-  .action-btn.climate-active .action-label {
-    color: var(--lumina-primary);
-  }
-
-  .action-btn.lights-active .action-label {
-    color: var(--lumina-secondary);
-  }
-
   .action-btn.vacuum-active .action-label {
-    color: var(--lumina-tertiary);
+    color: var(--lumina-on-surface);
   }
 
   /* ─── Hidden ────────────────────────────────────── */

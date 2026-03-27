@@ -187,16 +187,26 @@ export class HaLuminaClimateCard extends LitElement {
         ${render3dBackground(this.config.image, true)}
         <div class="lumina-3d-content">
 
-        <!-- Header with status badge -->
+        <!-- Header with status badge + humidity -->
         <div class="climate-header">
-          <span class="header-title">HVAC Control</span>
+          <div class="header-left">
+            <span class="header-title">HVAC Control</span>
+            ${this.config.show_humidity && this._humidity !== undefined
+              ? html`
+                <div class="header-humidity">
+                  <ha-icon icon="mdi:water-percent"></ha-icon>
+                  <span class="header-humidity-value">${this._humidity}%</span>
+                  <span class="header-humidity-label">Humidity</span>
+                </div>
+              ` : nothing}
+          </div>
           <div class="status-badge" style="--badge-color: ${this._modeColor}">
             <span class="status-dot"></span>
             <span class="status-text">${this._statusLabel.toUpperCase()}</span>
           </div>
         </div>
 
-        <!-- Hero Ring — Current Temperature -->
+        <!-- Hero Ring — Target Temperature -->
         <div class="hero-section">
           <lumina-icon-button
             icon="mdi:minus"
@@ -207,15 +217,15 @@ export class HaLuminaClimateCard extends LitElement {
 
           <div class="hero-ring-wrapper">
             <lumina-ring
-              .value=${this._tempPercent}
+              .value=${this._targetTempPercent}
               .size=${180}
               .strokeWidth=${4}
               color=${this._modeColor}
               ?inactive=${!isActive}
             >
               <div class="hero-center">
-                <span class="hero-label">CURRENT</span>
-                <span class="hero-temp">${this._currentTemp !== undefined ? formatTemperature(this._currentTemp) : '--°'}</span>
+                <span class="hero-label">TARGET</span>
+                <span class="hero-temp">${this._targetTemp !== undefined ? formatTemperature(this._targetTemp) : '--°'}</span>
               </div>
             </lumina-ring>
           </div>
@@ -228,10 +238,10 @@ export class HaLuminaClimateCard extends LitElement {
           ></lumina-icon-button>
         </div>
 
-        <!-- Target Temperature (below ring) -->
+        <!-- Current Temperature (below ring) -->
         <div class="target-section">
-          <span class="target-label">Target</span>
-          <span class="target-value">${this._targetTemp !== undefined ? formatTemperature(this._targetTemp) : '--°'}</span>
+          <span class="target-label">Current</span>
+          <span class="target-value">${this._currentTemp !== undefined ? formatTemperature(this._currentTemp) : '--°'}</span>
         </div>
 
         <!-- HVAC Modes — Circular Icon Buttons -->
@@ -255,44 +265,24 @@ export class HaLuminaClimateCard extends LitElement {
           </div>
         </div>
 
-        <!-- Bottom Row: Fan Speed + Humidity side by side -->
-        <div class="bottom-row">
-          ${this.config.show_fan_speed && this._fanModes.length
-            ? html`
-                <div class="fan-section">
-                  <span class="section-label">Fan Speed</span>
-                  <div class="fan-chips">
-                    ${this._fanModes.map((fm) => html`
-                      <lumina-chip
-                        .label=${fm.charAt(0).toUpperCase() + fm.slice(1)}
-                        ?active=${this._currentFanMode === fm}
-                        size="sm"
-                        @click=${() => this._setFanMode(fm)}
-                      ></lumina-chip>
-                    `)}
-                  </div>
+        <!-- Fan Speed -->
+        ${this.config.show_fan_speed && this._fanModes.length
+          ? html`
+              <div class="fan-section">
+                <span class="section-label">Fan Speed</span>
+                <div class="fan-chips">
+                  ${this._fanModes.map((fm) => html`
+                    <lumina-chip
+                      .label=${fm.charAt(0).toUpperCase() + fm.slice(1)}
+                      ?active=${this._currentFanMode === fm}
+                      size="sm"
+                      @click=${() => this._setFanMode(fm)}
+                    ></lumina-chip>
+                  `)}
                 </div>
-              `
-            : nothing}
-
-          ${this.config.show_humidity && this._humidity !== undefined
-            ? html`
-                <div class="humidity-section">
-                  <lumina-ring
-                    .value=${this._humidity}
-                    .size=${56}
-                    .strokeWidth=${3}
-                    color="var(--lumina-primary)"
-                  >
-                  </lumina-ring>
-                  <div class="humidity-info">
-                    <span class="humidity-value">${this._humidity}%</span>
-                    <span class="humidity-label">Humidity</span>
-                  </div>
-                </div>
-              `
-            : nothing}
-        </div>
+              </div>
+            `
+          : nothing}
 
       </div><!-- /lumina-3d-content -->
       </div>

@@ -32,9 +32,9 @@ const COLOR_PRESETS: Array<{ name: string; rgb: [number, number, number]; css: s
 ];
 
 /** Normalize entity config: supports both "light.x" string and {entity, name, icon} object */
-function normalizeEntity(cfg: string | LightEntityConfig): { id: string; customName?: string; customIcon?: string } {
+function normalizeEntity(cfg: string | LightEntityConfig): { id: string; customName?: string; customIcon?: string; group?: string } {
   if (typeof cfg === 'string') return { id: cfg };
-  return { id: cfg.entity, customName: cfg.name, customIcon: cfg.icon };
+  return { id: cfg.entity, customName: cfg.name, customIcon: cfg.icon, group: cfg.group };
 }
 
 @customElement('ha-lumina-light-card')
@@ -43,6 +43,7 @@ export class HaLuminaLightCard extends LitElement {
   @property({ attribute: false }) config!: LuminaLightCardConfig;
 
   @state() private _expandedId: string | null = null;
+  @state() private _collapsedGroups: Set<string> = new Set();
 
   private _pressTimer: ReturnType<typeof setTimeout> | undefined;
   private _pressedId: string | null = null;
@@ -91,7 +92,7 @@ export class HaLuminaLightCard extends LitElement {
 
   // ─── Normalized entities ──────────────────────────
 
-  private get _normalized(): Array<{ id: string; customName?: string; customIcon?: string }> {
+  private get _normalized(): Array<{ id: string; customName?: string; customIcon?: string; group?: string }> {
     return (this.config.entities || []).map(normalizeEntity);
   }
 
@@ -204,6 +205,19 @@ export class HaLuminaLightCard extends LitElement {
     this._pressTarget = null;
   }
 
+  // ─── Group / Expand Toggles ─────────────────────────
+
+  private _toggleGroup(group: string): void {
+    const next = new Set(this._collapsedGroups);
+    if (next.has(group)) next.delete(group); else next.add(group);
+    this._collapsedGroups = next;
+  }
+
+  private _toggleExpand(id: string, e: Event): void {
+    e.stopPropagation();
+    this._expandedId = this._expandedId === id ? null : id;
+  }
+
   // ─── Render: Expand Panel ─────────────────────────
 
   private _renderExpandPanel(id: string, entity: LightEntity) {
@@ -280,6 +294,102 @@ export class HaLuminaLightCard extends LitElement {
     `;
   }
 
+  // ─── Render: Light Item ──────────────────────────────
+
+  private _renderLightItem(id: string, customName?: string, customIcon?: string) {
+    const entity = this._getEntity(id);
+    if (!entity) return nothing;
+    const isOn = entity.state === 'on';
+    const hasBrightness = this._hasBrightness(entity);
+    const brightness = isOn && hasBrightness ? Math.round(((entity.attributes.brightness as number) || 0) / 255 * 100) : 0;
+    const hasExpand = this._isGroup(entity) || this._hasColor(entity) || this._hasEffects(entity);
+    const displayName = this._getName(id, customName);
+    const icon = customIcon || 'mdi:lightbulb';
+
+    return html`
+      <div class="light-item ${isOn ? 'on' : ''}">
+        <div class="light-item-row">
+          <button class="light-circle ${isOn ? 'on' : ''}"
+            @pointerdown=${(e: PointerEvent) => this._onPointerDown(id, e)}
+            @pointerup=${(e: PointerEvent) => this._onPointerUp(id, e)}
+            @pointercancel=${this._onPointerCancel}
+            @pointerleave=${this._onPointerLeave}>
+            <ha-icon icon="${icon}"></ha-icon>
+          </button>
+
+          <div class="light-item-info">
+            <span class="light-item-name">${displayName}</span>
+            ${isOn && hasBrightness ? html`
+              <div class="light-item-slider">
+                <lumina-slider .value=${brightness} .min=${1} .max=${100}
+                  color="var(--lumina-secondary)"
+                  @value-changed=${(e: CustomEvent) => this._debouncedBrightness(id, e.detail.value)}
+                ></lumina-slider>
+              </div>
+            ` : nothing}
+          </div>
+
+          ${hasBrightness
+            ? html`<span class="light-item-pct ${isOn ? 'on' : ''}">${isOn ? `${brightness}%` : 'Off'}</span>`
+            : html`
+              <button class="light-item-switch ${isOn ? 'on' : ''}"
+                @click=${(e: Event) => { e.stopPropagation(); this._toggleLight(id); }}>
+                <span class="switch-thumb"></span>
+              </button>
+            `
+          }
+
+          ${hasExpand ? html`
+            <button class="light-expand-btn ${this._expandedId === id ? 'open' : ''}"
+              @click=${(e: Event) => this._toggleExpand(id, e)}>
+              <ha-icon icon="mdi:chevron-down"></ha-icon>
+            </button>
+          ` : nothing}
+        </div>
+
+        ${hasExpand ? this._renderExpandPanel(id, entity) : nothing}
+      </div>
+    `;
+  }
+
+  // ─── Render: Grouped Lights ─────────────────────────
+
+  private _renderGroupedLights() {
+    const normalized = this._normalized;
+
+    // Separate into groups and ungrouped
+    const groups = new Map<string, typeof normalized>();
+    const ungrouped: typeof normalized = [];
+
+    for (const item of normalized) {
+      if (item.group) {
+        if (!groups.has(item.group)) groups.set(item.group, []);
+        groups.get(item.group)!.push(item);
+      } else {
+        ungrouped.push(item);
+      }
+    }
+
+    return html`
+      ${ungrouped.map(({ id, customName, customIcon }) => this._renderLightItem(id, customName, customIcon))}
+
+      ${[...groups.entries()].map(([groupName, items]) => {
+        const collapsed = this._collapsedGroups.has(groupName);
+        return html`
+          <div class="light-group">
+            <button class="light-group-header" @click=${() => this._toggleGroup(groupName)}>
+              <span class="light-group-name">${groupName}</span>
+              <ha-icon class="light-group-chevron ${collapsed ? '' : 'open'}" icon="mdi:chevron-down"></ha-icon>
+            </button>
+            <div class="light-group-items ${collapsed ? 'collapsed' : ''}">
+              ${items.map(({ id, customName, customIcon }) => this._renderLightItem(id, customName, customIcon))}
+            </div>
+          </div>
+        `;
+      })}
+    `;
+  }
+
   // ─── Render ───────────────────────────────────────
 
   protected render() {
@@ -338,50 +448,7 @@ export class HaLuminaLightCard extends LitElement {
         ${this.config.show_individual_controls !== false ? html`
           <div class="lights-section">
             <span class="lights-section-header">${onCount}/${total} Lights On</span>
-
-            ${this._normalized.map(({ id, customName, customIcon }) => {
-              const entity = this._getEntity(id);
-              if (!entity) return nothing;
-              const isOn = entity.state === 'on';
-              const hasBrightness = this._hasBrightness(entity);
-              const brightness = isOn && hasBrightness ? Math.round(((entity.attributes.brightness as number) || 0) / 255 * 100) : 0;
-              const hasExpand = this._isGroup(entity) || this._hasColor(entity) || this._hasEffects(entity);
-              const displayName = this._getName(id, customName);
-              const icon = customIcon || 'mdi:lightbulb';
-
-              return html`
-                <div class="light-item ${isOn ? 'on' : ''}">
-                  <div class="light-item-row">
-                    <button class="light-circle ${isOn ? 'on' : ''}"
-                      @pointerdown=${(e: PointerEvent) => this._onPointerDown(id, e)}
-                      @pointerup=${(e: PointerEvent) => this._onPointerUp(id, e)}
-                      @pointercancel=${this._onPointerCancel}
-                      @pointerleave=${this._onPointerLeave}>
-                      <ha-icon icon="${icon}"></ha-icon>
-                    </button>
-
-                    <div class="light-item-info">
-                      <span class="light-item-name">${displayName}</span>
-                      ${isOn && hasBrightness ? html`
-                        <div class="light-item-slider">
-                          <lumina-slider .value=${brightness} .min=${1} .max=${100}
-                            color="var(--lumina-secondary)"
-                            @value-changed=${(e: CustomEvent) => this._debouncedBrightness(id, e.detail.value)}
-                          ></lumina-slider>
-                        </div>
-                      ` : nothing}
-                    </div>
-
-                    ${hasBrightness
-                      ? html`<span class="light-item-pct ${isOn ? 'on' : ''}">${isOn ? `${brightness}%` : 'Off'}</span>`
-                      : html`<span class="light-item-toggle ${isOn ? 'on' : ''}" @click=${(e: Event) => { e.stopPropagation(); this._toggleLight(id); }}>${isOn ? 'On' : 'Off'}</span>`
-                    }
-                  </div>
-
-                  ${hasExpand ? this._renderExpandPanel(id, entity) : nothing}
-                </div>
-              `;
-            })}
+            ${this._renderGroupedLights()}
           </div>
         ` : nothing}
 

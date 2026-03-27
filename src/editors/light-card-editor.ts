@@ -17,7 +17,7 @@ export class HaLuminaLightCardEditor extends LitElement {
     .entity-block { background: var(--card-background-color, #1a1a1d); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
     .entity-row { display: flex; gap: 8px; align-items: center; }
     .entity-row ha-entity-picker { flex: 1; }
-    .entity-extras { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .entity-extras { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: end; }
     .remove-btn { cursor: pointer; color: var(--error-color, #db4437); --mdc-icon-size: 20px; }
     .add-btn { cursor: pointer; color: var(--primary-color); font-size: 0.875rem; font-weight: 500; padding: 8px; }
     .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
@@ -57,6 +57,10 @@ export class HaLuminaLightCardEditor extends LitElement {
     return typeof entry === 'string' ? '' : entry.icon || '';
   }
 
+  private _getEntityGroup(entry: string | LightEntityConfig): string {
+    return typeof entry === 'string' ? '' : entry.group || '';
+  }
+
   private _entityChanged(i: number, v: string): void {
     const e = [...(this._config.entities || [])];
     const obj = this._toObj(e[i]);
@@ -77,6 +81,14 @@ export class HaLuminaLightCardEditor extends LitElement {
     const e = [...(this._config.entities || [])];
     const obj = this._toObj(e[i]);
     obj.icon = v || undefined;
+    e[i] = obj;
+    this._set('entities', e);
+  }
+
+  private _entityGroupChanged(i: number, v: string): void {
+    const e = [...(this._config.entities || [])];
+    const obj = this._toObj(e[i]);
+    obj.group = v || undefined;
     e[i] = obj;
     this._set('entities', e);
   }
@@ -115,8 +127,10 @@ export class HaLuminaLightCardEditor extends LitElement {
             <div class="entity-extras">
               <ha-textfield label="Custom Name" .value=${this._getEntityName(entry)}
                 @input=${(e: Event) => this._entityNameChanged(i, (e.target as HTMLInputElement).value)}></ha-textfield>
-              <ha-textfield label="Icon (e.g. mdi:desk-lamp)" .value=${this._getEntityIcon(entry)}
-                @input=${(e: Event) => this._entityIconChanged(i, (e.target as HTMLInputElement).value)}></ha-textfield>
+              <ha-icon-picker .hass=${this.hass} label="Icon" .value=${this._getEntityIcon(entry)}
+                @value-changed=${(e: CustomEvent) => this._entityIconChanged(i, e.detail.value || '')}></ha-icon-picker>
+              <ha-textfield label="Group" .value=${this._getEntityGroup(entry)}
+                @input=${(e: Event) => this._entityGroupChanged(i, (e.target as HTMLInputElement).value)}></ha-textfield>
             </div>
           </div>
         `)}

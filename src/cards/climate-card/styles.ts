@@ -16,8 +16,14 @@ export const climateCardStyles = css`
   /* ─── Header with Status Badge ───────────────────── */
   .climate-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
+  }
+
+  .header-left {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumina-space-3);
   }
 
   .header-title {
@@ -25,6 +31,33 @@ export const climateCardStyles = css`
     font-size: 1.125rem;
     font-weight: 700;
     color: var(--lumina-on-surface);
+  }
+
+  .header-humidity {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--lumina-on-surface-variant);
+  }
+
+  .header-humidity ha-icon {
+    --mdc-icon-size: 16px;
+    color: var(--lumina-primary);
+  }
+
+  .header-humidity-value {
+    font-family: var(--lumina-font-headline);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--lumina-on-surface);
+  }
+
+  .header-humidity-label {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--lumina-on-surface-variant);
   }
 
   .status-badge {
@@ -184,20 +217,11 @@ export const climateCardStyles = css`
     color: var(--mode-color);
   }
 
-  /* ─── Bottom Row: Fan + Humidity ─────────────────── */
-  .bottom-row {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--lumina-space-5);
-  }
-
   /* ─── Fan Speed ─────────────────────────────────── */
   .fan-section {
     display: flex;
     flex-direction: column;
     gap: var(--lumina-space-3);
-    flex: 1;
-    min-width: 0;
   }
 
   .fan-chips {
@@ -206,46 +230,4 @@ export const climateCardStyles = css`
     gap: var(--lumina-space-2);
   }
 
-  /* ─── Humidity ──────────────────────────────────── */
-  .humidity-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    padding: var(--lumina-space-3);
-    background: var(--lumina-surface-container-high);
-    border-radius: var(--lumina-radius-lg);
-    position: relative;
-    flex-shrink: 0;
-  }
-
-  .humidity-section::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: var(--lumina-radius-lg);
-    border: 1px solid var(--lumina-ghost-border);
-    pointer-events: none;
-  }
-
-  .humidity-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-  }
-
-  .humidity-value {
-    font-family: var(--lumina-font-headline);
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--lumina-on-surface);
-  }
-
-  .humidity-label {
-    font-size: 0.625rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--lumina-on-surface-variant);
-  }
 `;

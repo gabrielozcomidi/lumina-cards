@@ -10,17 +10,72 @@ export class HaLuminaRoomCardEditor extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() private _config!: LuminaRoomCardConfig;
   @state() private _haLoaded = false;
+  @state() private _openSections: Record<string, boolean> = {};
 
   static styles = css`
     :host { display: block; }
     .editor { display: flex; flex-direction: column; gap: 16px; padding: 16px 0; }
     .editor-row { display: flex; flex-direction: column; gap: 4px; }
     .editor-label { font-size: 0.875rem; font-weight: 500; color: var(--primary-text-color); }
-    .editor-sublabel { font-size: 0.75rem; color: var(--secondary-text-color); }
+    .editor-sublabel { font-size: 0.75rem; color: var(--secondary-text-color); margin-bottom: 4px; }
     .editor-section {
       font-size: 1rem; font-weight: 600; color: var(--primary-text-color);
       margin-top: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--divider-color);
     }
+
+    /* ─── Collapsible Sections ──────────────────────── */
+    .section-collapsible {
+      border: 1px solid var(--divider-color);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      cursor: pointer;
+      user-select: none;
+      background: var(--card-background-color, #1a1a1d);
+      transition: background 0.2s;
+    }
+    .section-header:hover {
+      background: var(--secondary-background-color, #222);
+    }
+    .section-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-header-left ha-icon {
+      --mdc-icon-size: 20px;
+      color: var(--primary-color);
+    }
+    .section-title {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--primary-text-color);
+    }
+    .section-chevron {
+      --mdc-icon-size: 20px;
+      color: var(--secondary-text-color);
+      transition: transform 0.25s ease;
+    }
+    .section-chevron.open {
+      transform: rotate(180deg);
+    }
+    .section-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      padding: 0 14px;
+    }
+    .section-body.open {
+      max-height: 2000px;
+      padding: 12px 14px 16px;
+    }
+
     .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
     .entity-row { display: flex; gap: 8px; align-items: center; }
     .entity-row ha-entity-picker { flex: 1; }
@@ -130,6 +185,10 @@ export class HaLuminaRoomCardEditor extends LitElement {
 
   private _dispatch(): void {
     fireConfigChanged(this, this._config);
+  }
+
+  private _toggleSection(key: string): void {
+    this._openSections = { ...this._openSections, [key]: !this._openSections[key] };
   }
 
   private _set(field: string, value: unknown): void {
@@ -281,92 +340,132 @@ export class HaLuminaRoomCardEditor extends LitElement {
             allow-custom-entity></ha-entity-picker>
         </div>
 
-        <!-- ─── Lights ─────────────────────────────── -->
-        <div class="editor-section">Lights</div>
-        ${(this._config.light_entities || []).map((entry, i) => html`
-          <div class="entity-block">
-            <div class="entity-row">
-              <ha-entity-picker .hass=${this.hass} label="Light ${i + 1}" .value=${this._getLightId(entry)}
-                .includeDomains=${['light']}
-                @value-changed=${(e: CustomEvent) => this._lightChanged(i, e.detail.value)}
-                allow-custom-entity></ha-entity-picker>
-              <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removeLight(i)}></ha-icon>
+        <!-- ─── Lights (Collapsible) ─────────────────── -->
+        <div class="section-collapsible">
+          <div class="section-header" @click=${() => this._toggleSection('lights')}>
+            <div class="section-header-left">
+              <ha-icon icon="mdi:lightbulb-group"></ha-icon>
+              <span class="section-title">Lights</span>
             </div>
-            <div class="entity-extras">
-              <ha-textfield label="Custom Name" .value=${this._getLightName(entry)}
-                @input=${(e: Event) => this._lightNameChanged(i, (e.target as HTMLInputElement).value)}></ha-textfield>
-              <ha-textfield label="Icon (e.g. mdi:desk-lamp)" .value=${this._getLightIcon(entry)}
-                @input=${(e: Event) => this._lightIconChanged(i, (e.target as HTMLInputElement).value)}></ha-textfield>
+            <ha-icon class="section-chevron ${this._openSections['lights'] ? 'open' : ''}" icon="mdi:chevron-down"></ha-icon>
+          </div>
+          <div class="section-body ${this._openSections['lights'] ? 'open' : ''}">
+            ${(this._config.light_entities || []).map((entry, i) => html`
+              <div class="entity-block">
+                <div class="entity-row">
+                  <ha-entity-picker .hass=${this.hass} label="Light ${i + 1}" .value=${this._getLightId(entry)}
+                    .includeDomains=${['light']}
+                    @value-changed=${(e: CustomEvent) => this._lightChanged(i, e.detail.value)}
+                    allow-custom-entity></ha-entity-picker>
+                  <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removeLight(i)}></ha-icon>
+                </div>
+                <div class="entity-extras">
+                  <ha-textfield label="Custom Name" .value=${this._getLightName(entry)}
+                    @input=${(e: Event) => this._lightNameChanged(i, (e.target as HTMLInputElement).value)}></ha-textfield>
+                  <ha-textfield label="Icon (e.g. mdi:desk-lamp)" .value=${this._getLightIcon(entry)}
+                    @input=${(e: Event) => this._lightIconChanged(i, (e.target as HTMLInputElement).value)}></ha-textfield>
+                </div>
+              </div>
+            `)}
+            <div class="add-btn" @click=${this._addLight}>+ Add Light Entity</div>
+
+            <!-- Light Scenes -->
+            <div class="editor-section" style="margin-top: 12px;">Light Scenes</div>
+            ${(this._config.light_scenes || []).map((scene, i) => html`
+              <div class="scene-row">
+                <ha-textfield label="Name" .value=${scene.name}
+                  @input=${(e: Event) => this._sceneChanged(i, 'name', (e.target as HTMLInputElement).value)}></ha-textfield>
+                <ha-entity-picker .hass=${this.hass} label="Scene" .value=${scene.entity_id}
+                  .includeDomains=${['scene']}
+                  @value-changed=${(e: CustomEvent) => this._sceneChanged(i, 'entity_id', e.detail.value)}
+                  allow-custom-entity></ha-entity-picker>
+                <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removeScene(i)}></ha-icon>
+              </div>
+            `)}
+            <div class="add-btn" @click=${this._addScene}>+ Add Scene</div>
+          </div>
+        </div>
+
+        <!-- ─── Climate (Collapsible) ────────────────── -->
+        <div class="section-collapsible">
+          <div class="section-header" @click=${() => this._toggleSection('climate')}>
+            <div class="section-header-left">
+              <ha-icon icon="mdi:thermometer"></ha-icon>
+              <span class="section-title">Climate</span>
             </div>
+            <ha-icon class="section-chevron ${this._openSections['climate'] ? 'open' : ''}" icon="mdi:chevron-down"></ha-icon>
           </div>
-        `)}
-        <div class="add-btn" @click=${this._addLight}>+ Add Light Entity</div>
-
-        <!-- ─── Light Scenes ─────────────────────── -->
-        <div class="editor-section">Light Scenes</div>
-        ${(this._config.light_scenes || []).map((scene, i) => html`
-          <div class="scene-row">
-            <ha-textfield label="Name" .value=${scene.name}
-              @input=${(e: Event) => this._sceneChanged(i, 'name', (e.target as HTMLInputElement).value)}></ha-textfield>
-            <ha-entity-picker .hass=${this.hass} label="Scene" .value=${scene.entity_id}
-              .includeDomains=${['scene']}
-              @value-changed=${(e: CustomEvent) => this._sceneChanged(i, 'entity_id', e.detail.value)}
-              allow-custom-entity></ha-entity-picker>
-            <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removeScene(i)}></ha-icon>
+          <div class="section-body ${this._openSections['climate'] ? 'open' : ''}">
+            <div class="toggle-row">
+              <span class="editor-label">Show Climate</span>
+              <ha-switch .checked=${this._config.show_climate !== false}
+                @change=${(e: Event) => this._set('show_climate', (e.target as HTMLInputElement).checked)}>
+              </ha-switch>
+            </div>
+            ${this._config.show_climate !== false ? html`
+              <div class="editor-row">
+                <ha-entity-picker .hass=${this.hass} label="Climate Entity"
+                  .value=${this._config.climate_entity || ''} .includeDomains=${['climate']}
+                  @value-changed=${(e: CustomEvent) => this._set('climate_entity', e.detail.value)}
+                  allow-custom-entity></ha-entity-picker>
+              </div>
+            ` : ''}
           </div>
-        `)}
-        <div class="add-btn" @click=${this._addScene}>+ Add Scene</div>
-
-        <!-- ─── Climate ────────────────────────────── -->
-        <div class="editor-section">Climate</div>
-        <div class="toggle-row">
-          <span class="editor-label">Show Climate</span>
-          <ha-switch .checked=${this._config.show_climate !== false}
-            @change=${(e: Event) => this._set('show_climate', (e.target as HTMLInputElement).checked)}>
-          </ha-switch>
         </div>
-        ${this._config.show_climate !== false ? html`
-          <div class="editor-row">
-            <ha-entity-picker .hass=${this.hass} label="Climate Entity"
-              .value=${this._config.climate_entity || ''} .includeDomains=${['climate']}
-              @value-changed=${(e: CustomEvent) => this._set('climate_entity', e.detail.value)}
-              allow-custom-entity></ha-entity-picker>
-          </div>
-        ` : ''}
 
-        <!-- ─── Media ──────────────────────────────── -->
-        <div class="editor-section">Media</div>
-        <div class="toggle-row">
-          <span class="editor-label">Show Media</span>
-          <ha-switch .checked=${this._config.show_media !== false}
-            @change=${(e: Event) => this._set('show_media', (e.target as HTMLInputElement).checked)}>
-          </ha-switch>
-        </div>
-        ${this._config.show_media !== false ? html`
-          <div class="editor-row">
-            <ha-entity-picker .hass=${this.hass} label="Media Player"
-              .value=${this._config.media_entity || ''} .includeDomains=${['media_player']}
-              @value-changed=${(e: CustomEvent) => this._set('media_entity', e.detail.value)}
-              allow-custom-entity></ha-entity-picker>
+        <!-- ─── Media (Collapsible) ──────────────────── -->
+        <div class="section-collapsible">
+          <div class="section-header" @click=${() => this._toggleSection('media')}>
+            <div class="section-header-left">
+              <ha-icon icon="mdi:play-circle"></ha-icon>
+              <span class="section-title">Media</span>
+            </div>
+            <ha-icon class="section-chevron ${this._openSections['media'] ? 'open' : ''}" icon="mdi:chevron-down"></ha-icon>
           </div>
-        ` : ''}
+          <div class="section-body ${this._openSections['media'] ? 'open' : ''}">
+            <div class="toggle-row">
+              <span class="editor-label">Show Media</span>
+              <ha-switch .checked=${this._config.show_media !== false}
+                @change=${(e: Event) => this._set('show_media', (e.target as HTMLInputElement).checked)}>
+              </ha-switch>
+            </div>
+            ${this._config.show_media !== false ? html`
+              <div class="editor-row">
+                <ha-entity-picker .hass=${this.hass} label="Media Player"
+                  .value=${this._config.media_entity || ''} .includeDomains=${['media_player']}
+                  @value-changed=${(e: CustomEvent) => this._set('media_entity', e.detail.value)}
+                  allow-custom-entity></ha-entity-picker>
+              </div>
+            ` : ''}
+          </div>
+        </div>
 
-        <!-- ─── Cleaning ──────────────────────────── -->
-        <div class="editor-section">Cleaning</div>
-        <div class="toggle-row">
-          <span class="editor-label">Show Vacuum</span>
-          <ha-switch .checked=${this._config.show_vacuum !== false}
-            @change=${(e: Event) => this._set('show_vacuum', (e.target as HTMLInputElement).checked)}>
-          </ha-switch>
-        </div>
-        ${this._config.show_vacuum !== false ? html`
-          <div class="editor-row">
-            <ha-entity-picker .hass=${this.hass} label="Vacuum"
-              .value=${this._config.vacuum_entity || ''} .includeDomains=${['vacuum']}
-              @value-changed=${(e: CustomEvent) => this._set('vacuum_entity', e.detail.value)}
-              allow-custom-entity></ha-entity-picker>
+        <!-- ─── Cleaning (Collapsible) ───────────────── -->
+        <div class="section-collapsible">
+          <div class="section-header" @click=${() => this._toggleSection('cleaning')}>
+            <div class="section-header-left">
+              <ha-icon icon="mdi:robot-vacuum"></ha-icon>
+              <span class="section-title">Cleaning</span>
+            </div>
+            <ha-icon class="section-chevron ${this._openSections['cleaning'] ? 'open' : ''}" icon="mdi:chevron-down"></ha-icon>
           </div>
-        ` : ''}
+          <div class="section-body ${this._openSections['cleaning'] ? 'open' : ''}">
+            <div class="toggle-row">
+              <span class="editor-label">Show Vacuum</span>
+              <ha-switch .checked=${this._config.show_vacuum !== false}
+                @change=${(e: Event) => this._set('show_vacuum', (e.target as HTMLInputElement).checked)}>
+              </ha-switch>
+            </div>
+            ${this._config.show_vacuum !== false ? html`
+              <div class="editor-row">
+                <ha-entity-picker .hass=${this.hass} label="Vacuum"
+                  .value=${this._config.vacuum_entity || ''} .includeDomains=${['vacuum']}
+                  @value-changed=${(e: CustomEvent) => this._set('vacuum_entity', e.detail.value)}
+                  allow-custom-entity></ha-entity-picker>
+              </div>
+            ` : ''}
+          </div>
+        </div>
       </div>
     `;
   }

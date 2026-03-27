@@ -62,6 +62,8 @@ export interface MediaPlayerEntity extends HassEntity {
     media_duration?: number;
     media_position?: number;
     media_position_updated_at?: string;
+    media_content_type?: string;
+    media_content_id?: string;
     entity_picture?: string;
     volume_level?: number;
     is_volume_muted?: boolean;

@@ -13,11 +13,72 @@ export const mediaCardStyles = css`
     gap: var(--lumina-space-6);
   }
 
+  /* ─── Player Selector (multi-entity) ──────────────── */
+  .player-selector {
+    display: flex;
+    gap: var(--lumina-space-2);
+    overflow-x: auto;
+    padding-bottom: var(--lumina-space-1);
+    scrollbar-width: none;
+  }
+
+  .player-selector::-webkit-scrollbar {
+    display: none;
+  }
+
+  .player-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: var(--lumina-space-2) var(--lumina-space-4);
+    border-radius: var(--lumina-radius-full);
+    border: 1px solid var(--lumina-ghost-border);
+    background: var(--lumina-surface-container-high);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all var(--lumina-transition-fast);
+    -webkit-tap-highlight-color: transparent;
+    font-family: var(--lumina-font-body);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--lumina-on-surface-variant);
+  }
+
+  .player-tab.active {
+    background: rgba(133, 173, 255, 0.1);
+    border-color: rgba(133, 173, 255, 0.3);
+    color: var(--lumina-primary);
+  }
+
+  .player-tab-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: var(--lumina-radius-full);
+    background: var(--lumina-outline-variant);
+    flex-shrink: 0;
+  }
+
+  .player-tab-dot.playing {
+    background: var(--lumina-primary);
+    box-shadow: 0 0 4px rgba(133, 173, 255, 0.5);
+  }
+
+  .player-tab-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   /* ─── Now Playing Header ────────────────────────── */
   .now-playing-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+  }
+
+  .now-playing-left {
+    display: flex;
+    align-items: center;
+    gap: var(--lumina-space-3);
   }
 
   .now-playing-label {
@@ -26,6 +87,18 @@ export const mediaCardStyles = css`
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--lumina-primary);
+  }
+
+  .audio-format-badge {
+    font-size: 0.5625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 8px;
+    border-radius: var(--lumina-radius-sm);
+    background: var(--lumina-surface-container-highest);
+    border: 1px solid var(--lumina-ghost-border);
+    color: var(--lumina-on-surface-variant);
   }
 
   .grouped-badge {
@@ -229,17 +302,38 @@ export const mediaCardStyles = css`
     color: var(--lumina-primary);
   }
 
-  /* ─── Manage Rooms ──────────────────────────────── */
-  .rooms-section {
+  /* ─── Shortcuts Section ──────────────────────────── */
+  .shortcuts-section {
     display: flex;
     flex-direction: column;
     gap: var(--lumina-space-3);
+  }
+
+  .shortcuts-label {
+    font-family: var(--lumina-font-headline);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--lumina-on-surface);
+  }
+
+  .shortcuts-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--lumina-space-2);
+  }
+
+  /* ─── Speaker Management ──────────────────────────── */
+  .rooms-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumina-space-2);
   }
 
   .rooms-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    margin-bottom: var(--lumina-space-1);
   }
 
   .rooms-title {
@@ -249,12 +343,13 @@ export const mediaCardStyles = css`
     color: var(--lumina-on-surface);
   }
 
-  .rooms-grid-icon {
-    color: var(--lumina-outline);
-  }
-
-  .rooms-grid-icon ha-icon {
-    --mdc-icon-size: 20px;
+  .rooms-subtitle {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--lumina-on-surface-variant);
+    margin-top: var(--lumina-space-2);
   }
 
   .room-item {
@@ -264,6 +359,10 @@ export const mediaCardStyles = css`
     padding: var(--lumina-space-3) var(--lumina-space-4);
     background: var(--lumina-surface-container-high);
     border-radius: var(--lumina-radius-lg);
+  }
+
+  .room-item.joinable {
+    opacity: 0.7;
   }
 
   .room-item-dot {
@@ -287,12 +386,16 @@ export const mediaCardStyles = css`
     display: flex;
     flex-direction: column;
     gap: 1px;
+    min-width: 0;
   }
 
   .room-item-name {
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--lumina-on-surface);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .room-item-state {
@@ -302,13 +405,41 @@ export const mediaCardStyles = css`
     letter-spacing: 0.03em;
   }
 
-  .room-item-volume {
-    color: var(--lumina-outline);
+  .room-item-action {
     display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    border-radius: var(--lumina-radius-full);
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 0;
+    transition: background var(--lumina-transition-fast);
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .room-item-volume ha-icon {
+  .room-item-action ha-icon {
     --mdc-icon-size: 18px;
+  }
+
+  .room-item-action.join {
+    color: var(--lumina-primary);
+  }
+
+  .room-item-action.join:hover {
+    background: rgba(133, 173, 255, 0.1);
+  }
+
+  .room-item-action.unjoin {
+    color: var(--lumina-outline);
+  }
+
+  .room-item-action.unjoin:hover {
+    color: var(--lumina-error, #f44336);
+    background: rgba(244, 67, 54, 0.1);
   }
 
   /* ─── Idle State ────────────────────────────────── */

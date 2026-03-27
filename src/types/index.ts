@@ -63,6 +63,7 @@ export interface LightEntityConfig {
   entity: string;
   name?: string;
   icon?: string;
+  group?: string;
 }
 
 export interface LuminaLightCardConfig extends LovelaceCardConfig {
@@ -86,12 +87,27 @@ export interface LuminaClimateCardConfig extends LovelaceCardConfig {
 
 // ─── Media Card Config ───────────────────────────────────────
 
+export interface MediaEntityConfig {
+  entity: string;
+  name?: string;
+}
+
+export interface MediaShortcut {
+  name: string;
+  icon?: string;
+  media_content_id: string;
+  media_content_type: string;
+}
+
 export interface LuminaMediaCardConfig extends LovelaceCardConfig {
   type: string;
-  entity: string;
+  entity?: string;
+  entities?: (string | MediaEntityConfig)[];
   image?: string;
   show_source?: boolean;
   show_progress?: boolean;
+  show_speaker_management?: boolean;
+  shortcuts?: MediaShortcut[];
 }
 
 // ─── Vacuum Card Config ──────────────────────────────────────
