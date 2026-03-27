@@ -731,6 +731,9 @@ export class HaLuminaMediaCard extends LitElement {
                   }
                   <div class="browse-item-info">
                     <span class="browse-item-title">${item.title}</span>
+                    ${item.children_media_class ? html`
+                      <span class="browse-item-subtitle">${item.children_media_class}</span>
+                    ` : nothing}
                   </div>
                   <div class="browse-item-actions">
                     ${item.can_play ? html`

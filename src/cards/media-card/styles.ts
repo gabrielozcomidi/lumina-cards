@@ -420,10 +420,12 @@ export const mediaCardStyles = css`
   .browse-panel {
     display: flex;
     flex-direction: column;
-    gap: var(--lumina-space-4);
-    background: var(--lumina-surface-container);
-    border-radius: var(--lumina-radius-lg);
-    padding: var(--lumina-space-4);
+    gap: var(--lumina-space-5);
+    background: rgba(31, 31, 34, 0.4);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: var(--lumina-radius-xl, 1.5rem);
+    padding: var(--lumina-space-5);
   }
   .browse-header {
     display: flex;
@@ -449,8 +451,8 @@ export const mediaCardStyles = css`
   .browse-back-btn ha-icon { --mdc-icon-size: 18px; }
   .browse-title {
     font-family: var(--lumina-font-headline);
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 1.125rem;
+    font-weight: 700;
     color: var(--lumina-on-surface);
     flex: 1;
     overflow: hidden;
@@ -463,11 +465,11 @@ export const mediaCardStyles = css`
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: var(--lumina-space-8) 0;
+    padding: var(--lumina-space-10, 2.5rem) 0;
   }
   .browse-spinner {
-    width: 24px; height: 24px;
-    border: 2px solid var(--lumina-surface-container-highest);
+    width: 28px; height: 28px;
+    border: 2.5px solid var(--lumina-surface-container-highest);
     border-top-color: var(--lumina-primary);
     border-radius: 50%;
     animation: browse-spin 0.6s linear infinite;
@@ -480,41 +482,45 @@ export const mediaCardStyles = css`
     flex-direction: column;
     align-items: center;
     gap: var(--lumina-space-3);
-    padding: var(--lumina-space-6) 0;
+    padding: var(--lumina-space-8) 0;
     color: var(--lumina-on-surface-variant);
   }
-  .browse-empty ha-icon { --mdc-icon-size: 32px; }
-  .browse-empty span { font-size: 0.8125rem; }
+  .browse-empty ha-icon { --mdc-icon-size: 36px; }
+  .browse-empty span { font-size: 0.875rem; }
 
-  /* Browse: root category grid */
+  /* Browse: root category grid (2x3 like Stitch design) */
   .browse-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--lumina-space-2);
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--lumina-space-3);
   }
   .browse-category {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
-    padding: var(--lumina-space-4) var(--lumina-space-3);
+    gap: var(--lumina-space-2);
+    padding: var(--lumina-space-5) var(--lumina-space-3);
     background: var(--lumina-surface-container-high);
     border: none;
     border-radius: var(--lumina-radius-lg);
     cursor: pointer;
-    transition: background var(--lumina-transition-fast);
+    transition: all var(--lumina-transition-fast);
     -webkit-tap-highlight-color: transparent;
     font-family: var(--lumina-font-body);
   }
-  .browse-category:hover { background: var(--lumina-surface-container-highest); }
+  .browse-category:hover {
+    background: var(--lumina-surface-container-highest);
+    transform: translateY(-1px);
+  }
+  .browse-category:active { transform: scale(0.97); }
   .browse-category ha-icon {
     --mdc-icon-size: 28px;
     color: var(--lumina-primary);
   }
   .browse-category-title {
-    font-size: 0.75rem;
+    font-size: 0.6875rem;
     font-weight: 600;
-    color: var(--lumina-on-surface);
+    color: var(--lumina-on-surface-variant);
     text-align: center;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -526,30 +532,35 @@ export const mediaCardStyles = css`
   .browse-list {
     display: flex;
     flex-direction: column;
-    gap: var(--lumina-space-1);
-    max-height: 320px;
+    gap: var(--lumina-space-2);
+    max-height: 360px;
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--lumina-outline-variant) transparent;
   }
+  .browse-list::-webkit-scrollbar { width: 3px; }
+  .browse-list::-webkit-scrollbar-track { background: transparent; }
+  .browse-list::-webkit-scrollbar-thumb { background: var(--lumina-outline-variant); border-radius: 9999px; }
+
   .browse-list-item {
     display: flex;
     align-items: center;
     gap: var(--lumina-space-3);
     padding: var(--lumina-space-2) var(--lumina-space-3);
-    background: var(--lumina-surface-container-high);
     border-radius: var(--lumina-radius-lg);
     cursor: pointer;
     transition: background var(--lumina-transition-fast);
   }
-  .browse-list-item:hover { background: var(--lumina-surface-container-highest); }
+  .browse-list-item:hover { background: var(--lumina-surface-container-high); }
 
   .browse-thumb {
-    width: 40px; height: 40px;
+    width: 44px; height: 44px;
     border-radius: var(--lumina-radius-md, 8px);
     object-fit: cover;
     flex-shrink: 0;
   }
   .browse-thumb-placeholder {
-    width: 40px; height: 40px;
+    width: 44px; height: 44px;
     border-radius: var(--lumina-radius-md, 8px);
     background: var(--lumina-surface-container-highest);
     display: flex;
@@ -558,22 +569,29 @@ export const mediaCardStyles = css`
     flex-shrink: 0;
   }
   .browse-thumb-placeholder ha-icon {
-    --mdc-icon-size: 20px;
+    --mdc-icon-size: 22px;
     color: var(--lumina-outline);
   }
 
   .browse-item-info {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
   .browse-item-title {
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
     font-weight: 500;
     color: var(--lumina-on-surface);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     display: block;
+  }
+  .browse-item-subtitle {
+    font-size: 0.6875rem;
+    color: var(--lumina-on-surface-variant);
   }
 
   .browse-item-actions {
@@ -583,7 +601,7 @@ export const mediaCardStyles = css`
     flex-shrink: 0;
   }
   .browse-play-btn {
-    width: 28px; height: 28px;
+    width: 32px; height: 32px;
     border: none;
     background: transparent;
     border-radius: var(--lumina-radius-full);
@@ -593,14 +611,15 @@ export const mediaCardStyles = css`
     justify-content: center;
     padding: 0;
     color: var(--lumina-primary);
-    transition: background var(--lumina-transition-fast);
+    transition: all var(--lumina-transition-fast);
     -webkit-tap-highlight-color: transparent;
   }
-  .browse-play-btn:hover { background: rgba(133, 173, 255, 0.1); }
-  .browse-play-btn ha-icon { --mdc-icon-size: 18px; }
+  .browse-play-btn:hover { background: rgba(133, 173, 255, 0.12); }
+  .browse-play-btn ha-icon { --mdc-icon-size: 20px; }
   .browse-chevron {
-    --mdc-icon-size: 16px;
+    --mdc-icon-size: 18px;
     color: var(--lumina-on-surface-variant);
+    opacity: 0.6;
   }
 
   /* ─── Shortcuts ────────────────────────────────────── */
