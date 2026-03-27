@@ -91,6 +91,19 @@ export interface VacuumEntity extends HassEntity {
   };
 }
 
+export interface MediaPlayerItem {
+  title: string;
+  media_content_id: string;
+  media_content_type: string;
+  media_class: string;
+  can_play: boolean;
+  can_expand: boolean;
+  thumbnail?: string | null;
+  children_media_class?: string | null;
+  children?: MediaPlayerItem[];
+  not_shown?: number;
+}
+
 export type HvacMode = 'off' | 'heat' | 'cool' | 'heat_cool' | 'auto' | 'dry' | 'fan_only';
 
 export type VacuumState = 'cleaning' | 'docked' | 'paused' | 'idle' | 'returning' | 'error';

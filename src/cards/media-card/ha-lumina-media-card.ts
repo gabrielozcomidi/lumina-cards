@@ -4,7 +4,7 @@ import { luminaTokens } from '../../styles/tokens';
 import { sharedStyles } from '../../styles/shared';
 import { mediaCardStyles } from './styles';
 import { LuminaMediaCardConfig, MediaEntityConfig, MediaShortcut, MediaPlayerType } from '../../types';
-import { HomeAssistant, MediaPlayerEntity } from '../../types/ha-types';
+import { HomeAssistant, MediaPlayerEntity, MediaPlayerItem } from '../../types/ha-types';
 import {
   getEntity,
   isEntityAvailable,
@@ -90,6 +90,10 @@ export class HaLuminaMediaCard extends LitElement {
   @state() private _activeEntityId: string | null = null;
   @state() private _sourcesExpanded = false;
   @state() private _artError = false;
+  @state() private _browseMode = false;
+  @state() private _browseStack: MediaPlayerItem[] = [];
+  @state() private _browseItems: MediaPlayerItem | null = null;
+  @state() private _browseLoading = false;
   private _positionTimer: ReturnType<typeof setInterval> | undefined;
   private _lastArtUrl: string | null = null;
 
@@ -260,7 +264,7 @@ export class HaLuminaMediaCard extends LitElement {
 
   // ─── Actions ──────────────────────────────────────
 
-  private _selectPlayer(id: string): void { this._activeEntityId = id; this._sourcesExpanded = false; }
+  private _selectPlayer(id: string): void { this._activeEntityId = id; this._sourcesExpanded = false; this._exitBrowseMode(); }
   private _playPause(): void { callService(this.hass, 'media_player', 'media_play_pause', { entity_id: this._activeId }); }
   private _prev(): void { callService(this.hass, 'media_player', 'media_previous_track', { entity_id: this._activeId }); }
   private _next(): void { callService(this.hass, 'media_player', 'media_next_track', { entity_id: this._activeId }); }
@@ -328,18 +332,84 @@ export class HaLuminaMediaCard extends LitElement {
     });
   }
 
-  private _openMediaBrowser(): void {
-    // The card may be inside a portal on document.body (bottom sheet),
-    // so we must find the home-assistant element and dispatch there
-    const ha = document.querySelector('home-assistant') as HTMLElement | null;
-    if (ha && ha.shadowRoot) {
-      const main = ha.shadowRoot.querySelector('home-assistant-main') as HTMLElement | null;
-      const target = main || ha;
-      target.dispatchEvent(new CustomEvent('hass-more-info', {
-        bubbles: true, composed: true,
-        detail: { entityId: this._activeId },
-      }));
+  // ─── Browse Media ──────────────────────────────────
+
+  private async _enterBrowseMode(): Promise<void> {
+    this._browseMode = true;
+    this._browseStack = [];
+    this._browseItems = null;
+    this._browseLoading = true;
+    try {
+      const result = await (this.hass as unknown as { callWS: (msg: Record<string, unknown>) => Promise<MediaPlayerItem> }).callWS({
+        type: 'media_player/browse_media',
+        entity_id: this._activeId,
+      });
+      if (this.isConnected) this._browseItems = result;
+    } catch {
+      if (this.isConnected) this._browseItems = null;
     }
+    if (this.isConnected) this._browseLoading = false;
+  }
+
+  private async _browseInto(item: MediaPlayerItem): Promise<void> {
+    if (this._browseItems) this._browseStack = [...this._browseStack, this._browseItems];
+    this._browseLoading = true;
+    try {
+      const result = await (this.hass as unknown as { callWS: (msg: Record<string, unknown>) => Promise<MediaPlayerItem> }).callWS({
+        type: 'media_player/browse_media',
+        entity_id: this._activeId,
+        media_content_id: item.media_content_id,
+        media_content_type: item.media_content_type,
+      });
+      if (this.isConnected) this._browseItems = result;
+    } catch { /* stay on current view */ }
+    if (this.isConnected) this._browseLoading = false;
+  }
+
+  private _browseBack(): void {
+    if (this._browseStack.length > 0) {
+      const stack = [...this._browseStack];
+      this._browseItems = stack.pop()!;
+      this._browseStack = stack;
+    } else {
+      this._exitBrowseMode();
+    }
+  }
+
+  private _exitBrowseMode(): void {
+    this._browseMode = false;
+    this._browseStack = [];
+    this._browseItems = null;
+  }
+
+  private _playBrowseItem(item: MediaPlayerItem): void {
+    callService(this.hass, 'media_player', 'play_media', {
+      entity_id: this._activeId,
+      media_content_id: item.media_content_id,
+      media_content_type: item.media_content_type,
+    });
+    this._exitBrowseMode();
+  }
+
+  private _handleBrowseItem(item: MediaPlayerItem): void {
+    if (item.can_expand) this._browseInto(item);
+    else if (item.can_play) this._playBrowseItem(item);
+  }
+
+  private _getBrowseThumb(url?: string | null): string | null {
+    if (!url) return null;
+    return url.startsWith('/') ? `${location.origin}${url}` : url;
+  }
+
+  private _mediaClassIcon(cls: string): string {
+    const m: Record<string, string> = {
+      directory: 'mdi:folder', playlist: 'mdi:playlist-music', album: 'mdi:album',
+      artist: 'mdi:account-music', track: 'mdi:music-note', genre: 'mdi:tag',
+      radio: 'mdi:radio', podcast: 'mdi:podcast', movie: 'mdi:movie',
+      tvshow: 'mdi:television-classic', channel: 'mdi:television', music: 'mdi:music',
+      video: 'mdi:video', app: 'mdi:application', game: 'mdi:gamepad-variant',
+    };
+    return m[cls] || 'mdi:folder-music';
   }
 
   private _onArtError(): void { this._artError = true; }
@@ -604,12 +674,79 @@ export class HaLuminaMediaCard extends LitElement {
   // ─── Render: Browse Media ───────────────────────────
 
   private _renderBrowseMedia() {
+    if (!this._browseMode) {
+      return html`
+        <div class="browse-media-section">
+          <button class="browse-media-btn" @click=${() => this._enterBrowseMode()}>
+            <ha-icon icon="mdi:folder-music"></ha-icon>
+            <span>Browse Media</span>
+          </button>
+        </div>
+      `;
+    }
+
+    // Inline browser panel
+    const items = this._browseItems;
+    const isRoot = this._browseStack.length === 0;
+    const title = isRoot ? 'Browse Media' : (items?.title || 'Browse');
+
     return html`
-      <div class="browse-media-section">
-        <button class="browse-media-btn" @click=${() => this._openMediaBrowser()}>
-          <ha-icon icon="mdi:folder-music"></ha-icon>
-          <span>Browse Media</span>
-        </button>
+      <div class="browse-panel">
+        <div class="browse-header">
+          <button class="browse-back-btn" @click=${() => this._browseBack()}>
+            <ha-icon icon="${isRoot ? 'mdi:close' : 'mdi:arrow-left'}"></ha-icon>
+          </button>
+          <span class="browse-title">${title}</span>
+        </div>
+
+        ${this._browseLoading ? html`
+          <div class="browse-loading">
+            <div class="browse-spinner"></div>
+          </div>
+        ` : !items?.children?.length ? html`
+          <div class="browse-empty">
+            <ha-icon icon="mdi:folder-open-outline"></ha-icon>
+            <span>No items found</span>
+          </div>
+        ` : isRoot ? html`
+          <!-- Root: category grid -->
+          <div class="browse-grid">
+            ${items.children!.map((item) => html`
+              <button class="browse-category" @click=${() => this._handleBrowseItem(item)}>
+                <ha-icon icon="${this._mediaClassIcon(item.media_class)}"></ha-icon>
+                <span class="browse-category-title">${item.title}</span>
+              </button>
+            `)}
+          </div>
+        ` : html`
+          <!-- Folder: item list -->
+          <div class="browse-list">
+            ${items.children!.map((item) => {
+              const thumb = this._getBrowseThumb(item.thumbnail);
+              return html`
+                <div class="browse-list-item" @click=${() => this._handleBrowseItem(item)}>
+                  ${thumb
+                    ? html`<img class="browse-thumb" src="${thumb}" alt="" @error=${(e: Event) => { (e.target as HTMLImageElement).style.display = 'none'; }} />`
+                    : html`<div class="browse-thumb-placeholder"><ha-icon icon="${this._mediaClassIcon(item.media_class)}"></ha-icon></div>`
+                  }
+                  <div class="browse-item-info">
+                    <span class="browse-item-title">${item.title}</span>
+                  </div>
+                  <div class="browse-item-actions">
+                    ${item.can_play ? html`
+                      <button class="browse-play-btn" @click=${(e: Event) => { e.stopPropagation(); this._playBrowseItem(item); }}>
+                        <ha-icon icon="mdi:play"></ha-icon>
+                      </button>
+                    ` : nothing}
+                    ${item.can_expand ? html`
+                      <ha-icon class="browse-chevron" icon="mdi:chevron-right"></ha-icon>
+                    ` : nothing}
+                  </div>
+                </div>
+              `;
+            })}
+          </div>
+        `}
       </div>
     `;
   }
