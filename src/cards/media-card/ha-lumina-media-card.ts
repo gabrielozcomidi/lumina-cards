@@ -578,7 +578,9 @@ export class HaLuminaMediaCard extends LitElement {
         ${isSpeaker ? this._renderBrowseMedia() : nothing}
         ${isSpeaker && this.config.show_speaker_management !== false ? this._renderSpeakerManagement() : nothing}
 
-      </div></div>
+      </div>
+      ${this._renderBrowseOverlay()}
+      </div>
     `;
   }
 
@@ -671,85 +673,98 @@ export class HaLuminaMediaCard extends LitElement {
     `;
   }
 
-  // ─── Render: Browse Media ───────────────────────────
+  // ─── Render: Browse Media Button ────────────────────
 
   private _renderBrowseMedia() {
-    if (!this._browseMode) {
-      return html`
-        <div class="browse-media-section">
-          <button class="browse-media-btn" @click=${() => this._enterBrowseMode()}>
-            <ha-icon icon="mdi:folder-music"></ha-icon>
-            <span>Browse Media</span>
-          </button>
-        </div>
-      `;
-    }
+    return html`
+      <div class="browse-media-section">
+        <button class="browse-media-btn" @click=${() => this._enterBrowseMode()}>
+          <ha-icon icon="mdi:folder-music"></ha-icon>
+          <span>Browse Media</span>
+        </button>
+      </div>
+    `;
+  }
 
-    // Inline browser panel
+  // ─── Render: Browse Overlay ───────────────────────────
+
+  private _renderBrowseOverlay() {
+    if (!this._browseMode) return nothing;
+
+    const ALLOWED_TYPES = new Set(['artist', 'album', 'track', 'playlist', 'radio', 'podcast',
+      'artists', 'albums', 'tracks', 'playlists', 'podcasts']);
     const items = this._browseItems;
     const isRoot = this._browseStack.length === 0;
     const title = isRoot ? 'Browse Media' : (items?.title || 'Browse');
 
-    return html`
-      <div class="browse-panel">
-        <div class="browse-header">
-          <button class="browse-back-btn" @click=${() => this._browseBack()}>
-            <ha-icon icon="${isRoot ? 'mdi:close' : 'mdi:arrow-left'}"></ha-icon>
-          </button>
-          <span class="browse-title">${title}</span>
-        </div>
+    // Filter root children to only show the 6 allowed folders
+    const rootChildren = isRoot && items?.children
+      ? items.children.filter((c) => ALLOWED_TYPES.has(c.media_class) || ALLOWED_TYPES.has(c.media_content_type))
+      : null;
 
-        ${this._browseLoading ? html`
-          <div class="browse-loading">
-            <div class="browse-spinner"></div>
+    return html`
+      <div class="browse-overlay" @click=${(e: Event) => { if (e.target === e.currentTarget) this._exitBrowseMode(); }}>
+        <div class="browse-panel">
+          <div class="browse-header">
+            <button class="browse-back-btn" @click=${() => this._browseBack()}>
+              <ha-icon icon="${isRoot ? 'mdi:close' : 'mdi:arrow-left'}"></ha-icon>
+            </button>
+            <span class="browse-title">${title}</span>
           </div>
-        ` : !items?.children?.length ? html`
-          <div class="browse-empty">
-            <ha-icon icon="mdi:folder-open-outline"></ha-icon>
-            <span>No items found</span>
-          </div>
-        ` : isRoot ? html`
-          <!-- Root: category grid -->
-          <div class="browse-grid">
-            ${items.children!.map((item) => html`
-              <button class="browse-category" @click=${() => this._handleBrowseItem(item)}>
-                <ha-icon icon="${this._mediaClassIcon(item.media_class)}"></ha-icon>
-                <span class="browse-category-title">${item.title}</span>
-              </button>
-            `)}
-          </div>
-        ` : html`
-          <!-- Folder: item list -->
-          <div class="browse-list">
-            ${items.children!.map((item) => {
-              const thumb = this._getBrowseThumb(item.thumbnail);
-              return html`
-                <div class="browse-list-item" @click=${() => this._handleBrowseItem(item)}>
-                  ${thumb
-                    ? html`<img class="browse-thumb" src="${thumb}" alt="" @error=${(e: Event) => { (e.target as HTMLImageElement).style.display = 'none'; }} />`
-                    : html`<div class="browse-thumb-placeholder"><ha-icon icon="${this._mediaClassIcon(item.media_class)}"></ha-icon></div>`
-                  }
-                  <div class="browse-item-info">
-                    <span class="browse-item-title">${item.title}</span>
-                    ${item.children_media_class ? html`
-                      <span class="browse-item-subtitle">${item.children_media_class}</span>
-                    ` : nothing}
+
+          ${this._browseLoading ? html`
+            <div class="browse-loading"><div class="browse-spinner"></div></div>
+          ` : isRoot ? html`
+            <!-- Root: filtered category grid -->
+            ${rootChildren?.length ? html`
+              <div class="browse-grid">
+                ${rootChildren.map((item) => html`
+                  <button class="browse-category" @click=${() => this._handleBrowseItem(item)}>
+                    <ha-icon icon="${this._mediaClassIcon(item.media_class || item.media_content_type)}"></ha-icon>
+                    <span class="browse-category-title">${item.title}</span>
+                  </button>
+                `)}
+              </div>
+            ` : html`
+              <div class="browse-empty">
+                <ha-icon icon="mdi:folder-open-outline"></ha-icon>
+                <span>No media sources available</span>
+              </div>
+            `}
+          ` : !items?.children?.length ? html`
+            <div class="browse-empty">
+              <ha-icon icon="mdi:folder-open-outline"></ha-icon>
+              <span>No items found</span>
+            </div>
+          ` : html`
+            <!-- Folder: item list -->
+            <div class="browse-list">
+              ${items!.children!.map((item) => {
+                const thumb = this._getBrowseThumb(item.thumbnail);
+                return html`
+                  <div class="browse-list-item" @click=${() => this._handleBrowseItem(item)}>
+                    ${thumb
+                      ? html`<img class="browse-thumb" src="${thumb}" alt="" @error=${(e: Event) => { (e.target as HTMLImageElement).style.display = 'none'; }} />`
+                      : html`<div class="browse-thumb-placeholder"><ha-icon icon="${this._mediaClassIcon(item.media_class)}"></ha-icon></div>`
+                    }
+                    <div class="browse-item-info">
+                      <span class="browse-item-title">${item.title}</span>
+                      ${item.children_media_class ? html`<span class="browse-item-subtitle">${item.children_media_class}</span>` : nothing}
+                    </div>
+                    <div class="browse-item-actions">
+                      ${item.can_play ? html`
+                        <button class="browse-play-btn" @click=${(e: Event) => { e.stopPropagation(); this._playBrowseItem(item); }}>
+                          <ha-icon icon="mdi:play"></ha-icon>
+                        </button>
+                      ` : nothing}
+                      ${item.can_expand ? html`<ha-icon class="browse-chevron" icon="mdi:chevron-right"></ha-icon>` : nothing}
+                    </div>
                   </div>
-                  <div class="browse-item-actions">
-                    ${item.can_play ? html`
-                      <button class="browse-play-btn" @click=${(e: Event) => { e.stopPropagation(); this._playBrowseItem(item); }}>
-                        <ha-icon icon="mdi:play"></ha-icon>
-                      </button>
-                    ` : nothing}
-                    ${item.can_expand ? html`
-                      <ha-icon class="browse-chevron" icon="mdi:chevron-right"></ha-icon>
-                    ` : nothing}
-                  </div>
-                </div>
-              `;
-            })}
-          </div>
-        `}
+                `;
+              })}
+            </div>
+          `}
+        </div>
       </div>
     `;
   }

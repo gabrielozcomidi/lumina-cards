@@ -416,16 +416,27 @@ export const mediaCardStyles = css`
   .browse-media-btn:hover { background: var(--lumina-surface-container-highest); }
   .browse-media-btn ha-icon { --mdc-icon-size: 20px; color: var(--lumina-primary); }
 
-  /* ─── Inline Media Browser ─────────────────────────── */
+  /* ─── Media Browser Overlay ─────────────────────────── */
+  .browse-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    background: rgba(14, 14, 16, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: var(--lumina-space-4);
+    overflow-y: auto;
+    border-radius: inherit;
+  }
   .browse-panel {
     display: flex;
     flex-direction: column;
     gap: var(--lumina-space-5);
-    background: rgba(31, 31, 34, 0.4);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border-radius: var(--lumina-radius-xl, 1.5rem);
-    padding: var(--lumina-space-5);
+    width: 100%;
+    max-height: 100%;
   }
   .browse-header {
     display: flex;
