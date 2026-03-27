@@ -231,9 +231,23 @@ export class HaLuminaMediaCard extends LitElement {
   private get _audioFormat(): string | null {
     const entity = this._entity;
     if (!entity) return null;
-    const contentType = entity.attributes.media_content_type as string | undefined;
+    const attrs = entity.attributes;
+
+    // Try specific encoding/format attributes first (Music Assistant, Sonos, etc.)
+    const encoding = (attrs.media_encoding as string) || (attrs.media_format as string) || (attrs.stream_type as string);
+    if (encoding) return encoding.toUpperCase();
+
+    // Fall back to content type
+    const contentType = attrs.media_content_type as string | undefined;
     if (!contentType) return null;
     return contentType.charAt(0).toUpperCase() + contentType.slice(1);
+  }
+
+  /** Other configured speaker entities (for group all) */
+  private get _otherSpeakerIds(): string[] {
+    return this._allEntities
+      .filter((e) => e.id !== this._activeId && e.playerType === 'speaker')
+      .map((e) => e.id);
   }
 
   // ─── Actions ──────────────────────────────────────
@@ -253,6 +267,23 @@ export class HaLuminaMediaCard extends LitElement {
   private _unjoinSpeaker(speakerId: string): void {
     callService(this.hass, 'media_player', 'unjoin', {
       entity_id: speakerId,
+    });
+  }
+
+  private _groupAllSpeakers(): void {
+    const others = this._otherSpeakerIds;
+    if (!others.length) return;
+    callService(this.hass, 'media_player', 'join', {
+      entity_id: this._activeId,
+      group_members: others,
+    });
+  }
+
+  private _ungroupAllSpeakers(): void {
+    // Unjoin all non-host members
+    const members = this._groupMembers.filter((id) => id !== this._activeId);
+    members.forEach((id) => {
+      callService(this.hass, 'media_player', 'unjoin', { entity_id: id });
     });
   }
 
@@ -488,16 +519,26 @@ export class HaLuminaMediaCard extends LitElement {
 
   private _renderSpeakerManagement() {
     const groupMembers = this._groupMembers;
+    const otherSpeakers = this._otherSpeakerIds;
+    const isGrouped = this._isGrouped;
 
-    if (groupMembers.length === 0) return nothing;
+    // Show section if grouped or if there are other speakers to group with
+    if (!isGrouped && otherSpeakers.length === 0) return nothing;
 
     return html`
       <div class="rooms-section">
         <div class="rooms-header">
           <span class="rooms-title">Speakers</span>
+          ${otherSpeakers.length > 0 ? html`
+            <button class="group-btn ${isGrouped ? 'grouped' : ''}"
+              @click=${isGrouped ? this._ungroupAllSpeakers : this._groupAllSpeakers}>
+              <ha-icon icon="${isGrouped ? 'mdi:speaker-off' : 'mdi:speaker-multiple'}"></ha-icon>
+              <span>${isGrouped ? 'Ungroup' : 'Group All'}</span>
+            </button>
+          ` : nothing}
         </div>
 
-        ${groupMembers.map((memberId) => {
+        ${(isGrouped ? groupMembers : [this._activeId]).map((memberId) => {
           const member = getEntity(this.hass, memberId);
           const isPlaying = member?.state === 'playing';
           const memberName = member ? entityName(member) : memberId.split('.')[1];
@@ -507,10 +548,10 @@ export class HaLuminaMediaCard extends LitElement {
             <div class="room-item">
               <div class="room-item-dot ${isPlaying ? 'playing' : 'idle'}"></div>
               <div class="room-item-info">
-                <span class="room-item-name">${memberName}${isSelf ? ' (Host)' : ''}</span>
+                <span class="room-item-name">${memberName}${isSelf && isGrouped ? ' (Host)' : ''}</span>
                 <span class="room-item-state">${isPlaying ? 'Playing' : 'Idle'} · ${memberVolume}%</span>
               </div>
-              ${!isSelf ? html`
+              ${!isSelf && isGrouped ? html`
                 <button class="room-item-action unjoin" @click=${() => this._unjoinSpeaker(memberId)}
                   title="Remove from group">
                   <ha-icon icon="mdi:minus-circle-outline"></ha-icon>

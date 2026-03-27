@@ -428,6 +428,37 @@ export const mediaCardStyles = css`
     margin-bottom: var(--lumina-space-1);
   }
 
+  .group-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: var(--lumina-space-1) var(--lumina-space-3);
+    border: 1px solid var(--lumina-ghost-border);
+    border-radius: var(--lumina-radius-full);
+    background: var(--lumina-surface-container-high);
+    cursor: pointer;
+    font-family: var(--lumina-font-body);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--lumina-on-surface-variant);
+    transition: all var(--lumina-transition-fast);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .group-btn ha-icon {
+    --mdc-icon-size: 14px;
+  }
+
+  .group-btn:hover {
+    background: var(--lumina-surface-container-highest);
+  }
+
+  .group-btn.grouped {
+    background: rgba(133, 173, 255, 0.1);
+    border-color: rgba(133, 173, 255, 0.25);
+    color: var(--lumina-primary);
+  }
+
   .rooms-title {
     font-family: var(--lumina-font-headline);
     font-size: 0.9375rem;
