@@ -435,15 +435,6 @@ export const mediaCardStyles = css`
     color: var(--lumina-on-surface);
   }
 
-  .rooms-subtitle {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--lumina-on-surface-variant);
-    margin-top: var(--lumina-space-2);
-  }
-
   .room-item {
     display: flex;
     align-items: center;
@@ -451,10 +442,6 @@ export const mediaCardStyles = css`
     padding: var(--lumina-space-3) var(--lumina-space-4);
     background: var(--lumina-surface-container-high);
     border-radius: var(--lumina-radius-lg);
-  }
-
-  .room-item.joinable {
-    opacity: 0.7;
   }
 
   .room-item-dot {
@@ -515,14 +502,6 @@ export const mediaCardStyles = css`
 
   .room-item-action ha-icon {
     --mdc-icon-size: 18px;
-  }
-
-  .room-item-action.join {
-    color: var(--lumina-primary);
-  }
-
-  .room-item-action.join:hover {
-    background: rgba(133, 173, 255, 0.1);
   }
 
   .room-item-action.unjoin {

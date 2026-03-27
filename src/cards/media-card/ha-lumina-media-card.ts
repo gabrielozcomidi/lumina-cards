@@ -236,18 +236,6 @@ export class HaLuminaMediaCard extends LitElement {
     return contentType.charAt(0).toUpperCase() + contentType.slice(1);
   }
 
-  /** All media_player entities from HA that aren't the active one (for speaker join/unjoin) */
-  private get _availableSpeakers(): Array<{ id: string; name: string }> {
-    if (!this.hass?.states) return [];
-    return Object.keys(this.hass.states)
-      .filter((id) => id.startsWith('media_player.') && id !== this._activeId)
-      .map((id) => ({
-        id,
-        name: entityName(this.hass.states[id]),
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }
-
   // ─── Actions ──────────────────────────────────────
 
   private _selectPlayer(id: string): void {
@@ -260,13 +248,6 @@ export class HaLuminaMediaCard extends LitElement {
   private _onVolume(e: CustomEvent): void { this._debouncedVolume(e.detail.value); }
   private _selectSource(source: string): void {
     callService(this.hass, 'media_player', 'select_source', { entity_id: this._activeId, source });
-  }
-
-  private _joinSpeaker(speakerId: string): void {
-    callService(this.hass, 'media_player', 'join', {
-      entity_id: this._activeId,
-      group_members: [speakerId],
-    });
   }
 
   private _unjoinSpeaker(speakerId: string): void {
@@ -507,11 +488,8 @@ export class HaLuminaMediaCard extends LitElement {
 
   private _renderSpeakerManagement() {
     const groupMembers = this._groupMembers;
-    const availableSpeakers = this._availableSpeakers;
-    const joinable = availableSpeakers.filter((s) => !groupMembers.includes(s.id));
 
-    // Show if there are group members, joinable speakers, or other configured speakers
-    if (groupMembers.length === 0 && joinable.length === 0 && availableSpeakers.length === 0) return nothing;
+    if (groupMembers.length === 0) return nothing;
 
     return html`
       <div class="rooms-section">
@@ -519,7 +497,7 @@ export class HaLuminaMediaCard extends LitElement {
           <span class="rooms-title">Speakers</span>
         </div>
 
-        ${(groupMembers.length > 0 ? groupMembers : [this._activeId]).map((memberId) => {
+        ${groupMembers.map((memberId) => {
           const member = getEntity(this.hass, memberId);
           const isPlaying = member?.state === 'playing';
           const memberName = member ? entityName(member) : memberId.split('.')[1];
@@ -541,22 +519,6 @@ export class HaLuminaMediaCard extends LitElement {
             </div>
           `;
         })}
-
-        ${joinable.length ? html`
-          <span class="rooms-subtitle">Available</span>
-          ${joinable.map((speaker) => html`
-            <div class="room-item joinable">
-              <div class="room-item-dot idle"></div>
-              <div class="room-item-info">
-                <span class="room-item-name">${speaker.name}</span>
-              </div>
-              <button class="room-item-action join" @click=${() => this._joinSpeaker(speaker.id)}
-                title="Add to group">
-                <ha-icon icon="mdi:plus-circle-outline"></ha-icon>
-              </button>
-            </div>
-          `)}
-        ` : nothing}
       </div>
     `;
   }
