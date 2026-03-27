@@ -418,25 +418,26 @@ export const mediaCardStyles = css`
 
   /* ─── Media Browser Overlay ─────────────────────────── */
   .browse-overlay {
-    position: absolute;
+    position: fixed;
     inset: 0;
-    z-index: 10;
-    background: rgba(14, 14, 16, 0.6);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    z-index: 10000;
+    background: rgba(14, 14, 16, 0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: var(--lumina-space-4);
+    flex-direction: column;
     overflow-y: auto;
-    border-radius: inherit;
+    padding: 0;
   }
   .browse-panel {
     display: flex;
     flex-direction: column;
     gap: var(--lumina-space-5);
     width: 100%;
-    max-height: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: var(--lumina-space-6) var(--lumina-space-5);
+    flex: 1;
   }
   .browse-header {
     display: flex;

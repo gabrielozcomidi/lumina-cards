@@ -691,15 +691,17 @@ export class HaLuminaMediaCard extends LitElement {
   private _renderBrowseOverlay() {
     if (!this._browseMode) return nothing;
 
-    const ALLOWED_TYPES = new Set(['artist', 'album', 'track', 'playlist', 'radio', 'podcast',
-      'artists', 'albums', 'tracks', 'playlists', 'podcasts']);
+    const ALLOWED_KEYWORDS = /artist|album|track|playlist|radio|podcast|music|librar|favorite|recent/i;
     const items = this._browseItems;
     const isRoot = this._browseStack.length === 0;
     const title = isRoot ? 'Browse Media' : (items?.title || 'Browse');
 
-    // Filter root children to only show the 6 allowed folders
+    // Filter root children to relevant music categories
     const rootChildren = isRoot && items?.children
-      ? items.children.filter((c) => ALLOWED_TYPES.has(c.media_class) || ALLOWED_TYPES.has(c.media_content_type))
+      ? items.children.filter((c) =>
+          ALLOWED_KEYWORDS.test(c.title) ||
+          ALLOWED_KEYWORDS.test(c.media_class) ||
+          ALLOWED_KEYWORDS.test(c.media_content_type))
       : null;
 
     return html`
