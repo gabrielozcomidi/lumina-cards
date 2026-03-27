@@ -418,23 +418,24 @@ export class HaLuminaMediaCard extends LitElement {
 
         ${this._hasMultiple ? this._renderPlayerSelector() : nothing}
 
-        <!-- Now Playing Header -->
-        <div class="now-playing-header">
-          <div class="now-playing-left">
-            <span class="now-playing-label">Now Playing</span>
-            ${this._audioFormat ? html`<span class="audio-format-badge">${this._audioFormat}</span>` : nothing}
+        <!-- Now Playing Header + Title -->
+        <div class="now-playing-group">
+          <div class="now-playing-header">
+            <div class="now-playing-left">
+              <span class="now-playing-label">Now Playing</span>
+              ${this._audioFormat ? html`<span class="audio-format-badge">${this._audioFormat}</span>` : nothing}
+            </div>
+            <div class="now-playing-right">
+              ${this._isGrouped ? html`<span class="grouped-badge"><ha-icon icon="mdi:speaker-multiple"></ha-icon> Grouped</span>` : nothing}
+              ${!isSpeaker ? html`
+                <button class="power-btn on" @click=${() => this._togglePower()}>
+                  <ha-icon icon="mdi:power"></ha-icon>
+                </button>
+              ` : nothing}
+            </div>
           </div>
-          <div class="now-playing-right">
-            ${this._isGrouped ? html`<span class="grouped-badge"><ha-icon icon="mdi:speaker-multiple"></ha-icon> Grouped</span>` : nothing}
-            ${!isSpeaker ? html`
-              <button class="power-btn on" @click=${() => this._togglePower()}>
-                <ha-icon icon="mdi:power"></ha-icon>
-              </button>
-            ` : nothing}
-          </div>
+          <div class="room-title">${this._groupedRoomName}</div>
         </div>
-
-        <div class="room-title">${this._groupedRoomName}</div>
 
         <!-- Album Art -->
         <div class="album-section">

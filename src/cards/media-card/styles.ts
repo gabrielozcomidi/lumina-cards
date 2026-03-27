@@ -130,14 +130,19 @@ export const mediaCardStyles = css`
     justify-content: flex-end;
   }
 
-  /* ─── Room Title ────────────────────────────────────── */
+  /* ─── Now Playing + Title group ──────────────────────── */
+  .now-playing-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumina-space-2);
+  }
+
   .room-title {
     font-family: var(--lumina-font-headline);
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--lumina-on-surface);
     line-height: 1.3;
-    margin-top: calc(-1 * var(--lumina-space-4));
   }
 
   /* ─── Album Art (responsive) ────────────────────────── */
