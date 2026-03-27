@@ -10,7 +10,7 @@ export const mediaCardStyles = css`
   .media-card {
     display: flex;
     flex-direction: column;
-    gap: var(--lumina-space-6);
+    gap: var(--lumina-space-8);
   }
 
   /* ─── Player Selector ──────────────────────────────── */
