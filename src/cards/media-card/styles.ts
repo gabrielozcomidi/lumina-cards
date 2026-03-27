@@ -74,6 +74,26 @@ export const mediaCardStyles = css`
     align-items: center;
     gap: var(--lumina-space-2);
   }
+  .header-action-btn {
+    width: 32px; height: 32px;
+    border-radius: var(--lumina-radius-full);
+    border: 1px solid var(--lumina-ghost-border);
+    background: var(--lumina-surface-container-high);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: var(--lumina-on-surface-variant);
+    transition: all var(--lumina-transition-fast);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .header-action-btn ha-icon { --mdc-icon-size: 16px; }
+  .header-action-btn:hover {
+    background: var(--lumina-surface-container-highest);
+    color: var(--lumina-primary);
+    border-color: rgba(133, 173, 255, 0.3);
+  }
   .now-playing-label {
     font-size: 0.6875rem;
     font-weight: 600;
@@ -149,7 +169,7 @@ export const mediaCardStyles = css`
   .album-section {
     display: flex;
     justify-content: center;
-    padding: var(--lumina-space-4) 0;
+    padding: var(--lumina-space-2) 0;
   }
   .album-art {
     max-width: 220px;

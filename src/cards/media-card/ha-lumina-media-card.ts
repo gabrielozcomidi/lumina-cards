@@ -501,6 +501,21 @@ export class HaLuminaMediaCard extends LitElement {
             </div>
             <div class="now-playing-right">
               ${this._isGrouped ? html`<span class="grouped-badge"><ha-icon icon="mdi:speaker-multiple"></ha-icon> Grouped</span>` : nothing}
+              ${isSpeaker && this.config.show_source && sourceList.length ? html`
+                <button class="header-action-btn" @click=${() => { this._sourcesExpanded = !this._sourcesExpanded; }}>
+                  <ha-icon icon="mdi:speaker"></ha-icon>
+                </button>
+              ` : nothing}
+              ${!isSpeaker && this.config.show_source && sourceList.length ? html`
+                <button class="header-action-btn" @click=${() => { this._sourcesExpanded = !this._sourcesExpanded; }}>
+                  <ha-icon icon="mdi:apps"></ha-icon>
+                </button>
+              ` : nothing}
+              ${isSpeaker ? html`
+                <button class="header-action-btn" @click=${() => this._enterBrowseMode()}>
+                  <ha-icon icon="mdi:folder-music"></ha-icon>
+                </button>
+              ` : nothing}
               ${!isSpeaker ? html`
                 <button class="power-btn on" @click=${() => this._togglePower()}>
                   <ha-icon icon="mdi:power"></ha-icon>
@@ -571,15 +586,14 @@ export class HaLuminaMediaCard extends LitElement {
           <span class="volume-icon"><ha-icon icon="mdi:volume-high"></ha-icon></span>
         </div>
 
-        <!-- Sources / Apps (collapsible) -->
-        ${this.config.show_source && sourceList.length
+        <!-- Sources / Apps (collapsible, triggered from header) -->
+        ${this._sourcesExpanded && this.config.show_source && sourceList.length
           ? isSpeaker
             ? this._renderSpeakerSources(sourceList, currentSource)
             : this._renderTvApps(sourceList, currentSource)
           : nothing}
 
         ${isSpeaker ? this._renderShortcuts() : nothing}
-        ${isSpeaker ? this._renderBrowseMedia() : nothing}
         ${isSpeaker && this.config.show_speaker_management !== false ? this._renderSpeakerManagement() : nothing}
 
       </div>
