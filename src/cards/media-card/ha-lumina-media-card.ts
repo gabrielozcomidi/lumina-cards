@@ -94,6 +94,7 @@ export class HaLuminaMediaCard extends LitElement {
   @state() private _browseStack: MediaPlayerItem[] = [];
   @state() private _browseItems: MediaPlayerItem | null = null;
   @state() private _browseLoading = false;
+  @state() private _browseSearch = '';
   private _positionTimer: ReturnType<typeof setInterval> | undefined;
   private _lastArtUrl: string | null = null;
 
@@ -380,6 +381,7 @@ export class HaLuminaMediaCard extends LitElement {
     this._browseMode = false;
     this._browseStack = [];
     this._browseItems = null;
+    this._browseSearch = '';
   }
 
   private _playBrowseItem(item: MediaPlayerItem): void {
@@ -704,6 +706,12 @@ export class HaLuminaMediaCard extends LitElement {
           ALLOWED_KEYWORDS.test(c.media_content_type))
       : null;
 
+    // Filter list items by search query
+    const query = this._browseSearch.toLowerCase();
+    const filteredChildren = !isRoot && items?.children
+      ? (query ? items.children.filter((c) => c.title.toLowerCase().includes(query)) : items.children)
+      : null;
+
     return html`
       <div class="browse-overlay" @click=${(e: Event) => { if (e.target === e.currentTarget) this._exitBrowseMode(); }}>
         <div class="browse-panel">
@@ -714,15 +722,33 @@ export class HaLuminaMediaCard extends LitElement {
             <span class="browse-title">${title}</span>
           </div>
 
+          <!-- Search bar -->
+          <div class="browse-search">
+            <ha-icon icon="mdi:magnify"></ha-icon>
+            <input type="text" class="browse-search-input"
+              placeholder="${isRoot ? 'Search media...' : `Search ${title.toLowerCase()}...`}"
+              .value=${this._browseSearch}
+              @input=${(e: Event) => { this._browseSearch = (e.target as HTMLInputElement).value; }}
+            />
+            ${this._browseSearch ? html`
+              <button class="browse-search-clear" @click=${() => { this._browseSearch = ''; }}>
+                <ha-icon icon="mdi:close"></ha-icon>
+              </button>
+            ` : nothing}
+          </div>
+
           ${this._browseLoading ? html`
             <div class="browse-loading"><div class="browse-spinner"></div></div>
           ` : isRoot ? html`
-            <!-- Root: filtered category grid -->
             ${rootChildren?.length ? html`
               <div class="browse-grid">
-                ${rootChildren.map((item) => html`
+                ${rootChildren
+                  .filter((item) => !query || item.title.toLowerCase().includes(query))
+                  .map((item) => html`
                   <button class="browse-category" @click=${() => this._handleBrowseItem(item)}>
-                    <ha-icon icon="${this._mediaClassIcon(item.media_class || item.media_content_type)}"></ha-icon>
+                    <div class="browse-category-icon">
+                      <ha-icon icon="${this._mediaClassIcon(item.media_class || item.media_content_type)}"></ha-icon>
+                    </div>
                     <span class="browse-category-title">${item.title}</span>
                   </button>
                 `)}
@@ -733,15 +759,15 @@ export class HaLuminaMediaCard extends LitElement {
                 <span>No media sources available</span>
               </div>
             `}
-          ` : !items?.children?.length ? html`
+          ` : !filteredChildren?.length ? html`
             <div class="browse-empty">
               <ha-icon icon="mdi:folder-open-outline"></ha-icon>
-              <span>No items found</span>
+              <span>${query ? 'No results found' : 'No items found'}</span>
             </div>
           ` : html`
             <!-- Folder: item list -->
             <div class="browse-list">
-              ${items!.children!.map((item) => {
+              ${filteredChildren!.map((item) => {
                 const thumb = this._getBrowseThumb(item.thumbnail);
                 return html`
                   <div class="browse-list-item" @click=${() => this._handleBrowseItem(item)}>
