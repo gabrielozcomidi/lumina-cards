@@ -33,7 +33,15 @@ export class HaLuminaMediaCardEditor extends LitElement {
     .migrate-btn { cursor: pointer; color: var(--primary-color); font-size: 0.8125rem; font-weight: 500; padding: 8px; background: var(--card-background-color, #1a1a1d); border-radius: 8px; text-align: center; }
   `;
 
-  public setConfig(config: LuminaMediaCardConfig): void { this._config = { ...config }; }
+  public setConfig(config: LuminaMediaCardConfig): void {
+    // Always migrate legacy single entity to entities array
+    if (config.entity && !config.entities?.length) {
+      const { entity, ...rest } = config as Record<string, unknown>;
+      this._config = { ...rest, entities: [{ entity: entity as string }] } as LuminaMediaCardConfig;
+    } else {
+      this._config = { ...config };
+    }
+  }
 
   async connectedCallback(): Promise<void> {
     super.connectedCallback();
@@ -73,10 +81,7 @@ export class HaLuminaMediaCardEditor extends LitElement {
   }
 
   private _getEntities(): (string | MediaEntityConfig)[] {
-    // Support both old `entity` and new `entities` format
-    if (this._config.entities?.length) return this._config.entities;
-    if (this._config.entity) return [this._config.entity];
-    return [];
+    return this._config.entities || [];
   }
 
   private _entityChanged(i: number, v: string): void {
@@ -85,13 +90,6 @@ export class HaLuminaMediaCardEditor extends LitElement {
     obj.entity = v;
     e[i] = obj;
     this._set('entities', e);
-    // Clear legacy field
-    if (this._config.entity) {
-      const c = { ...this._config, entities: e };
-      delete (c as Record<string, unknown>).entity;
-      this._config = c;
-      this._dispatch();
-    }
   }
 
   private _entityNameChanged(i: number, v: string): void {
@@ -103,13 +101,7 @@ export class HaLuminaMediaCardEditor extends LitElement {
   }
 
   private _addEntity(): void {
-    const current = this._getEntities().map((e) => this._toObj(e));
-    current.push({ entity: '' });
-    // Migrate: always use entities array, clear legacy entity field
-    const c = { ...this._config, entities: current } as Record<string, unknown>;
-    delete c.entity;
-    this._config = c as LuminaMediaCardConfig;
-    this._dispatch();
+    this._set('entities', [...this._getEntities(), { entity: '' }]);
   }
 
   private _removeEntity(i: number): void {

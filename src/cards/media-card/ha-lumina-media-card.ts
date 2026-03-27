@@ -83,10 +83,16 @@ export class HaLuminaMediaCard extends LitElement {
   }, 150);
 
   public setConfig(config: LuminaMediaCardConfig): void {
-    if (!config.entity && (!config.entities || !config.entities.length)) {
+    // Migrate legacy single entity to entities array
+    let resolved = config;
+    if (config.entity && !config.entities?.length) {
+      const { entity, ...rest } = config as Record<string, unknown>;
+      resolved = { ...rest, entities: [{ entity: entity as string }] } as LuminaMediaCardConfig;
+    }
+    if (!resolved.entities?.length && !resolved.entity) {
       throw new Error('Please define at least one media_player entity');
     }
-    this.config = { show_source: true, show_progress: true, show_speaker_management: true, ...config };
+    this.config = { show_source: true, show_progress: true, show_speaker_management: true, ...resolved };
   }
 
   public getCardSize(): number { return 6; }
