@@ -233,14 +233,19 @@ export class HaLuminaMediaCard extends LitElement {
     if (!entity) return null;
     const attrs = entity.attributes;
 
-    // Try specific encoding/format attributes first (Music Assistant, Sonos, etc.)
-    const encoding = (attrs.media_encoding as string) || (attrs.media_format as string) || (attrs.stream_type as string);
-    if (encoding) return encoding.toUpperCase();
+    // Sonos audio format (Stereo, Dolby Digital 5.1, Dolby Atmos, etc.)
+    const sonosFormat = attrs.sonos_audio_format as string | undefined;
+    if (sonosFormat) return sonosFormat;
 
-    // Fall back to content type
-    const contentType = attrs.media_content_type as string | undefined;
-    if (!contentType) return null;
-    return contentType.charAt(0).toUpperCase() + contentType.slice(1);
+    // Media channel (Sonos TV input shows format here)
+    const mediaChannel = attrs.media_channel as string | undefined;
+    if (mediaChannel && /stereo|dolby|atmos|surround|dts|pcm|mono/i.test(mediaChannel)) return mediaChannel;
+
+    // Generic encoding/format attributes (Music Assistant, etc.)
+    const encoding = (attrs.media_encoding as string) || (attrs.media_format as string) || (attrs.stream_type as string);
+    if (encoding) return encoding;
+
+    return null;
   }
 
   /** Other configured speaker entities (for group all) */
