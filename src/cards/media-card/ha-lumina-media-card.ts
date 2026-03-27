@@ -236,14 +236,16 @@ export class HaLuminaMediaCard extends LitElement {
     return contentType.charAt(0).toUpperCase() + contentType.slice(1);
   }
 
-  /** Configured speakers (same player_type) that aren't the active one */
+  /** All media_player entities from HA that aren't the active one (for speaker join/unjoin) */
   private get _availableSpeakers(): Array<{ id: string; name: string }> {
-    return this._allEntities
-      .filter((e) => e.id !== this._activeId && e.playerType === 'speaker')
-      .map((e) => ({
-        id: e.id,
-        name: this._getDisplayName(e.id, e.customName),
-      }));
+    if (!this.hass?.states) return [];
+    return Object.keys(this.hass.states)
+      .filter((id) => id.startsWith('media_player.') && id !== this._activeId)
+      .map((id) => ({
+        id,
+        name: entityName(this.hass.states[id]),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   // ─── Actions ──────────────────────────────────────
@@ -282,18 +284,12 @@ export class HaLuminaMediaCard extends LitElement {
   }
 
   private _openMediaBrowser(): void {
-    // Fire HA more-info dialog which includes the media browser tab
-    const event = new CustomEvent('hass-more-info', {
+    // Fire HA more-info dialog — composed:true crosses all shadow DOM boundaries
+    this.dispatchEvent(new CustomEvent('hass-more-info', {
       bubbles: true,
       composed: true,
       detail: { entityId: this._activeId },
-    });
-    // Must dispatch from a node connected to HA's DOM tree
-    // Try the closest ha-panel-lovelace or fall back to document
-    const root = document.querySelector('home-assistant')
-      ?? document.querySelector('hc-main')
-      ?? document;
-    root.dispatchEvent(event);
+    }));
   }
 
   // ─── Render ───────────────────────────────────────
