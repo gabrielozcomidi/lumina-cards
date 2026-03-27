@@ -95,7 +95,10 @@ export class HaLuminaMediaCard extends LitElement {
   @state() private _browseItems: MediaPlayerItem | null = null;
   @state() private _browseLoading = false;
   @state() private _browseSearch = '';
+  @state() private _searchResults: MediaPlayerItem[] | null = null;
+  @state() private _searchLoading = false;
   private _positionTimer: ReturnType<typeof setInterval> | undefined;
+  private _searchTimer: ReturnType<typeof setTimeout> | undefined;
   private _lastArtUrl: string | null = null;
 
   static styles = [luminaTokens, sharedStyles, mediaCardStyles];
@@ -384,6 +387,9 @@ export class HaLuminaMediaCard extends LitElement {
     this._browseStack = [];
     this._browseItems = null;
     this._browseSearch = '';
+    this._searchResults = null;
+    this._searchLoading = false;
+    if (this._searchTimer) clearTimeout(this._searchTimer);
   }
 
   private _playBrowseItem(item: MediaPlayerItem): void {
@@ -414,6 +420,61 @@ export class HaLuminaMediaCard extends LitElement {
       video: 'mdi:video', app: 'mdi:application', game: 'mdi:gamepad-variant',
     };
     return m[cls] || 'mdi:folder-music';
+  }
+
+  private _onSearchInput(value: string): void {
+    this._browseSearch = value;
+    if (this._searchTimer) clearTimeout(this._searchTimer);
+
+    if (!value.trim()) {
+      this._searchResults = null;
+      this._searchLoading = false;
+      return;
+    }
+
+    // If Music Assistant config entry is set, do server-side search
+    const massId = this.config.mass_config_entry_id;
+    if (massId) {
+      this._searchLoading = true;
+      this._searchTimer = setTimeout(() => this._doMassSearch(value.trim(), massId), 400);
+    }
+    // Otherwise client-side filtering happens in render via filteredChildren
+  }
+
+  private async _doMassSearch(query: string, configEntryId: string): Promise<void> {
+    try {
+      const response = await this.hass.callService('music_assistant', 'search', {
+        config_entry_id: configEntryId,
+        name: query,
+        limit: 25,
+      }) as unknown;
+
+      if (!this.isConnected || this._browseSearch.trim() !== query) return;
+
+      // Convert MA search results to MediaPlayerItem format
+      const results: MediaPlayerItem[] = [];
+      if (response && typeof response === 'object') {
+        for (const [mediaType, items] of Object.entries(response as Record<string, unknown[]>)) {
+          if (!Array.isArray(items)) continue;
+          for (const item of items) {
+            const r = item as Record<string, unknown>;
+            results.push({
+              title: (r.name as string) || (r.title as string) || 'Unknown',
+              media_content_id: (r.uri as string) || (r.media_content_id as string) || '',
+              media_content_type: mediaType.replace(/s$/, ''),
+              media_class: mediaType.replace(/s$/, ''),
+              can_play: true,
+              can_expand: mediaType !== 'tracks',
+              thumbnail: ((r.image as Record<string, unknown>)?.url as string) || (r.image as string) || (r.thumbnail as string) || null,
+            });
+          }
+        }
+      }
+      this._searchResults = results;
+    } catch {
+      this._searchResults = [];
+    }
+    if (this.isConnected) this._searchLoading = false;
   }
 
   private _onArtError(): void { this._artError = true; }
@@ -738,23 +799,59 @@ export class HaLuminaMediaCard extends LitElement {
             <span class="browse-title">${title}</span>
           </div>
 
-          <!-- Search bar -->
-          ${!isRoot ? html`
+          <!-- Search bar (always shown if MA configured, or inside folders) -->
+          ${!isRoot || this.config.mass_config_entry_id ? html`
             <div class="browse-search">
               <ha-icon icon="mdi:magnify"></ha-icon>
               <input type="text" class="browse-search-input"
-                placeholder="Search ${title.toLowerCase()}..."
+                placeholder="${isRoot ? 'Search music...' : `Search ${title.toLowerCase()}...`}"
                 .value=${this._browseSearch}
-                @input=${(e: Event) => { this._browseSearch = (e.target as HTMLInputElement).value; }}
+                @input=${(e: Event) => { this._onSearchInput((e.target as HTMLInputElement).value); }}
               />
               <button class="browse-search-clear ${this._browseSearch ? 'visible' : ''}"
-                @click=${() => { this._browseSearch = ''; }}>
+                @click=${() => { this._onSearchInput(''); }}>
                 <ha-icon icon="mdi:close"></ha-icon>
               </button>
             </div>
           ` : nothing}
 
-          ${this._browseLoading ? html`
+          <!-- Search results (MA server search) -->
+          ${this._searchLoading ? html`
+            <div class="browse-loading"><div class="browse-spinner"></div></div>
+          ` : this._searchResults !== null ? html`
+            ${this._searchResults.length ? html`
+              <div class="browse-list">
+                ${this._searchResults.map((item) => {
+                  const thumb = this._getBrowseThumb(item.thumbnail);
+                  return html`
+                    <div class="browse-list-item" @click=${() => this._handleBrowseItem(item)}>
+                      ${thumb
+                        ? html`<img class="browse-thumb" src="${thumb}" alt="" @error=${(e: Event) => { (e.target as HTMLImageElement).style.display = 'none'; }} />`
+                        : html`<div class="browse-thumb-placeholder"><ha-icon icon="${this._mediaClassIcon(item.media_class)}"></ha-icon></div>`
+                      }
+                      <div class="browse-item-info">
+                        <span class="browse-item-title">${item.title}</span>
+                        <span class="browse-item-subtitle">${item.media_class}</span>
+                      </div>
+                      <div class="browse-item-actions">
+                        ${item.can_play ? html`
+                          <button class="browse-play-btn" @click=${(e: Event) => { e.stopPropagation(); this._playBrowseItem(item); }}>
+                            <ha-icon icon="mdi:play"></ha-icon>
+                          </button>
+                        ` : nothing}
+                        ${item.can_expand ? html`<ha-icon class="browse-chevron" icon="mdi:chevron-right"></ha-icon>` : nothing}
+                      </div>
+                    </div>
+                  `;
+                })}
+              </div>
+            ` : html`
+              <div class="browse-empty">
+                <ha-icon icon="mdi:magnify-close"></ha-icon>
+                <span>No results for "${this._browseSearch}"</span>
+              </div>
+            `}
+          ` : this._browseLoading ? html`
             <div class="browse-loading"><div class="browse-spinner"></div></div>
           ` : isRoot ? html`
             ${rootChildren?.length ? html`

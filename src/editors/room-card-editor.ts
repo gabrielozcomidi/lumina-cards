@@ -542,6 +542,8 @@ export class HaLuminaRoomCardEditor extends LitElement {
                 .value=${this._config.audio_format_entity || ''} .includeDomains=${['sensor']}
                 @value-changed=${(e: CustomEvent) => this._set('audio_format_entity', e.detail.value)}
                 allow-custom-entity></ha-entity-picker>
+              <ha-textfield label="Music Assistant Config Entry ID (for search)" .value=${this._config.mass_config_entry_id || ''}
+                @input=${(e: Event) => this._set('mass_config_entry_id', (e.target as HTMLInputElement).value || undefined)}></ha-textfield>
             ` : ''}
           </div>
         </div>

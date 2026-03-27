@@ -174,6 +174,10 @@ export class HaLuminaMediaCardEditor extends LitElement {
           @value-changed=${(e: CustomEvent) => this._set('audio_format_entity', e.detail.value)}
           allow-custom-entity></ha-entity-picker>
 
+        <div class="editor-section">Music Assistant</div>
+        <ha-textfield label="Config Entry ID (for search)" .value=${this._config.mass_config_entry_id || ''}
+          @input=${(e: Event) => this._set('mass_config_entry_id', (e.target as HTMLInputElement).value || undefined)}></ha-textfield>
+
         <div class="editor-section">Options</div>
         <div class="toggle-row">
           <span class="toggle-label">Show Source Selector</span>

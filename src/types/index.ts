@@ -30,6 +30,7 @@ export interface LuminaRoomCardConfig extends LovelaceCardConfig {
   media_entity?: string;
   media_entities?: (string | MediaEntityConfig)[];
   audio_format_entity?: string;
+  mass_config_entry_id?: string;
   vacuum_entity?: string;
   show_climate?: boolean;
   show_media?: boolean;
@@ -109,6 +110,7 @@ export interface LuminaMediaCardConfig extends LovelaceCardConfig {
   entity?: string;
   entities?: (string | MediaEntityConfig)[];
   audio_format_entity?: string;
+  mass_config_entry_id?: string;
   image?: string;
   show_source?: boolean;
   show_progress?: boolean;
