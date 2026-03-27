@@ -276,13 +276,18 @@ export class HaLuminaMediaCard extends LitElement {
   }
 
   private _openMediaBrowser(): void {
-    // Fire HA more-info dialog which includes media browser
+    // Fire HA more-info dialog which includes the media browser tab
     const event = new CustomEvent('hass-more-info', {
       bubbles: true,
       composed: true,
       detail: { entityId: this._activeId },
     });
-    this.dispatchEvent(event);
+    // Must dispatch from a node connected to HA's DOM tree
+    // Try the closest ha-panel-lovelace or fall back to document
+    const root = document.querySelector('home-assistant')
+      ?? document.querySelector('hc-main')
+      ?? document;
+    root.dispatchEvent(event);
   }
 
   // ─── Render ───────────────────────────────────────
@@ -503,7 +508,8 @@ export class HaLuminaMediaCard extends LitElement {
     const availableSpeakers = this._availableSpeakers;
     const joinable = availableSpeakers.filter((s) => !groupMembers.includes(s.id));
 
-    if (groupMembers.length === 0 && joinable.length === 0) return nothing;
+    // Show if there are group members, joinable speakers, or other configured speakers
+    if (groupMembers.length === 0 && joinable.length === 0 && availableSpeakers.length === 0) return nothing;
 
     return html`
       <div class="rooms-section">
@@ -511,7 +517,7 @@ export class HaLuminaMediaCard extends LitElement {
           <span class="rooms-title">Speakers</span>
         </div>
 
-        ${groupMembers.map((memberId) => {
+        ${(groupMembers.length > 0 ? groupMembers : [this._activeId]).map((memberId) => {
           const member = getEntity(this.hass, memberId);
           const isPlaying = member?.state === 'playing';
           const memberName = member ? entityName(member) : memberId.split('.')[1];

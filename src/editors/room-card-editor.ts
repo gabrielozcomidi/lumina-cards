@@ -278,21 +278,17 @@ export class HaLuminaRoomCardEditor extends LitElement {
           ></ha-textfield>
         </div>
 
-        <!-- ─── Card Settings (Collapsible) ─────────── -->
+        <!-- ─── 3D Room Element (Collapsible) ──────────── -->
         <div class="section-collapsible">
-          <div class="section-header" @click=${() => this._toggleSection('card_settings')}>
+          <div class="section-header" @click=${() => this._toggleSection('3d_asset')}>
             <div class="section-header-left">
-              <ha-icon icon="mdi:cog"></ha-icon>
-              <span class="section-title">Card Settings</span>
+              <ha-icon icon="mdi:cube-outline"></ha-icon>
+              <span class="section-title">3D Room Element</span>
             </div>
-            <ha-icon class="section-chevron ${this._openSections['card_settings'] ? 'open' : ''}" icon="mdi:chevron-down"></ha-icon>
+            <ha-icon class="section-chevron ${this._openSections['3d_asset'] ? 'open' : ''}" icon="mdi:chevron-down"></ha-icon>
           </div>
-          <div class="section-body ${this._openSections['card_settings'] ? 'open' : ''}">
-
-            <!-- 3D Asset -->
-            <div class="editor-sublabel" style="font-weight: 600; font-size: 0.875rem; color: var(--primary-text-color); margin-bottom: 4px;">3D Room Element</div>
+          <div class="section-body ${this._openSections['3d_asset'] ? 'open' : ''}">
             <div class="editor-sublabel">Select a built-in 3D asset or enter a custom image URL</div>
-
             <div class="asset-list">
               ${ASSETS_3D.map((asset) => {
                 const selected = img === asset.key;
@@ -310,7 +306,6 @@ export class HaLuminaRoomCardEditor extends LitElement {
                 `;
               })}
             </div>
-
             <div class="editor-row">
               <ha-textfield
                 label="Or custom image URL"
@@ -319,9 +314,19 @@ export class HaLuminaRoomCardEditor extends LitElement {
               ></ha-textfield>
               <span class="custom-url-note">Supports: /local/image.png or full URLs</span>
             </div>
+          </div>
+        </div>
 
-            <!-- Button Labels -->
-            <div class="editor-sublabel" style="font-weight: 600; font-size: 0.875rem; color: var(--primary-text-color); margin-top: 12px; margin-bottom: 4px;">Button Labels</div>
+        <!-- ─── Button Labels (Collapsible) ──────────────── -->
+        <div class="section-collapsible">
+          <div class="section-header" @click=${() => this._toggleSection('labels')}>
+            <div class="section-header-left">
+              <ha-icon icon="mdi:label-outline"></ha-icon>
+              <span class="section-title">Button Labels</span>
+            </div>
+            <ha-icon class="section-chevron ${this._openSections['labels'] ? 'open' : ''}" icon="mdi:chevron-down"></ha-icon>
+          </div>
+          <div class="section-body ${this._openSections['labels'] ? 'open' : ''}">
             <div class="editor-sublabel">Custom names for the action buttons (leave empty for defaults)</div>
             <div class="label-row">
               <ha-textfield label="Lights" .value=${this._config.lights_label || ''}
@@ -335,9 +340,19 @@ export class HaLuminaRoomCardEditor extends LitElement {
               <ha-textfield label="Clean" .value=${this._config.vacuum_label || ''}
                 @input=${(e: Event) => this._set('vacuum_label', (e.target as HTMLInputElement).value)}></ha-textfield>
             </div>
+          </div>
+        </div>
 
-            <!-- Sensors -->
-            <div class="editor-sublabel" style="font-weight: 600; font-size: 0.875rem; color: var(--primary-text-color); margin-top: 12px; margin-bottom: 4px;">Sensors</div>
+        <!-- ─── Sensors (Collapsible) ────────────────────── -->
+        <div class="section-collapsible">
+          <div class="section-header" @click=${() => this._toggleSection('sensors')}>
+            <div class="section-header-left">
+              <ha-icon icon="mdi:thermometer"></ha-icon>
+              <span class="section-title">Sensors</span>
+            </div>
+            <ha-icon class="section-chevron ${this._openSections['sensors'] ? 'open' : ''}" icon="mdi:chevron-down"></ha-icon>
+          </div>
+          <div class="section-body ${this._openSections['sensors'] ? 'open' : ''}">
             <div class="editor-row">
               <ha-entity-picker .hass=${this.hass} label="Temperature Entity"
                 .value=${this._config.temperature_entity || ''} .includeDomains=${['sensor']}
@@ -350,7 +365,6 @@ export class HaLuminaRoomCardEditor extends LitElement {
                 @value-changed=${(e: CustomEvent) => this._set('humidity_entity', e.detail.value)}
                 allow-custom-entity></ha-entity-picker>
             </div>
-
           </div>
         </div>
 

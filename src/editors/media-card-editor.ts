@@ -103,7 +103,13 @@ export class HaLuminaMediaCardEditor extends LitElement {
   }
 
   private _addEntity(): void {
-    this._set('entities', [...this._getEntities(), { entity: '' }]);
+    const current = this._getEntities().map((e) => this._toObj(e));
+    current.push({ entity: '' });
+    // Migrate: always use entities array, clear legacy entity field
+    const c = { ...this._config, entities: current } as Record<string, unknown>;
+    delete c.entity;
+    this._config = c as LuminaMediaCardConfig;
+    this._dispatch();
   }
 
   private _removeEntity(i: number): void {
