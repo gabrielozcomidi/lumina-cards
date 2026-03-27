@@ -74,26 +74,90 @@ export const mediaCardStyles = css`
     align-items: center;
     gap: var(--lumina-space-2);
   }
+  .header-action-wrapper {
+    position: relative;
+  }
   .header-action-btn {
-    width: 32px; height: 32px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 var(--lumina-space-3);
     border-radius: var(--lumina-radius-full);
     border: 1px solid var(--lumina-ghost-border);
     background: var(--lumina-surface-container-high);
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
     color: var(--lumina-on-surface-variant);
     transition: all var(--lumina-transition-fast);
     -webkit-tap-highlight-color: transparent;
+    font-family: var(--lumina-font-body);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    white-space: nowrap;
   }
   .header-action-btn ha-icon { --mdc-icon-size: 16px; }
+  .header-action-label {
+    max-width: 64px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .header-action-btn:hover {
     background: var(--lumina-surface-container-highest);
     color: var(--lumina-primary);
     border-color: rgba(133, 173, 255, 0.3);
   }
+
+  /* Source dropdown */
+  .source-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 180px;
+    max-height: 280px;
+    overflow-y: auto;
+    background: var(--lumina-surface-container-high);
+    border: 1px solid var(--lumina-ghost-border);
+    border-radius: var(--lumina-radius-lg);
+    padding: var(--lumina-space-2);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    scrollbar-width: thin;
+    scrollbar-color: var(--lumina-outline-variant) transparent;
+  }
+  .source-dropdown::-webkit-scrollbar { width: 3px; }
+  .source-dropdown::-webkit-scrollbar-thumb { background: var(--lumina-outline-variant); border-radius: 9999px; }
+  .source-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: var(--lumina-space-3);
+    padding: var(--lumina-space-2) var(--lumina-space-3);
+    border: none;
+    background: transparent;
+    border-radius: var(--lumina-radius-md, 8px);
+    cursor: pointer;
+    font-family: var(--lumina-font-body);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--lumina-on-surface);
+    transition: background var(--lumina-transition-fast);
+    -webkit-tap-highlight-color: transparent;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .source-dropdown-item ha-icon {
+    --mdc-icon-size: 18px;
+    color: var(--lumina-on-surface-variant);
+    flex-shrink: 0;
+  }
+  .source-dropdown-item:hover { background: var(--lumina-surface-container-highest); }
+  .source-dropdown-item.active {
+    background: rgba(133, 173, 255, 0.1);
+    color: var(--lumina-primary);
+  }
+  .source-dropdown-item.active ha-icon { color: var(--lumina-primary); }
   .now-playing-label {
     font-size: 0.6875rem;
     font-weight: 600;

@@ -574,19 +574,29 @@ export class HaLuminaMediaCard extends LitElement {
             </div>
             <div class="now-playing-right">
               ${this._isGrouped ? html`<span class="grouped-badge"><ha-icon icon="mdi:speaker-multiple"></ha-icon> Grouped</span>` : nothing}
-              ${isSpeaker && this.config.show_source && sourceList.length ? html`
-                <button class="header-action-btn" @click=${() => { this._sourcesExpanded = !this._sourcesExpanded; }}>
-                  <ha-icon icon="mdi:speaker"></ha-icon>
-                </button>
-              ` : nothing}
-              ${!isSpeaker && this.config.show_source && sourceList.length ? html`
-                <button class="header-action-btn" @click=${() => { this._sourcesExpanded = !this._sourcesExpanded; }}>
-                  <ha-icon icon="mdi:apps"></ha-icon>
-                </button>
+              ${this.config.show_source && sourceList.length ? html`
+                <div class="header-action-wrapper">
+                  <button class="header-action-btn" @click=${() => { this._sourcesExpanded = !this._sourcesExpanded; }}>
+                    <ha-icon icon="${isSpeaker ? 'mdi:speaker' : 'mdi:apps'}"></ha-icon>
+                    <span class="header-action-label">${currentSource || 'Source'}</span>
+                  </button>
+                  ${this._sourcesExpanded ? html`
+                    <div class="source-dropdown">
+                      ${sourceList.map((source) => html`
+                        <button class="source-dropdown-item ${currentSource === source ? 'active' : ''}"
+                          @click=${() => this._selectSource(source)}>
+                          <ha-icon icon="${isSpeaker ? getSpeakerSourceIcon(source) : getAppIcon(source)}"></ha-icon>
+                          <span>${source}</span>
+                        </button>
+                      `)}
+                    </div>
+                  ` : nothing}
+                </div>
               ` : nothing}
               ${isSpeaker ? html`
                 <button class="header-action-btn" @click=${() => this._enterBrowseMode()}>
                   <ha-icon icon="mdi:folder-music"></ha-icon>
+                  <span class="header-action-label">Browse</span>
                 </button>
               ` : nothing}
               ${!isSpeaker ? html`
@@ -658,13 +668,6 @@ export class HaLuminaMediaCard extends LitElement {
           </div>
           <span class="volume-icon"><ha-icon icon="mdi:volume-high"></ha-icon></span>
         </div>
-
-        <!-- Sources / Apps (collapsible, triggered from header) -->
-        ${this._sourcesExpanded && this.config.show_source && sourceList.length
-          ? isSpeaker
-            ? this._renderSpeakerSources(sourceList, currentSource)
-            : this._renderTvApps(sourceList, currentSource)
-          : nothing}
 
         ${isSpeaker ? this._renderShortcuts() : nothing}
         ${isSpeaker && this.config.show_speaker_management !== false ? this._renderSpeakerManagement() : nothing}
