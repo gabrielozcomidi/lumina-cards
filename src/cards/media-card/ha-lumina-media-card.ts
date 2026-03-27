@@ -739,19 +739,20 @@ export class HaLuminaMediaCard extends LitElement {
           </div>
 
           <!-- Search bar -->
-          <div class="browse-search">
-            <ha-icon icon="mdi:magnify"></ha-icon>
-            <input type="text" class="browse-search-input"
-              placeholder="${isRoot ? 'Search media...' : `Search ${title.toLowerCase()}...`}"
-              .value=${this._browseSearch}
-              @input=${(e: Event) => { this._browseSearch = (e.target as HTMLInputElement).value; }}
-            />
-            ${this._browseSearch ? html`
-              <button class="browse-search-clear" @click=${() => { this._browseSearch = ''; }}>
+          ${!isRoot ? html`
+            <div class="browse-search">
+              <ha-icon icon="mdi:magnify"></ha-icon>
+              <input type="text" class="browse-search-input"
+                placeholder="Search ${title.toLowerCase()}..."
+                .value=${this._browseSearch}
+                @input=${(e: Event) => { this._browseSearch = (e.target as HTMLInputElement).value; }}
+              />
+              <button class="browse-search-clear ${this._browseSearch ? 'visible' : ''}"
+                @click=${() => { this._browseSearch = ''; }}>
                 <ha-icon icon="mdi:close"></ha-icon>
               </button>
-            ` : nothing}
-          </div>
+            </div>
+          ` : nothing}
 
           ${this._browseLoading ? html`
             <div class="browse-loading"><div class="browse-spinner"></div></div>

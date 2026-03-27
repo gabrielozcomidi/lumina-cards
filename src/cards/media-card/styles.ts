@@ -537,6 +537,13 @@ export const mediaCardStyles = css`
     color: var(--lumina-on-surface-variant);
     flex-shrink: 0;
     -webkit-tap-highlight-color: transparent;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--lumina-transition-fast);
+  }
+  .browse-search-clear.visible {
+    opacity: 1;
+    pointer-events: auto;
   }
   .browse-search-clear ha-icon { --mdc-icon-size: 16px; }
 
