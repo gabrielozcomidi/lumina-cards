@@ -443,29 +443,41 @@ export class HaLuminaMediaCard extends LitElement {
 
   private async _doMassSearch(query: string, configEntryId: string): Promise<void> {
     try {
-      const response = await this.hass.callService('music_assistant', 'search', {
-        config_entry_id: configEntryId,
-        name: query,
-        limit: 25,
-      }) as unknown;
+      // Use WebSocket directly with return_response to get search results
+      const conn = (this.hass as unknown as { connection: { sendMessagePromise: (msg: Record<string, unknown>) => Promise<unknown> } }).connection;
+      const wsResponse = await conn.sendMessagePromise({
+        type: 'call_service',
+        domain: 'music_assistant',
+        service: 'search',
+        service_data: {
+          config_entry_id: configEntryId,
+          name: query,
+          limit: 25,
+        },
+        return_response: true,
+      });
 
       if (!this.isConnected || this._browseSearch.trim() !== query) return;
 
-      // Convert MA search results to MediaPlayerItem format
+      // Extract response data from WS result
+      const response = (wsResponse as Record<string, unknown>)?.response as Record<string, unknown> | undefined;
       const results: MediaPlayerItem[] = [];
+
       if (response && typeof response === 'object') {
-        for (const [mediaType, items] of Object.entries(response as Record<string, unknown[]>)) {
+        for (const [mediaType, items] of Object.entries(response)) {
           if (!Array.isArray(items)) continue;
-          for (const item of items) {
-            const r = item as Record<string, unknown>;
+          for (const item of items as Record<string, unknown>[]) {
+            const imgObj = item.image as Record<string, unknown> | string | undefined;
+            const thumb = typeof imgObj === 'object' && imgObj ? (imgObj.url as string) || null
+              : typeof imgObj === 'string' ? imgObj : (item.thumbnail as string) || null;
             results.push({
-              title: (r.name as string) || (r.title as string) || 'Unknown',
-              media_content_id: (r.uri as string) || (r.media_content_id as string) || '',
+              title: (item.name as string) || (item.title as string) || 'Unknown',
+              media_content_id: (item.uri as string) || (item.media_content_id as string) || '',
               media_content_type: mediaType.replace(/s$/, ''),
               media_class: mediaType.replace(/s$/, ''),
               can_play: true,
               can_expand: mediaType !== 'tracks',
-              thumbnail: ((r.image as Record<string, unknown>)?.url as string) || (r.image as string) || (r.thumbnail as string) || null,
+              thumbnail: thumb,
             });
           }
         }
