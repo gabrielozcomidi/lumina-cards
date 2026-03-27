@@ -354,6 +354,7 @@ export class HaLuminaMediaCard extends LitElement {
 
   private async _browseInto(item: MediaPlayerItem): Promise<void> {
     if (this._browseItems) this._browseStack = [...this._browseStack, this._browseItems];
+    this._browseSearch = '';
     this._browseLoading = true;
     try {
       const result = await (this.hass as unknown as { callWS: (msg: Record<string, unknown>) => Promise<MediaPlayerItem> }).callWS({
@@ -368,6 +369,7 @@ export class HaLuminaMediaCard extends LitElement {
   }
 
   private _browseBack(): void {
+    this._browseSearch = '';
     if (this._browseStack.length > 0) {
       const stack = [...this._browseStack];
       this._browseItems = stack.pop()!;
@@ -742,9 +744,7 @@ export class HaLuminaMediaCard extends LitElement {
           ` : isRoot ? html`
             ${rootChildren?.length ? html`
               <div class="browse-grid">
-                ${rootChildren
-                  .filter((item) => !query || item.title.toLowerCase().includes(query))
-                  .map((item) => html`
+                ${rootChildren.map((item) => html`
                   <button class="browse-category" @click=${() => this._handleBrowseItem(item)}>
                     <div class="browse-category-icon">
                       <ha-icon icon="${this._mediaClassIcon(item.media_class || item.media_content_type)}"></ha-icon>
