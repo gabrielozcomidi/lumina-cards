@@ -168,6 +168,12 @@ export class HaLuminaMediaCardEditor extends LitElement {
         `)}
         <div class="add-btn" @click=${this._addEntity}>+ Add Media Player</div>
 
+        <div class="editor-section">Audio Format</div>
+        <ha-entity-picker .hass=${this.hass} label="Audio Format Sensor (e.g. Sonos audio format)"
+          .value=${this._config.audio_format_entity || ''} .includeDomains=${['sensor']}
+          @value-changed=${(e: CustomEvent) => this._set('audio_format_entity', e.detail.value)}
+          allow-custom-entity></ha-entity-picker>
+
         <div class="editor-section">Options</div>
         <div class="toggle-row">
           <span class="toggle-label">Show Source Selector</span>

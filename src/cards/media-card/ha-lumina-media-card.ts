@@ -223,30 +223,29 @@ export class HaLuminaMediaCard extends LitElement {
   }
 
   private get _audioFormat(): string | null {
+    // Primary: read from configured audio format sensor entity
+    if (this.config.audio_format_entity) {
+      const sensor = getEntity(this.hass, this.config.audio_format_entity);
+      if (sensor && sensor.state && sensor.state !== 'unknown' && sensor.state !== 'unavailable') {
+        return sensor.state;
+      }
+    }
+
+    // Fallback: scan media player attributes
     const entity = this._entity;
     if (!entity) return null;
     const attrs = entity.attributes;
 
-    // Check well-known format attributes first
     for (const key of ['sonos_audio_format', 'media_channel', 'media_encoding', 'media_format', 'stream_type', 'audio_format']) {
       const val = attrs[key];
       if (typeof val === 'string' && val.length > 0 && FORMAT_REGEX.test(val)) return val;
     }
 
-    // Scan all attributes for format keywords
     for (const [key, val] of Object.entries(attrs)) {
       if (SKIP_ATTRS.has(key) || typeof val !== 'string') continue;
       const match = val.match(FORMAT_REGEX);
       if (match) return match[0];
     }
-
-    // Fallback: show media content type (music, tvshow, etc.)
-    const contentType = attrs.media_content_type as string | undefined;
-    if (contentType) return contentType.charAt(0).toUpperCase() + contentType.slice(1);
-
-    // Fallback: show current source as format indicator
-    const source = attrs.source as string | undefined;
-    if (source) return source;
 
     return null;
   }

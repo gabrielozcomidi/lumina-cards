@@ -538,6 +538,10 @@ export class HaLuminaRoomCardEditor extends LitElement {
                 </div>
               `)}
               <div class="add-btn" @click=${this._addMediaEntity}>+ Add Media Player</div>
+              <ha-entity-picker .hass=${this.hass} label="Audio Format Sensor"
+                .value=${this._config.audio_format_entity || ''} .includeDomains=${['sensor']}
+                @value-changed=${(e: CustomEvent) => this._set('audio_format_entity', e.detail.value)}
+                allow-custom-entity></ha-entity-picker>
             ` : ''}
           </div>
         </div>
