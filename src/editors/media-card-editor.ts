@@ -34,18 +34,26 @@ export class HaLuminaMediaCardEditor extends LitElement {
   `;
 
   public setConfig(config: LuminaMediaCardConfig): void {
-    // Always migrate legacy single entity to entities array
-    if (config.entity && !config.entities?.length) {
-      const { entity, ...rest } = config as Record<string, unknown>;
-      this._config = { ...rest, entities: [{ entity: entity as string }] } as LuminaMediaCardConfig;
-    } else {
-      this._config = { ...config };
+    // Always normalize to entities array
+    const c = { ...config } as Record<string, unknown>;
+    if (!Array.isArray(c.entities) || !(c.entities as unknown[]).length) {
+      if (c.entity) {
+        c.entities = [{ entity: c.entity as string }];
+        delete c.entity;
+      } else {
+        c.entities = [];
+      }
     }
+    this._config = c as LuminaMediaCardConfig;
   }
 
   async connectedCallback(): Promise<void> {
     super.connectedCallback();
-    await loadHaElements();
+    try {
+      await loadHaElements();
+    } catch {
+      // Continue even if HA elements fail to load
+    }
     this._haLoaded = true;
   }
 
