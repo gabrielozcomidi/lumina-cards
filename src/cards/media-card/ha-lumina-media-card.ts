@@ -371,9 +371,10 @@ export class HaLuminaMediaCard extends LitElement {
     const isSpeaker = this._activePlayerType === 'speaker';
 
     if (!this._isActive) {
-      // Idle state — show last played info if available
       const lastTitle = entity.attributes.media_title as string | undefined;
       const lastArtist = entity.attributes.media_artist as string | undefined;
+      const sourceList = (entity.attributes.source_list as string[]) || [];
+      const currentSource = entity.attributes.source as string | undefined;
       return html`
         <div class="media-card">
           ${this._hasMultiple ? this._renderPlayerSelector() : nothing}
@@ -393,6 +394,12 @@ export class HaLuminaMediaCard extends LitElement {
               </div>
             ` : html`<span class="idle-text">No media playing</span>`}
           </div>
+          <!-- Source selector available in idle state too -->
+          ${this.config.show_source && sourceList.length
+            ? isSpeaker
+              ? this._renderSpeakerSources(sourceList, currentSource)
+              : this._renderTvApps(sourceList, currentSource)
+            : nothing}
           ${isSpeaker ? this._renderShortcuts() : nothing}
           ${isSpeaker ? this._renderBrowseMedia() : nothing}
           ${isSpeaker && this.config.show_speaker_management !== false ? this._renderSpeakerManagement() : nothing}
