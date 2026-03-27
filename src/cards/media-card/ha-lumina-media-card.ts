@@ -20,15 +20,22 @@ import '../../components/lumina-chip';
 import '../../components/lumina-slider';
 import '../../components/lumina-icon-button';
 
+// ─── Feature bitmask constants (HA MediaPlayerEntityFeature) ───
+const SUPPORT_SEEK = 4;
+const SUPPORT_SHUFFLE = 32768;
+const SUPPORT_REPEAT = 262144;
+
+// ─── Audio format detection regex ─────────────────────────────
+const FORMAT_REGEX = /\b(stereo|dolby(?:\s+(?:digital|atmos|surround))?(?:\s+\d+\.\d+)?|atmos|surround(?:\s+\d+\.\d+)?|dts(?:[- ](?:hd|x|ma))?|pcm|flac|aac|mp3|ogg|wav|alac|mono|5\.1|7\.1|lossless|hi-?res)\b/i;
+const SKIP_ATTRS = new Set(['friendly_name', 'entity_picture', 'media_title', 'media_artist', 'media_album_name', 'source', 'source_list', 'group_members', 'icon', 'supported_features', 'media_content_id', 'media_position_updated_at']);
+
 interface NormalizedMedia { id: string; customName?: string; playerType: MediaPlayerType }
 
-/** Normalize entity config */
 function normalizeMediaEntity(cfg: string | MediaEntityConfig): NormalizedMedia {
   if (typeof cfg === 'string') return { id: cfg, playerType: 'speaker' };
   return { id: cfg.entity, customName: cfg.name, playerType: cfg.player_type || 'speaker' };
 }
 
-/** Map source name to an app/streaming icon */
 function getAppIcon(source: string): string {
   const s = source.toLowerCase();
   if (s.includes('netflix')) return 'mdi:netflix';
@@ -42,6 +49,12 @@ function getAppIcon(source: string): string {
   if (s.includes('spotify')) return 'mdi:spotify';
   if (s.includes('hulu')) return 'mdi:television-play';
   if (s.includes('twitch')) return 'mdi:twitch';
+  if (s.includes('tidal')) return 'mdi:music-box-multiple';
+  if (s.includes('deezer')) return 'mdi:music-note';
+  if (s.includes('qobuz')) return 'mdi:music-circle';
+  if (s.includes('soundcloud')) return 'mdi:cloud';
+  if (s.includes('chromecast') || s.includes('cast')) return 'mdi:cast';
+  if (s.includes('dlna') || s.includes('upnp')) return 'mdi:dlna';
   if (s.includes('hdmi')) return 'mdi:video-input-hdmi';
   if (s.includes('usb')) return 'mdi:usb';
   if (s.includes('game') || s.includes('playstation') || s.includes('xbox') || s.includes('nintendo')) return 'mdi:gamepad-variant';
@@ -49,7 +62,6 @@ function getAppIcon(source: string): string {
   return 'mdi:application';
 }
 
-/** Map source name to a speaker/audio icon */
 function getSpeakerSourceIcon(source: string): string {
   const s = source.toLowerCase();
   if (s.includes('spotify')) return 'mdi:spotify';
@@ -61,6 +73,11 @@ function getSpeakerSourceIcon(source: string): string {
   if (s.includes('youtube')) return 'mdi:youtube';
   if (s.includes('amazon') || s.includes('alexa')) return 'mdi:amazon';
   if (s.includes('apple') || s.includes('music')) return 'mdi:music-box';
+  if (s.includes('tidal')) return 'mdi:music-box-multiple';
+  if (s.includes('deezer')) return 'mdi:music-note';
+  if (s.includes('qobuz')) return 'mdi:music-circle';
+  if (s.includes('soundcloud')) return 'mdi:cloud';
+  if (s.includes('chromecast') || s.includes('cast')) return 'mdi:cast';
   return 'mdi:speaker';
 }
 
@@ -71,7 +88,10 @@ export class HaLuminaMediaCard extends LitElement {
 
   @state() private _currentPosition = 0;
   @state() private _activeEntityId: string | null = null;
+  @state() private _sourcesExpanded = false;
+  @state() private _artError = false;
   private _positionTimer: ReturnType<typeof setInterval> | undefined;
+  private _lastArtUrl: string | null = null;
 
   static styles = [luminaTokens, sharedStyles, mediaCardStyles];
 
@@ -83,7 +103,6 @@ export class HaLuminaMediaCard extends LitElement {
   }, 150);
 
   public setConfig(config: LuminaMediaCardConfig): void {
-    // Migrate legacy single entity to entities array
     let resolved = config;
     if (config.entity && !config.entities?.length) {
       const { entity, ...rest } = config as Record<string, unknown>;
@@ -96,14 +115,8 @@ export class HaLuminaMediaCard extends LitElement {
   }
 
   public getCardSize(): number { return 6; }
-
-  static getConfigElement(): HTMLElement {
-    return document.createElement('ha-lumina-media-card-editor');
-  }
-
-  static getStubConfig() {
-    return { type: 'custom:ha-lumina-media-card', entities: [], show_source: true, show_progress: true };
-  }
+  static getConfigElement(): HTMLElement { return document.createElement('ha-lumina-media-card-editor'); }
+  static getStubConfig() { return { type: 'custom:ha-lumina-media-card', entities: [], show_source: true, show_progress: true }; }
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -116,39 +129,35 @@ export class HaLuminaMediaCard extends LitElement {
   }
 
   protected updated(changed: PropertyValues): void {
-    if (changed.has('hass')) this._syncPosition();
+    if (changed.has('hass')) {
+      this._syncPosition();
+      // Reset art error when URL changes
+      const url = this._artUrl;
+      if (url !== this._lastArtUrl) {
+        this._artError = false;
+        this._lastArtUrl = url;
+      }
+    }
   }
 
   // ─── Entity Resolution ─────────────────────────────
 
   private get _allEntities(): NormalizedMedia[] {
-    if (this.config.entities?.length) {
-      return this.config.entities.map(normalizeMediaEntity);
-    }
-    if (this.config.entity) {
-      return [{ id: this.config.entity, playerType: 'speaker' as MediaPlayerType }];
-    }
+    if (this.config.entities?.length) return this.config.entities.map(normalizeMediaEntity);
+    if (this.config.entity) return [{ id: this.config.entity, playerType: 'speaker' as MediaPlayerType }];
     return [];
   }
 
-  private get _hasMultiple(): boolean {
-    return this._allEntities.length > 1;
-  }
+  private get _hasMultiple(): boolean { return this._allEntities.length > 1; }
 
   private get _activeId(): string {
-    if (this._activeEntityId && this._allEntities.some((e) => e.id === this._activeEntityId)) {
-      return this._activeEntityId;
-    }
-    const playing = this._allEntities.find((e) => {
-      const ent = getEntity(this.hass, e.id);
-      return ent?.state === 'playing';
-    });
+    if (this._activeEntityId && this._allEntities.some((e) => e.id === this._activeEntityId)) return this._activeEntityId;
+    const playing = this._allEntities.find((e) => getEntity(this.hass, e.id)?.state === 'playing');
     return playing?.id || this._allEntities[0]?.id || '';
   }
 
   private get _activePlayerType(): MediaPlayerType {
-    const found = this._allEntities.find((e) => e.id === this._activeId);
-    return found?.playerType || 'speaker';
+    return this._allEntities.find((e) => e.id === this._activeId)?.playerType || 'speaker';
   }
 
   private _getMediaEntity(id: string): MediaPlayerEntity | undefined {
@@ -169,8 +178,7 @@ export class HaLuminaMediaCard extends LitElement {
     const position = entity.attributes.media_position as number | undefined;
     const updatedAt = entity.attributes.media_position_updated_at as string | undefined;
     if (position !== undefined && updatedAt && entity.state === 'playing') {
-      const elapsed = (Date.now() - new Date(updatedAt).getTime()) / 1000;
-      this._currentPosition = position + elapsed;
+      this._currentPosition = position + (Date.now() - new Date(updatedAt).getTime()) / 1000;
     } else if (position !== undefined) {
       this._currentPosition = position;
     }
@@ -179,9 +187,7 @@ export class HaLuminaMediaCard extends LitElement {
   private _startPositionTracking(): void {
     this._stopPositionTracking();
     this._positionTimer = setInterval(() => {
-      if (this._entity?.state === 'playing' && this._duration > 0) {
-        this._currentPosition += 1;
-      }
+      if (this._entity?.state === 'playing' && this._duration > 0) this._currentPosition += 1;
     }, 1000);
   }
 
@@ -191,13 +197,12 @@ export class HaLuminaMediaCard extends LitElement {
 
   // ─── Computed ─────────────────────────────────────
 
-  private get _entity(): MediaPlayerEntity | undefined {
-    return this._getMediaEntity(this._activeId);
-  }
-
+  private get _entity(): MediaPlayerEntity | undefined { return this._getMediaEntity(this._activeId); }
   private get _isPlaying(): boolean { return this._entity?.state === 'playing'; }
   private get _isPaused(): boolean { return this._entity?.state === 'paused'; }
   private get _isActive(): boolean { return this._isPlaying || this._isPaused; }
+  private get _duration(): number { return (this._entity?.attributes.media_duration as number) || 0; }
+  private get _isMuted(): boolean { return !!this._entity?.attributes.is_volume_muted; }
 
   private get _artUrl(): string | null {
     const pic = this._entity?.attributes.entity_picture;
@@ -205,27 +210,16 @@ export class HaLuminaMediaCard extends LitElement {
     return pic.startsWith('/') ? `${location.origin}${pic}` : pic;
   }
 
-  private get _duration(): number {
-    return (this._entity?.attributes.media_duration as number) || 0;
-  }
-
-  private get _groupMembers(): string[] {
-    return (this._entity?.attributes.group_members as string[]) || [];
-  }
-
-  private get _isGrouped(): boolean {
-    return this._groupMembers.length > 1;
-  }
+  private get _groupMembers(): string[] { return (this._entity?.attributes.group_members as string[]) || []; }
+  private get _isGrouped(): boolean { return this._groupMembers.length > 1; }
 
   private get _groupedRoomName(): string {
     const found = this._allEntities.find((e) => e.id === this._activeId);
     if (!this._isGrouped) return this._getDisplayName(this._activeId, found?.customName);
-    return this._groupMembers
-      .map((id) => {
-        const e = getEntity(this.hass, id);
-        return e ? entityName(e) : id.split('.')[1];
-      })
-      .join(' + ');
+    return this._groupMembers.map((id) => {
+      const e = getEntity(this.hass, id);
+      return e ? entityName(e) : id.split('.')[1];
+    }).join(' + ');
   }
 
   private get _audioFormat(): string | null {
@@ -233,61 +227,88 @@ export class HaLuminaMediaCard extends LitElement {
     if (!entity) return null;
     const attrs = entity.attributes;
 
-    // Sonos audio format (Stereo, Dolby Digital 5.1, Dolby Atmos, etc.)
-    const sonosFormat = attrs.sonos_audio_format as string | undefined;
-    if (sonosFormat) return sonosFormat;
+    // Check well-known format attributes first
+    for (const key of ['sonos_audio_format', 'media_channel', 'media_encoding', 'media_format', 'stream_type', 'audio_format']) {
+      const val = attrs[key];
+      if (typeof val === 'string' && val.length > 0 && FORMAT_REGEX.test(val)) return val;
+    }
 
-    // Media channel (Sonos TV input shows format here)
-    const mediaChannel = attrs.media_channel as string | undefined;
-    if (mediaChannel && /stereo|dolby|atmos|surround|dts|pcm|mono/i.test(mediaChannel)) return mediaChannel;
-
-    // Generic encoding/format attributes (Music Assistant, etc.)
-    const encoding = (attrs.media_encoding as string) || (attrs.media_format as string) || (attrs.stream_type as string);
-    if (encoding) return encoding;
+    // Scan all attributes for format keywords
+    for (const [key, val] of Object.entries(attrs)) {
+      if (SKIP_ATTRS.has(key) || typeof val !== 'string') continue;
+      const match = val.match(FORMAT_REGEX);
+      if (match) return match[0];
+    }
 
     return null;
   }
 
-  /** Other configured speaker entities (for group all) */
   private get _otherSpeakerIds(): string[] {
-    return this._allEntities
-      .filter((e) => e.id !== this._activeId && e.playerType === 'speaker')
-      .map((e) => e.id);
+    return this._allEntities.filter((e) => e.id !== this._activeId && e.playerType === 'speaker').map((e) => e.id);
+  }
+
+  private _hasFeature(feature: number): boolean {
+    return !!((this._entity?.attributes.supported_features || 0) & feature);
   }
 
   // ─── Actions ──────────────────────────────────────
 
-  private _selectPlayer(id: string): void {
-    this._activeEntityId = id;
-  }
-
+  private _selectPlayer(id: string): void { this._activeEntityId = id; this._sourcesExpanded = false; }
   private _playPause(): void { callService(this.hass, 'media_player', 'media_play_pause', { entity_id: this._activeId }); }
   private _prev(): void { callService(this.hass, 'media_player', 'media_previous_track', { entity_id: this._activeId }); }
   private _next(): void { callService(this.hass, 'media_player', 'media_next_track', { entity_id: this._activeId }); }
   private _onVolume(e: CustomEvent): void { this._debouncedVolume(e.detail.value); }
+
+  private _toggleMute(): void {
+    callService(this.hass, 'media_player', 'volume_mute', {
+      entity_id: this._activeId,
+      is_volume_muted: !this._isMuted,
+    });
+  }
+
+  private _toggleShuffle(): void {
+    callService(this.hass, 'media_player', 'shuffle_set', {
+      entity_id: this._activeId,
+      shuffle: !this._entity?.attributes.shuffle,
+    });
+  }
+
+  private _cycleRepeat(): void {
+    const current = (this._entity?.attributes.repeat as string) || 'off';
+    const next = current === 'off' ? 'all' : current === 'all' ? 'one' : 'off';
+    callService(this.hass, 'media_player', 'repeat_set', { entity_id: this._activeId, repeat: next });
+  }
+
   private _selectSource(source: string): void {
     callService(this.hass, 'media_player', 'select_source', { entity_id: this._activeId, source });
+    this._sourcesExpanded = false;
+  }
+
+  private _togglePower(): void {
+    callService(this.hass, 'media_player', 'toggle', { entity_id: this._activeId });
+  }
+
+  private _seekToPosition(e: MouseEvent): void {
+    const bar = e.currentTarget as HTMLElement;
+    const rect = bar.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const position = pct * this._duration;
+    callService(this.hass, 'media_player', 'media_seek', { entity_id: this._activeId, seek_position: position });
+    this._currentPosition = position;
   }
 
   private _unjoinSpeaker(speakerId: string): void {
-    callService(this.hass, 'media_player', 'unjoin', {
-      entity_id: speakerId,
-    });
+    callService(this.hass, 'media_player', 'unjoin', { entity_id: speakerId });
   }
 
   private _groupAllSpeakers(): void {
     const others = this._otherSpeakerIds;
     if (!others.length) return;
-    callService(this.hass, 'media_player', 'join', {
-      entity_id: this._activeId,
-      group_members: others,
-    });
+    callService(this.hass, 'media_player', 'join', { entity_id: this._activeId, group_members: others });
   }
 
   private _ungroupAllSpeakers(): void {
-    // Unjoin all non-host members
-    const members = this._groupMembers.filter((id) => id !== this._activeId);
-    members.forEach((id) => {
+    this._groupMembers.filter((id) => id !== this._activeId).forEach((id) => {
       callService(this.hass, 'media_player', 'unjoin', { entity_id: id });
     });
   }
@@ -301,13 +322,32 @@ export class HaLuminaMediaCard extends LitElement {
   }
 
   private _openMediaBrowser(): void {
-    // Fire HA more-info dialog — composed:true crosses all shadow DOM boundaries
-    this.dispatchEvent(new CustomEvent('hass-more-info', {
-      bubbles: true,
-      composed: true,
+    // Try dispatching from self (composed crosses shadow DOM)
+    const event = new CustomEvent('hass-more-info', {
+      bubbles: true, composed: true,
       detail: { entityId: this._activeId },
-    }));
+    });
+    this.dispatchEvent(event);
+
+    // Fallback: traverse shadow roots to find HA root and dispatch there
+    let el: HTMLElement | null = this;
+    while (el) {
+      const root = el.getRootNode() as ShadowRoot | Document;
+      if (root instanceof ShadowRoot && root.host) {
+        el = root.host as HTMLElement;
+      } else {
+        break;
+      }
+    }
+    if (el && el !== this) {
+      el.dispatchEvent(new CustomEvent('hass-more-info', {
+        bubbles: true, composed: true,
+        detail: { entityId: this._activeId },
+      }));
+    }
   }
+
+  private _onArtError(): void { this._artError = true; }
 
   // ─── Render ───────────────────────────────────────
 
@@ -331,12 +371,27 @@ export class HaLuminaMediaCard extends LitElement {
     const isSpeaker = this._activePlayerType === 'speaker';
 
     if (!this._isActive) {
+      // Idle state — show last played info if available
+      const lastTitle = entity.attributes.media_title as string | undefined;
+      const lastArtist = entity.attributes.media_artist as string | undefined;
       return html`
         <div class="media-card">
           ${this._hasMultiple ? this._renderPlayerSelector() : nothing}
+          ${!isSpeaker ? html`
+            <div class="idle-power-row">
+              <button class="power-btn ${entity.state !== 'off' ? 'on' : ''}" @click=${() => this._togglePower()}>
+                <ha-icon icon="mdi:power"></ha-icon>
+              </button>
+            </div>
+          ` : nothing}
           <div class="idle-state">
             <ha-icon icon="${isSpeaker ? 'mdi:speaker-off' : 'mdi:television-off'}"></ha-icon>
-            <span class="idle-text">No media playing</span>
+            ${lastTitle ? html`
+              <div class="idle-last-played">
+                <span class="idle-last-title">${lastTitle}</span>
+                ${lastArtist ? html`<span class="idle-last-artist">${lastArtist}</span>` : nothing}
+              </div>
+            ` : html`<span class="idle-text">No media playing</span>`}
           </div>
           ${isSpeaker ? this._renderShortcuts() : nothing}
           ${isSpeaker ? this._renderBrowseMedia() : nothing}
@@ -352,35 +407,37 @@ export class HaLuminaMediaCard extends LitElement {
     const sourceList = (entity.attributes.source_list as string[]) || [];
     const currentSource = entity.attributes.source as string | undefined;
     const progressPct = this._duration ? Math.min(100, (this._currentPosition / this._duration) * 100) : 0;
+    const showArt = this._artUrl && !this._artError;
 
     return html`
       <div class="media-card" style="position:relative;">
         ${render3dBackground(this.config.image, true)}
         <div class="lumina-3d-content">
 
-        <!-- Player Selector (multi-entity) -->
         ${this._hasMultiple ? this._renderPlayerSelector() : nothing}
 
         <!-- Now Playing Header -->
         <div class="now-playing-header">
           <div class="now-playing-left">
             <span class="now-playing-label">Now Playing</span>
-            ${this._audioFormat ? html`
-              <span class="audio-format-badge">${this._audioFormat}</span>
+            ${this._audioFormat ? html`<span class="audio-format-badge">${this._audioFormat}</span>` : nothing}
+          </div>
+          <div class="now-playing-right">
+            ${this._isGrouped ? html`<span class="grouped-badge"><ha-icon icon="mdi:speaker-multiple"></ha-icon> Grouped</span>` : nothing}
+            ${!isSpeaker ? html`
+              <button class="power-btn on" @click=${() => this._togglePower()}>
+                <ha-icon icon="mdi:power"></ha-icon>
+              </button>
             ` : nothing}
           </div>
-          ${this._isGrouped
-            ? html`<span class="grouped-badge"><ha-icon icon="mdi:speaker-multiple"></ha-icon> Grouped</span>`
-            : nothing}
         </div>
 
-        <!-- Room Title -->
         <div class="room-title">${this._groupedRoomName}</div>
 
         <!-- Album Art -->
         <div class="album-section">
-          ${this._artUrl
-            ? html`<img class="album-art" src=${this._artUrl} alt="Album art" />`
+          ${showArt
+            ? html`<img class="album-art" src=${this._artUrl!} alt="Album art" @error=${() => this._onArtError()} />`
             : html`<div class="album-art-placeholder"><ha-icon icon="${isSpeaker ? 'mdi:music' : 'mdi:television'}"></ha-icon></div>`}
         </div>
 
@@ -390,11 +447,12 @@ export class HaLuminaMediaCard extends LitElement {
           <span class="track-artist">${artist}${album ? ` \u2014 ${album}` : ''}</span>
         </div>
 
-        <!-- Progress Bar -->
+        <!-- Seekable Progress Bar -->
         ${this.config.show_progress && this._duration > 0 ? html`
           <div class="progress-section">
             <span class="progress-time">${formatDuration(this._currentPosition)}</span>
-            <div class="progress-bar">
+            <div class="progress-bar ${this._hasFeature(SUPPORT_SEEK) ? 'seekable' : ''}"
+              @click=${this._hasFeature(SUPPORT_SEEK) ? (e: MouseEvent) => this._seekToPosition(e) : nothing}>
               <div class="progress-fill" style="width: ${progressPct}%"></div>
             </div>
             <span class="progress-time">${formatDuration(this._duration)}</span>
@@ -403,45 +461,51 @@ export class HaLuminaMediaCard extends LitElement {
 
         <!-- Playback Controls -->
         <div class="playback-controls">
-          <lumina-icon-button icon="mdi:skip-previous" @click=${this._prev}></lumina-icon-button>
+          ${this._hasFeature(SUPPORT_SHUFFLE) ? html`
+            <lumina-icon-button icon="mdi:shuffle-variant"
+              class="${entity.attributes.shuffle ? 'control-active' : ''}"
+              @click=${() => this._toggleShuffle()}></lumina-icon-button>
+          ` : nothing}
+          <lumina-icon-button icon="mdi:skip-previous" @click=${() => this._prev()}></lumina-icon-button>
           <lumina-icon-button
             icon=${this._isPlaying ? 'mdi:pause' : 'mdi:play'}
-            size="lg"
-            variant="filled"
-            @click=${this._playPause}
+            size="lg" variant="filled"
+            @click=${() => this._playPause()}
           ></lumina-icon-button>
-          <lumina-icon-button icon="mdi:skip-next" @click=${this._next}></lumina-icon-button>
+          <lumina-icon-button icon="mdi:skip-next" @click=${() => this._next()}></lumina-icon-button>
+          ${this._hasFeature(SUPPORT_REPEAT) ? html`
+            <lumina-icon-button
+              icon="${entity.attributes.repeat === 'one' ? 'mdi:repeat-once' : 'mdi:repeat'}"
+              class="${entity.attributes.repeat && entity.attributes.repeat !== 'off' ? 'control-active' : ''}"
+              @click=${() => this._cycleRepeat()}></lumina-icon-button>
+          ` : nothing}
         </div>
 
-        <!-- Volume -->
+        <!-- Volume with Mute -->
         <div class="volume-section">
-          <span class="volume-icon"><ha-icon icon="mdi:volume-low"></ha-icon></span>
+          <button class="volume-mute-btn ${this._isMuted ? 'muted' : ''}" @click=${() => this._toggleMute()}>
+            <ha-icon icon="${this._isMuted ? 'mdi:volume-off' : 'mdi:volume-low'}"></ha-icon>
+          </button>
           <div class="volume-slider-wrapper">
-            <lumina-slider
-              .value=${volumePercent}
-              .min=${0}
-              .max=${100}
-              color="var(--lumina-primary)"
-              @value-changed=${this._onVolume}
+            <lumina-slider .value=${volumePercent} .min=${0} .max=${100}
+              color="var(--lumina-primary)" @value-changed=${this._onVolume}
             ></lumina-slider>
           </div>
           <span class="volume-icon"><ha-icon icon="mdi:volume-high"></ha-icon></span>
         </div>
 
-        <!-- Sources / Apps (type-dependent) -->
+        <!-- Sources / Apps (collapsible) -->
         ${this.config.show_source && sourceList.length
           ? isSpeaker
             ? this._renderSpeakerSources(sourceList, currentSource)
             : this._renderTvApps(sourceList, currentSource)
           : nothing}
 
-        <!-- Speaker-only sections -->
         ${isSpeaker ? this._renderShortcuts() : nothing}
         ${isSpeaker ? this._renderBrowseMedia() : nothing}
         ${isSpeaker && this.config.show_speaker_management !== false ? this._renderSpeakerManagement() : nothing}
 
-      </div><!-- /lumina-3d-content -->
-      </div>
+      </div></div>
     `;
   }
 
@@ -457,8 +521,7 @@ export class HaLuminaMediaCard extends LitElement {
           const name = this._getDisplayName(id, customName);
           const icon = playerType === 'tv' ? 'mdi:television' : 'mdi:speaker';
           return html`
-            <button class="player-tab ${isActive ? 'active' : ''}"
-              @click=${() => this._selectPlayer(id)}>
+            <button class="player-tab ${isActive ? 'active' : ''}" @click=${() => this._selectPlayer(id)}>
               <ha-icon class="player-tab-icon" icon="${icon}"></ha-icon>
               <span class="player-tab-dot ${isPlaying ? 'playing' : ''}"></span>
               <span class="player-tab-name">${name}</span>
@@ -469,12 +532,26 @@ export class HaLuminaMediaCard extends LitElement {
     `;
   }
 
-  // ─── Render: Speaker Sources (list) ─────────────────
+  // ─── Render: Speaker Sources (collapsible) ──────────
 
   private _renderSpeakerSources(sourceList: string[], currentSource?: string) {
+    if (!this._sourcesExpanded) {
+      return html`
+        <button class="source-compact" @click=${() => { this._sourcesExpanded = true; }}>
+          <ha-icon icon="${currentSource ? getSpeakerSourceIcon(currentSource) : 'mdi:speaker'}"></ha-icon>
+          <span class="source-compact-name">${currentSource || 'Select Source'}</span>
+          <ha-icon class="source-compact-chevron" icon="mdi:chevron-down"></ha-icon>
+        </button>
+      `;
+    }
     return html`
       <div class="sources-section">
-        <span class="sources-label">Sources</span>
+        <div class="sources-header">
+          <span class="sources-label">Sources</span>
+          <button class="sources-close" @click=${() => { this._sourcesExpanded = false; }}>
+            <ha-icon icon="mdi:close"></ha-icon>
+          </button>
+        </div>
         <div class="sources-list">
           ${sourceList.map((source) => html`
             <div class="source-item ${currentSource === source ? 'active' : ''}"
@@ -488,12 +565,26 @@ export class HaLuminaMediaCard extends LitElement {
     `;
   }
 
-  // ─── Render: TV Apps (grid) ─────────────────────────
+  // ─── Render: TV Apps (collapsible) ──────────────────
 
   private _renderTvApps(sourceList: string[], currentSource?: string) {
+    if (!this._sourcesExpanded) {
+      return html`
+        <button class="source-compact" @click=${() => { this._sourcesExpanded = true; }}>
+          <ha-icon icon="${currentSource ? getAppIcon(currentSource) : 'mdi:application'}"></ha-icon>
+          <span class="source-compact-name">${currentSource || 'Select App'}</span>
+          <ha-icon class="source-compact-chevron" icon="mdi:chevron-down"></ha-icon>
+        </button>
+      `;
+    }
     return html`
       <div class="sources-section">
-        <span class="sources-label">Apps & Inputs</span>
+        <div class="sources-header">
+          <span class="sources-label">Apps & Inputs</span>
+          <button class="sources-close" @click=${() => { this._sourcesExpanded = false; }}>
+            <ha-icon icon="mdi:close"></ha-icon>
+          </button>
+        </div>
         <div class="app-grid">
           ${sourceList.map((source) => html`
             <button class="app-item ${currentSource === source ? 'active' : ''}"
@@ -512,7 +603,7 @@ export class HaLuminaMediaCard extends LitElement {
   private _renderBrowseMedia() {
     return html`
       <div class="browse-media-section">
-        <button class="browse-media-btn" @click=${this._openMediaBrowser}>
+        <button class="browse-media-btn" @click=${() => this._openMediaBrowser()}>
           <ha-icon icon="mdi:folder-music"></ha-icon>
           <span>Browse Media</span>
         </button>
@@ -527,7 +618,6 @@ export class HaLuminaMediaCard extends LitElement {
     const otherSpeakers = this._otherSpeakerIds;
     const isGrouped = this._isGrouped;
 
-    // Show section if grouped or if there are other speakers to group with
     if (!isGrouped && otherSpeakers.length === 0) return nothing;
 
     return html`
@@ -536,7 +626,7 @@ export class HaLuminaMediaCard extends LitElement {
           <span class="rooms-title">Speakers</span>
           ${otherSpeakers.length > 0 ? html`
             <button class="group-btn ${isGrouped ? 'grouped' : ''}"
-              @click=${isGrouped ? this._ungroupAllSpeakers : this._groupAllSpeakers}>
+              @click=${() => isGrouped ? this._ungroupAllSpeakers() : this._groupAllSpeakers()}>
               <ha-icon icon="${isGrouped ? 'mdi:speaker-off' : 'mdi:speaker-multiple'}"></ha-icon>
               <span>${isGrouped ? 'Ungroup' : 'Group All'}</span>
             </button>
@@ -557,8 +647,7 @@ export class HaLuminaMediaCard extends LitElement {
                 <span class="room-item-state">${isPlaying ? 'Playing' : 'Idle'} · ${memberVolume}%</span>
               </div>
               ${!isSelf && isGrouped ? html`
-                <button class="room-item-action unjoin" @click=${() => this._unjoinSpeaker(memberId)}
-                  title="Remove from group">
+                <button class="room-item-action unjoin" @click=${() => this._unjoinSpeaker(memberId)} title="Remove from group">
                   <ha-icon icon="mdi:minus-circle-outline"></ha-icon>
                 </button>
               ` : nothing}
@@ -578,11 +667,8 @@ export class HaLuminaMediaCard extends LitElement {
         <span class="shortcuts-label">Shortcuts</span>
         <div class="shortcuts-list">
           ${this.config.shortcuts.map((shortcut) => html`
-            <lumina-chip
-              .icon=${shortcut.icon || 'mdi:play-circle'}
-              .label=${shortcut.name}
-              @click=${() => this._playShortcut(shortcut)}
-            ></lumina-chip>
+            <lumina-chip .icon=${shortcut.icon || 'mdi:play-circle'} .label=${shortcut.name}
+              @click=${() => this._playShortcut(shortcut)}></lumina-chip>
           `)}
         </div>
       </div>

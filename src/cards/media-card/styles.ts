@@ -13,7 +13,7 @@ export const mediaCardStyles = css`
     gap: var(--lumina-space-6);
   }
 
-  /* ─── Player Selector (multi-entity) ──────────────── */
+  /* ─── Player Selector ──────────────────────────────── */
   .player-selector {
     display: flex;
     gap: var(--lumina-space-2);
@@ -21,10 +21,7 @@ export const mediaCardStyles = css`
     padding-bottom: var(--lumina-space-1);
     scrollbar-width: none;
   }
-
-  .player-selector::-webkit-scrollbar {
-    display: none;
-  }
+  .player-selector::-webkit-scrollbar { display: none; }
 
   .player-tab {
     display: flex;
@@ -43,44 +40,40 @@ export const mediaCardStyles = css`
     font-weight: 500;
     color: var(--lumina-on-surface-variant);
   }
-
   .player-tab.active {
     background: rgba(133, 173, 255, 0.1);
     border-color: rgba(133, 173, 255, 0.3);
     color: var(--lumina-primary);
   }
-
   .player-tab-dot {
-    width: 6px;
-    height: 6px;
+    width: 6px; height: 6px;
     border-radius: var(--lumina-radius-full);
     background: var(--lumina-outline-variant);
     flex-shrink: 0;
   }
-
   .player-tab-dot.playing {
     background: var(--lumina-primary);
     box-shadow: 0 0 4px rgba(133, 173, 255, 0.5);
   }
+  .player-tab-name { overflow: hidden; text-overflow: ellipsis; }
+  .player-tab-icon { --mdc-icon-size: 14px; }
 
-  .player-tab-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  /* ─── Now Playing Header ────────────────────────── */
+  /* ─── Now Playing Header ────────────────────────────── */
   .now-playing-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
-
   .now-playing-left {
     display: flex;
     align-items: center;
     gap: var(--lumina-space-3);
   }
-
+  .now-playing-right {
+    display: flex;
+    align-items: center;
+    gap: var(--lumina-space-2);
+  }
   .now-playing-label {
     font-size: 0.6875rem;
     font-weight: 600;
@@ -88,7 +81,6 @@ export const mediaCardStyles = css`
     letter-spacing: 0.08em;
     color: var(--lumina-primary);
   }
-
   .audio-format-badge {
     font-size: 0.5625rem;
     font-weight: 700;
@@ -100,7 +92,6 @@ export const mediaCardStyles = css`
     border: 1px solid var(--lumina-ghost-border);
     color: var(--lumina-on-surface-variant);
   }
-
   .grouped-badge {
     display: inline-flex;
     align-items: center;
@@ -112,12 +103,34 @@ export const mediaCardStyles = css`
     font-weight: 500;
     color: var(--lumina-on-surface-variant);
   }
+  .grouped-badge ha-icon { --mdc-icon-size: 14px; }
 
-  .grouped-badge ha-icon {
-    --mdc-icon-size: 14px;
+  /* ─── Power Button ─────────────────────────────────── */
+  .power-btn {
+    width: 28px; height: 28px;
+    border-radius: var(--lumina-radius-full);
+    border: 1px solid var(--lumina-ghost-border);
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: var(--lumina-outline);
+    transition: all var(--lumina-transition-fast);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .power-btn ha-icon { --mdc-icon-size: 16px; }
+  .power-btn.on {
+    color: var(--lumina-primary);
+    border-color: rgba(133, 173, 255, 0.3);
+  }
+  .idle-power-row {
+    display: flex;
+    justify-content: flex-end;
   }
 
-  /* ─── Room Title ────────────────────────────────── */
+  /* ─── Room Title ────────────────────────────────────── */
   .room-title {
     font-family: var(--lumina-font-headline);
     font-size: 1.25rem;
@@ -126,24 +139,24 @@ export const mediaCardStyles = css`
     line-height: 1.3;
   }
 
-  /* ─── Album Art ─────────────────────────────────── */
+  /* ─── Album Art (responsive) ────────────────────────── */
   .album-section {
     display: flex;
     justify-content: center;
     padding: var(--lumina-space-4) 0;
   }
-
   .album-art {
-    width: 180px;
-    height: 180px;
+    max-width: 220px;
+    width: 60%;
+    aspect-ratio: 1 / 1;
     border-radius: var(--lumina-radius-lg);
     object-fit: cover;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   }
-
   .album-art-placeholder {
-    width: 180px;
-    height: 180px;
+    max-width: 220px;
+    width: 60%;
+    aspect-ratio: 1 / 1;
     border-radius: var(--lumina-radius-lg);
     background: var(--lumina-surface-container-highest);
     display: flex;
@@ -151,12 +164,9 @@ export const mediaCardStyles = css`
     justify-content: center;
     color: var(--lumina-outline);
   }
+  .album-art-placeholder ha-icon { --mdc-icon-size: 64px; }
 
-  .album-art-placeholder ha-icon {
-    --mdc-icon-size: 64px;
-  }
-
-  /* ─── Track Info ────────────────────────────────── */
+  /* ─── Track Info ────────────────────────────────────── */
   .track-info {
     display: flex;
     flex-direction: column;
@@ -164,27 +174,24 @@ export const mediaCardStyles = css`
     gap: var(--lumina-space-1);
     text-align: center;
   }
-
   .track-title {
     font-family: var(--lumina-font-headline);
     font-size: 1.125rem;
     font-weight: 700;
     color: var(--lumina-on-surface);
   }
-
   .track-artist {
     font-size: 0.8125rem;
     color: var(--lumina-on-surface-variant);
   }
 
-  /* ─── Progress Bar ─────────────────────────────── */
+  /* ─── Progress Bar (seekable) ──────────────────────── */
   .progress-section {
     display: flex;
     align-items: center;
     gap: var(--lumina-space-3);
     padding: 0 var(--lumina-space-2);
   }
-
   .progress-time {
     font-size: 0.6875rem;
     font-weight: 500;
@@ -192,19 +199,23 @@ export const mediaCardStyles = css`
     min-width: 32px;
     font-variant-numeric: tabular-nums;
   }
-
-  .progress-time:last-child {
-    text-align: right;
-  }
-
+  .progress-time:last-child { text-align: right; }
   .progress-bar {
     flex: 1;
     height: 3px;
     border-radius: var(--lumina-radius-full);
     background: var(--lumina-surface-container-highest);
     overflow: hidden;
+    position: relative;
   }
-
+  .progress-bar.seekable {
+    cursor: pointer;
+    height: 6px;
+    transition: height var(--lumina-transition-fast);
+  }
+  .progress-bar.seekable:hover {
+    height: 10px;
+  }
   .progress-fill {
     height: 100%;
     border-radius: var(--lumina-radius-full);
@@ -212,57 +223,112 @@ export const mediaCardStyles = css`
     transition: width 1s linear;
   }
 
-  /* ─── Playback Controls ─────────────────────────── */
+  /* ─── Playback Controls ────────────────────────────── */
   .playback-controls {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--lumina-space-6);
+    gap: var(--lumina-space-4);
+  }
+  .control-active {
+    --lumina-icon-button-color: var(--lumina-primary);
+    color: var(--lumina-primary);
   }
 
-  /* ─── Volume ────────────────────────────────────── */
+  /* ─── Volume with Mute ─────────────────────────────── */
   .volume-section {
     display: flex;
     align-items: center;
     gap: var(--lumina-space-3);
     padding: 0 var(--lumina-space-2);
   }
-
+  .volume-mute-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    border: none;
+    background: transparent;
+    border-radius: var(--lumina-radius-full);
+    cursor: pointer;
+    padding: 0;
+    color: var(--lumina-outline);
+    transition: all var(--lumina-transition-fast);
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+  }
+  .volume-mute-btn ha-icon { --mdc-icon-size: 18px; }
+  .volume-mute-btn.muted { color: var(--lumina-error, #f44336); }
+  .volume-mute-btn:hover { background: var(--lumina-surface-container-highest); }
   .volume-icon {
     display: flex;
     color: var(--lumina-outline);
   }
+  .volume-icon ha-icon { --mdc-icon-size: 18px; }
+  .volume-slider-wrapper { flex: 1; }
 
-  .volume-icon ha-icon {
-    --mdc-icon-size: 18px;
+  /* ─── Source Compact Selector ───────────────────────── */
+  .source-compact {
+    display: flex;
+    align-items: center;
+    gap: var(--lumina-space-3);
+    width: 100%;
+    padding: var(--lumina-space-3) var(--lumina-space-4);
+    background: var(--lumina-surface-container-high);
+    border: 1px solid var(--lumina-ghost-border);
+    border-radius: var(--lumina-radius-lg);
+    cursor: pointer;
+    transition: background var(--lumina-transition-fast);
+    -webkit-tap-highlight-color: transparent;
+    font-family: var(--lumina-font-body);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--lumina-on-surface);
   }
+  .source-compact:hover { background: var(--lumina-surface-container-highest); }
+  .source-compact ha-icon { --mdc-icon-size: 20px; color: var(--lumina-primary); }
+  .source-compact-name { flex: 1; text-align: left; }
+  .source-compact-chevron { --mdc-icon-size: 16px; color: var(--lumina-on-surface-variant); }
 
-  .volume-slider-wrapper {
-    flex: 1;
-  }
-
-  /* ─── Sources Section ──────────────────────────── */
+  /* ─── Sources Section (expanded) ────────────────────── */
   .sources-section {
     display: flex;
     flex-direction: column;
     gap: var(--lumina-space-3);
   }
-
+  .sources-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
   .sources-label {
     font-family: var(--lumina-font-headline);
     font-size: 0.9375rem;
     font-weight: 600;
     color: var(--lumina-on-surface);
   }
-
+  .sources-close {
+    width: 28px; height: 28px;
+    border: none;
+    background: transparent;
+    border-radius: var(--lumina-radius-full);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: var(--lumina-on-surface-variant);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sources-close ha-icon { --mdc-icon-size: 18px; }
+  .sources-close:hover { background: var(--lumina-surface-container-highest); }
   .sources-list {
     display: flex;
     flex-direction: column;
     gap: var(--lumina-space-1);
-    max-height: 200px;
+    max-height: 240px;
     overflow-y: auto;
   }
-
   .source-item {
     display: flex;
     align-items: center;
@@ -273,42 +339,22 @@ export const mediaCardStyles = css`
     cursor: pointer;
     transition: background var(--lumina-transition-fast);
   }
-
-  .source-item:hover {
-    background: var(--lumina-surface-container-highest);
-  }
-
+  .source-item:hover { background: var(--lumina-surface-container-highest); }
   .source-item.active {
     background: rgba(133, 173, 255, 0.1);
     border: 1px solid rgba(133, 173, 255, 0.2);
   }
+  .source-item ha-icon { --mdc-icon-size: 20px; color: var(--lumina-on-surface-variant); }
+  .source-item.active ha-icon { color: var(--lumina-primary); }
+  .source-name { font-size: 0.875rem; font-weight: 500; color: var(--lumina-on-surface); }
+  .source-item.active .source-name { color: var(--lumina-primary); }
 
-  .source-item ha-icon {
-    --mdc-icon-size: 20px;
-    color: var(--lumina-on-surface-variant);
-  }
-
-  .source-item.active ha-icon {
-    color: var(--lumina-primary);
-  }
-
-  .source-name {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--lumina-on-surface);
-  }
-
-  .source-item.active .source-name {
-    color: var(--lumina-primary);
-  }
-
-  /* ─── TV App Grid ────────────────────────────────── */
+  /* ─── TV App Grid ──────────────────────────────────── */
   .app-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--lumina-space-2);
   }
-
   .app-item {
     display: flex;
     flex-direction: column;
@@ -323,25 +369,13 @@ export const mediaCardStyles = css`
     -webkit-tap-highlight-color: transparent;
     font-family: var(--lumina-font-body);
   }
-
-  .app-item:hover {
-    background: var(--lumina-surface-container-highest);
-  }
-
+  .app-item:hover { background: var(--lumina-surface-container-highest); }
   .app-item.active {
     background: rgba(133, 173, 255, 0.1);
     border-color: rgba(133, 173, 255, 0.25);
   }
-
-  .app-item ha-icon {
-    --mdc-icon-size: 24px;
-    color: var(--lumina-on-surface-variant);
-  }
-
-  .app-item.active ha-icon {
-    color: var(--lumina-primary);
-  }
-
+  .app-item ha-icon { --mdc-icon-size: 24px; color: var(--lumina-on-surface-variant); }
+  .app-item.active ha-icon { color: var(--lumina-primary); }
   .app-name {
     font-size: 0.625rem;
     font-weight: 500;
@@ -352,16 +386,10 @@ export const mediaCardStyles = css`
     white-space: nowrap;
     max-width: 100%;
   }
+  .app-item.active .app-name { color: var(--lumina-primary); }
 
-  .app-item.active .app-name {
-    color: var(--lumina-primary);
-  }
-
-  /* ─── Browse Media Button ────────────────────────── */
-  .browse-media-section {
-    display: flex;
-  }
-
+  /* ─── Browse Media ─────────────────────────────────── */
+  .browse-media-section { display: flex; }
   .browse-media-btn {
     display: flex;
     align-items: center;
@@ -379,55 +407,45 @@ export const mediaCardStyles = css`
     font-weight: 500;
     color: var(--lumina-on-surface);
   }
+  .browse-media-btn:hover { background: var(--lumina-surface-container-highest); }
+  .browse-media-btn ha-icon { --mdc-icon-size: 20px; color: var(--lumina-primary); }
 
-  .browse-media-btn:hover {
-    background: var(--lumina-surface-container-highest);
-  }
-
-  .browse-media-btn ha-icon {
-    --mdc-icon-size: 20px;
-    color: var(--lumina-primary);
-  }
-
-  /* ─── Player Tab Icon ────────────────────────────── */
-  .player-tab-icon {
-    --mdc-icon-size: 14px;
-  }
-
-  /* ─── Shortcuts Section ──────────────────────────── */
+  /* ─── Shortcuts ────────────────────────────────────── */
   .shortcuts-section {
     display: flex;
     flex-direction: column;
     gap: var(--lumina-space-3);
   }
-
   .shortcuts-label {
     font-family: var(--lumina-font-headline);
     font-size: 0.9375rem;
     font-weight: 600;
     color: var(--lumina-on-surface);
   }
-
   .shortcuts-list {
     display: flex;
     flex-wrap: wrap;
     gap: var(--lumina-space-2);
   }
 
-  /* ─── Speaker Management ──────────────────────────── */
+  /* ─── Speaker Management ───────────────────────────── */
   .rooms-section {
     display: flex;
     flex-direction: column;
     gap: var(--lumina-space-2);
   }
-
   .rooms-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: var(--lumina-space-1);
   }
-
+  .rooms-title {
+    font-family: var(--lumina-font-headline);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--lumina-on-surface);
+  }
   .group-btn {
     display: flex;
     align-items: center;
@@ -444,28 +462,13 @@ export const mediaCardStyles = css`
     transition: all var(--lumina-transition-fast);
     -webkit-tap-highlight-color: transparent;
   }
-
-  .group-btn ha-icon {
-    --mdc-icon-size: 14px;
-  }
-
-  .group-btn:hover {
-    background: var(--lumina-surface-container-highest);
-  }
-
+  .group-btn ha-icon { --mdc-icon-size: 14px; }
+  .group-btn:hover { background: var(--lumina-surface-container-highest); }
   .group-btn.grouped {
     background: rgba(133, 173, 255, 0.1);
     border-color: rgba(133, 173, 255, 0.25);
     color: var(--lumina-primary);
   }
-
-  .rooms-title {
-    font-family: var(--lumina-font-headline);
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: var(--lumina-on-surface);
-  }
-
   .room-item {
     display: flex;
     align-items: center;
@@ -474,23 +477,16 @@ export const mediaCardStyles = css`
     background: var(--lumina-surface-container-high);
     border-radius: var(--lumina-radius-lg);
   }
-
   .room-item-dot {
-    width: 8px;
-    height: 8px;
+    width: 8px; height: 8px;
     border-radius: var(--lumina-radius-full);
     flex-shrink: 0;
   }
-
   .room-item-dot.playing {
     background: var(--lumina-primary);
     box-shadow: 0 0 6px rgba(133, 173, 255, 0.5);
   }
-
-  .room-item-dot.idle {
-    background: var(--lumina-outline-variant);
-  }
-
+  .room-item-dot.idle { background: var(--lumina-outline-variant); }
   .room-item-info {
     flex: 1;
     display: flex;
@@ -498,7 +494,6 @@ export const mediaCardStyles = css`
     gap: 1px;
     min-width: 0;
   }
-
   .room-item-name {
     font-size: 0.875rem;
     font-weight: 500;
@@ -507,20 +502,17 @@ export const mediaCardStyles = css`
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-
   .room-item-state {
     font-size: 0.6875rem;
     color: var(--lumina-outline);
     text-transform: uppercase;
     letter-spacing: 0.03em;
   }
-
   .room-item-action {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: 28px; height: 28px;
     border: none;
     background: transparent;
     border-radius: var(--lumina-radius-full);
@@ -530,21 +522,14 @@ export const mediaCardStyles = css`
     transition: background var(--lumina-transition-fast);
     -webkit-tap-highlight-color: transparent;
   }
-
-  .room-item-action ha-icon {
-    --mdc-icon-size: 18px;
-  }
-
-  .room-item-action.unjoin {
-    color: var(--lumina-outline);
-  }
-
+  .room-item-action ha-icon { --mdc-icon-size: 18px; }
+  .room-item-action.unjoin { color: var(--lumina-outline); }
   .room-item-action.unjoin:hover {
     color: var(--lumina-error, #f44336);
     background: rgba(244, 67, 54, 0.1);
   }
 
-  /* ─── Idle State ────────────────────────────────── */
+  /* ─── Idle State ───────────────────────────────────── */
   .idle-state {
     display: flex;
     flex-direction: column;
@@ -552,14 +537,29 @@ export const mediaCardStyles = css`
     gap: var(--lumina-space-4);
     padding: var(--lumina-space-8) 0;
   }
-
   .idle-state ha-icon {
     --mdc-icon-size: 48px;
     color: var(--lumina-outline);
   }
-
   .idle-text {
     font-size: 0.875rem;
+    color: var(--lumina-on-surface-variant);
+  }
+  .idle-last-played {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    opacity: 0.5;
+  }
+  .idle-last-title {
+    font-family: var(--lumina-font-headline);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--lumina-on-surface);
+  }
+  .idle-last-artist {
+    font-size: 0.75rem;
     color: var(--lumina-on-surface-variant);
   }
 `;

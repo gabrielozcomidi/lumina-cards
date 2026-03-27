@@ -70,6 +70,9 @@ export interface MediaPlayerEntity extends HassEntity {
     source?: string;
     source_list?: string[];
     group_members?: string[];
+    shuffle?: boolean;
+    repeat?: string;
+    supported_features?: number;
     friendly_name?: string;
     icon?: string;
     [key: string]: unknown;
