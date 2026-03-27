@@ -87,9 +87,12 @@ export interface LuminaClimateCardConfig extends LovelaceCardConfig {
 
 // ─── Media Card Config ───────────────────────────────────────
 
+export type MediaPlayerType = 'speaker' | 'tv';
+
 export interface MediaEntityConfig {
   entity: string;
   name?: string;
+  player_type?: MediaPlayerType;
 }
 
 export interface MediaShortcut {

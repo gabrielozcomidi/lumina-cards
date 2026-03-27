@@ -302,6 +302,98 @@ export const mediaCardStyles = css`
     color: var(--lumina-primary);
   }
 
+  /* ─── TV App Grid ────────────────────────────────── */
+  .app-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--lumina-space-2);
+  }
+
+  .app-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: var(--lumina-space-3) var(--lumina-space-2);
+    background: var(--lumina-surface-container-high);
+    border-radius: var(--lumina-radius-lg);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all var(--lumina-transition-fast);
+    -webkit-tap-highlight-color: transparent;
+    font-family: var(--lumina-font-body);
+  }
+
+  .app-item:hover {
+    background: var(--lumina-surface-container-highest);
+  }
+
+  .app-item.active {
+    background: rgba(133, 173, 255, 0.1);
+    border-color: rgba(133, 173, 255, 0.25);
+  }
+
+  .app-item ha-icon {
+    --mdc-icon-size: 24px;
+    color: var(--lumina-on-surface-variant);
+  }
+
+  .app-item.active ha-icon {
+    color: var(--lumina-primary);
+  }
+
+  .app-name {
+    font-size: 0.625rem;
+    font-weight: 500;
+    color: var(--lumina-on-surface-variant);
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+
+  .app-item.active .app-name {
+    color: var(--lumina-primary);
+  }
+
+  /* ─── Browse Media Button ────────────────────────── */
+  .browse-media-section {
+    display: flex;
+  }
+
+  .browse-media-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--lumina-space-3);
+    width: 100%;
+    padding: var(--lumina-space-3) var(--lumina-space-4);
+    background: var(--lumina-surface-container-high);
+    border: 1px solid var(--lumina-ghost-border);
+    border-radius: var(--lumina-radius-lg);
+    cursor: pointer;
+    transition: background var(--lumina-transition-fast);
+    -webkit-tap-highlight-color: transparent;
+    font-family: var(--lumina-font-body);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--lumina-on-surface);
+  }
+
+  .browse-media-btn:hover {
+    background: var(--lumina-surface-container-highest);
+  }
+
+  .browse-media-btn ha-icon {
+    --mdc-icon-size: 20px;
+    color: var(--lumina-primary);
+  }
+
+  /* ─── Player Tab Icon ────────────────────────────── */
+  .player-tab-icon {
+    --mdc-icon-size: 14px;
+  }
+
   /* ─── Shortcuts Section ──────────────────────────── */
   .shortcuts-section {
     display: flex;

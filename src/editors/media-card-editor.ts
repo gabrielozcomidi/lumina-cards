@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { LuminaMediaCardConfig, MediaEntityConfig, MediaShortcut } from '../types';
+import { LuminaMediaCardConfig, MediaEntityConfig, MediaShortcut, MediaPlayerType } from '../types';
 import { HomeAssistant } from '../types/ha-types';
 import { loadHaElements, fireConfigChanged } from '../utils/editor-helpers';
 
@@ -21,6 +21,11 @@ export class HaLuminaMediaCardEditor extends LitElement {
     .add-btn { cursor: pointer; color: var(--primary-color); font-size: 0.875rem; font-weight: 500; padding: 8px; }
     .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
     .toggle-label { font-size: 0.875rem; font-weight: 500; }
+    .entity-extras { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: end; }
+    .type-select { width: 100%; padding: 10px 12px; background: var(--card-background-color, #1a1a1d); border: 1px solid var(--divider-color); border-radius: 8px; color: var(--primary-text-color); font-size: 0.875rem; font-family: inherit; appearance: none; -webkit-appearance: none; cursor: pointer; }
+    .type-select-wrapper { position: relative; }
+    .type-select-wrapper::after { content: '▾'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--secondary-text-color); pointer-events: none; font-size: 0.75rem; }
+    .type-select-label { font-size: 0.75rem; color: var(--secondary-text-color); margin-bottom: 4px; }
     .shortcut-block { background: var(--card-background-color, #1a1a1d); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
     .shortcut-row { display: flex; gap: 8px; align-items: center; }
     .shortcut-row ha-textfield { flex: 1; }
@@ -53,6 +58,18 @@ export class HaLuminaMediaCardEditor extends LitElement {
 
   private _getEntityName(entry: string | MediaEntityConfig): string {
     return typeof entry === 'string' ? '' : entry.name || '';
+  }
+
+  private _getPlayerType(entry: string | MediaEntityConfig): MediaPlayerType {
+    return typeof entry === 'string' ? 'speaker' : entry.player_type || 'speaker';
+  }
+
+  private _playerTypeChanged(i: number, v: string): void {
+    const e = [...this._getEntities()];
+    const obj = this._toObj(e[i]);
+    obj.player_type = v as MediaPlayerType;
+    e[i] = obj;
+    this._set('entities', e);
   }
 
   private _getEntities(): (string | MediaEntityConfig)[] {
@@ -127,8 +144,20 @@ export class HaLuminaMediaCardEditor extends LitElement {
                 allow-custom-entity></ha-entity-picker>
               <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removeEntity(i)}></ha-icon>
             </div>
-            <ha-textfield label="Custom Name" .value=${this._getEntityName(entry)}
-              @input=${(e: Event) => this._entityNameChanged(i, (e.target as HTMLInputElement).value)}></ha-textfield>
+            <div class="entity-extras">
+              <ha-textfield label="Custom Name" .value=${this._getEntityName(entry)}
+                @input=${(e: Event) => this._entityNameChanged(i, (e.target as HTMLInputElement).value)}></ha-textfield>
+              <div>
+                <div class="type-select-label">Type</div>
+                <div class="type-select-wrapper">
+                  <select class="type-select"
+                    @change=${(e: Event) => this._playerTypeChanged(i, (e.target as HTMLSelectElement).value)}>
+                    <option value="speaker" ?selected=${this._getPlayerType(entry) === 'speaker'}>Speaker</option>
+                    <option value="tv" ?selected=${this._getPlayerType(entry) === 'tv'}>TV / Streamer</option>
+                  </select>
+                </div>
+              </div>
+            </div>
           </div>
         `)}
         <div class="add-btn" @click=${this._addEntity}>+ Add Media Player</div>

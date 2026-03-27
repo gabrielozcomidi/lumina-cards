@@ -278,66 +278,80 @@ export class HaLuminaRoomCardEditor extends LitElement {
           ></ha-textfield>
         </div>
 
-        <!-- ─── 3D Asset List with Preview ─────────── -->
-        <div class="editor-section">3D Room Element</div>
-        <div class="editor-sublabel">Select a built-in 3D asset or enter a custom image URL</div>
+        <!-- ─── Card Settings (Collapsible) ─────────── -->
+        <div class="section-collapsible">
+          <div class="section-header" @click=${() => this._toggleSection('card_settings')}>
+            <div class="section-header-left">
+              <ha-icon icon="mdi:cog"></ha-icon>
+              <span class="section-title">Card Settings</span>
+            </div>
+            <ha-icon class="section-chevron ${this._openSections['card_settings'] ? 'open' : ''}" icon="mdi:chevron-down"></ha-icon>
+          </div>
+          <div class="section-body ${this._openSections['card_settings'] ? 'open' : ''}">
 
-        <div class="asset-list">
-          ${ASSETS_3D.map((asset) => {
-            const selected = img === asset.key;
-            return html`
-              <div class="asset-item ${selected ? 'selected' : ''}" @click=${() => this._selectAsset(asset.key)}>
-                <div class="asset-preview">
-                  <img src="${asset.url}" alt="${asset.label}" loading="lazy" />
-                </div>
-                <div class="asset-info">
-                  <span class="asset-name">${asset.label}</span>
-                  <span class="asset-category">${asset.category}</span>
-                </div>
-                ${selected ? html`<ha-icon class="asset-check" icon="mdi:check-circle"></ha-icon>` : ''}
-              </div>
-            `;
-          })}
-        </div>
+            <!-- 3D Asset -->
+            <div class="editor-sublabel" style="font-weight: 600; font-size: 0.875rem; color: var(--primary-text-color); margin-bottom: 4px;">3D Room Element</div>
+            <div class="editor-sublabel">Select a built-in 3D asset or enter a custom image URL</div>
 
-        <div class="editor-row">
-          <ha-textfield
-            label="Or custom image URL"
-            .value=${isCustomUrl ? img : ''}
-            @input=${(e: Event) => this._set('image', (e.target as HTMLInputElement).value)}
-          ></ha-textfield>
-          <span class="custom-url-note">Supports: /local/image.png or full URLs</span>
-        </div>
+            <div class="asset-list">
+              ${ASSETS_3D.map((asset) => {
+                const selected = img === asset.key;
+                return html`
+                  <div class="asset-item ${selected ? 'selected' : ''}" @click=${() => this._selectAsset(asset.key)}>
+                    <div class="asset-preview">
+                      <img src="${asset.url}" alt="${asset.label}" loading="lazy" />
+                    </div>
+                    <div class="asset-info">
+                      <span class="asset-name">${asset.label}</span>
+                      <span class="asset-category">${asset.category}</span>
+                    </div>
+                    ${selected ? html`<ha-icon class="asset-check" icon="mdi:check-circle"></ha-icon>` : ''}
+                  </div>
+                `;
+              })}
+            </div>
 
-        <!-- ─── Custom Button Labels ───────────────── -->
-        <div class="editor-section">Button Labels</div>
-        <div class="editor-sublabel">Custom names for the action buttons (leave empty for defaults)</div>
-        <div class="label-row">
-          <ha-textfield label="Lights" .value=${this._config.lights_label || ''}
-            @input=${(e: Event) => this._set('lights_label', (e.target as HTMLInputElement).value)}></ha-textfield>
-          <ha-textfield label="Climate" .value=${this._config.climate_label || ''}
-            @input=${(e: Event) => this._set('climate_label', (e.target as HTMLInputElement).value)}></ha-textfield>
-        </div>
-        <div class="label-row">
-          <ha-textfield label="Media" .value=${this._config.media_label || ''}
-            @input=${(e: Event) => this._set('media_label', (e.target as HTMLInputElement).value)}></ha-textfield>
-          <ha-textfield label="Clean" .value=${this._config.vacuum_label || ''}
-            @input=${(e: Event) => this._set('vacuum_label', (e.target as HTMLInputElement).value)}></ha-textfield>
-        </div>
+            <div class="editor-row">
+              <ha-textfield
+                label="Or custom image URL"
+                .value=${isCustomUrl ? img : ''}
+                @input=${(e: Event) => this._set('image', (e.target as HTMLInputElement).value)}
+              ></ha-textfield>
+              <span class="custom-url-note">Supports: /local/image.png or full URLs</span>
+            </div>
 
-        <!-- ─── Sensors ───────────────────────────── -->
-        <div class="editor-section">Sensors</div>
-        <div class="editor-row">
-          <ha-entity-picker .hass=${this.hass} label="Temperature Entity"
-            .value=${this._config.temperature_entity || ''} .includeDomains=${['sensor']}
-            @value-changed=${(e: CustomEvent) => this._set('temperature_entity', e.detail.value)}
-            allow-custom-entity></ha-entity-picker>
-        </div>
-        <div class="editor-row">
-          <ha-entity-picker .hass=${this.hass} label="Humidity Entity"
-            .value=${this._config.humidity_entity || ''} .includeDomains=${['sensor']}
-            @value-changed=${(e: CustomEvent) => this._set('humidity_entity', e.detail.value)}
-            allow-custom-entity></ha-entity-picker>
+            <!-- Button Labels -->
+            <div class="editor-sublabel" style="font-weight: 600; font-size: 0.875rem; color: var(--primary-text-color); margin-top: 12px; margin-bottom: 4px;">Button Labels</div>
+            <div class="editor-sublabel">Custom names for the action buttons (leave empty for defaults)</div>
+            <div class="label-row">
+              <ha-textfield label="Lights" .value=${this._config.lights_label || ''}
+                @input=${(e: Event) => this._set('lights_label', (e.target as HTMLInputElement).value)}></ha-textfield>
+              <ha-textfield label="Climate" .value=${this._config.climate_label || ''}
+                @input=${(e: Event) => this._set('climate_label', (e.target as HTMLInputElement).value)}></ha-textfield>
+            </div>
+            <div class="label-row">
+              <ha-textfield label="Media" .value=${this._config.media_label || ''}
+                @input=${(e: Event) => this._set('media_label', (e.target as HTMLInputElement).value)}></ha-textfield>
+              <ha-textfield label="Clean" .value=${this._config.vacuum_label || ''}
+                @input=${(e: Event) => this._set('vacuum_label', (e.target as HTMLInputElement).value)}></ha-textfield>
+            </div>
+
+            <!-- Sensors -->
+            <div class="editor-sublabel" style="font-weight: 600; font-size: 0.875rem; color: var(--primary-text-color); margin-top: 12px; margin-bottom: 4px;">Sensors</div>
+            <div class="editor-row">
+              <ha-entity-picker .hass=${this.hass} label="Temperature Entity"
+                .value=${this._config.temperature_entity || ''} .includeDomains=${['sensor']}
+                @value-changed=${(e: CustomEvent) => this._set('temperature_entity', e.detail.value)}
+                allow-custom-entity></ha-entity-picker>
+            </div>
+            <div class="editor-row">
+              <ha-entity-picker .hass=${this.hass} label="Humidity Entity"
+                .value=${this._config.humidity_entity || ''} .includeDomains=${['sensor']}
+                @value-changed=${(e: CustomEvent) => this._set('humidity_entity', e.detail.value)}
+                allow-custom-entity></ha-entity-picker>
+            </div>
+
+          </div>
         </div>
 
         <!-- ─── Lights (Collapsible) ─────────────────── -->
