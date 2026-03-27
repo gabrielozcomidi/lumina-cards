@@ -28,6 +28,7 @@ export interface LuminaRoomCardConfig extends LovelaceCardConfig {
   light_entities?: (string | LightEntityConfig)[];
   climate_entity?: string;
   media_entity?: string;
+  media_entities?: (string | MediaEntityConfig)[];
   vacuum_entity?: string;
   show_climate?: boolean;
   show_media?: boolean;

@@ -66,7 +66,11 @@ export class HaLuminaRoomCard extends LitElement {
     const c = this._config;
     this._lightConfig = { type: 'custom:ha-lumina-light-card', entities: c.light_entities || [], image: c.image, scenes: c.light_scenes };
     this._climateConfig = { type: 'custom:ha-lumina-climate-card', entity: c.climate_entity || '', image: c.image, show_fan_speed: true, show_humidity: true };
-    this._mediaConfig = { type: 'custom:ha-lumina-media-card', entity: c.media_entity || '', image: c.image, show_source: true, show_progress: true };
+    // Support both legacy media_entity and new media_entities array
+    const mediaEntities = c.media_entities?.length
+      ? c.media_entities
+      : c.media_entity ? [{ entity: c.media_entity }] : [];
+    this._mediaConfig = { type: 'custom:ha-lumina-media-card', entities: mediaEntities, image: c.image, show_source: true, show_progress: true };
     this._vacuumConfig = { type: 'custom:ha-lumina-vacuum-card', entity: c.vacuum_entity || '', image: c.image, show_fan_speed: true };
     this._roomPopupConfig = {
       type: 'custom:ha-lumina-room-popup',
@@ -113,6 +117,7 @@ export class HaLuminaRoomCard extends LitElement {
       ...this._lightEntityIds,
       this._config.climate_entity,
       this._config.media_entity,
+      ...(this._config.media_entities || []).map((e) => typeof e === 'string' ? e : e.entity),
       this._config.vacuum_entity,
     ].filter(Boolean) as string[];
 
@@ -151,13 +156,27 @@ export class HaLuminaRoomCard extends LitElement {
     return !!e && e.state !== 'off' && isEntityAvailable(e);
   }
 
+  private get _mediaEntityIds(): string[] {
+    if (this._config.media_entities?.length) {
+      return this._config.media_entities.map((e) => typeof e === 'string' ? e : e.entity).filter(Boolean);
+    }
+    return this._config.media_entity ? [this._config.media_entity] : [];
+  }
+
   private get _mediaEntity() {
-    return getEntity(this.hass, this._config.media_entity);
+    // Return first active, or first configured
+    const playing = this._mediaEntityIds.find((id) => {
+      const e = getEntity(this.hass, id);
+      return e?.state === 'playing';
+    });
+    return getEntity(this.hass, playing || this._mediaEntityIds[0]);
   }
 
   private get _mediaActive(): boolean {
-    const e = this._mediaEntity;
-    return !!e && (e.state === 'playing' || e.state === 'paused');
+    return this._mediaEntityIds.some((id) => {
+      const e = getEntity(this.hass, id);
+      return !!e && (e.state === 'playing' || e.state === 'paused');
+    });
   }
 
   private get _vacuumEntity() {
@@ -317,7 +336,7 @@ export class HaLuminaRoomCard extends LitElement {
 
             <!-- Media (no ring — just shows active glow when playing) -->
             <div
-              class="action-btn ${mediaActive ? 'media-active' : ''} ${!this._config.show_media || !this._config.media_entity ? 'hidden' : ''}"
+              class="action-btn ${mediaActive ? 'media-active' : ''} ${!this._config.show_media || !this._mediaEntityIds.length ? 'hidden' : ''}"
               @click=${() => this._openSheet('media')}
             >
               <div class="action-ring-wrapper">

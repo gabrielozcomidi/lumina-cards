@@ -1,6 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { LuminaRoomCardConfig, LightEntityConfig, SceneConfig } from '../types';
+import { LuminaRoomCardConfig, LightEntityConfig, SceneConfig, MediaEntityConfig, MediaPlayerType } from '../types';
 import { HomeAssistant } from '../types/ha-types';
 import { ASSETS_3D, resolveImageUrl } from '../utils/assets-3d';
 import { loadHaElements, fireConfigChanged } from '../utils/editor-helpers';
@@ -259,6 +259,68 @@ export class HaLuminaRoomCardEditor extends LitElement {
     const s = [...(this._config.light_scenes || [])]; s[i] = { ...s[i], [field]: v }; this._set('light_scenes', s);
   }
 
+  // ─── Media Entity Helpers ─────────────────────────
+
+  private _toMediaObj(entry: string | MediaEntityConfig): MediaEntityConfig {
+    return typeof entry === 'string' ? { entity: entry } : { ...entry };
+  }
+
+  private _getMediaEntities(): (string | MediaEntityConfig)[] {
+    if (this._config.media_entities?.length) return this._config.media_entities;
+    if (this._config.media_entity) return [{ entity: this._config.media_entity }];
+    return [];
+  }
+
+  private _getMediaId(entry: string | MediaEntityConfig): string {
+    return typeof entry === 'string' ? entry : entry.entity;
+  }
+
+  private _getMediaName(entry: string | MediaEntityConfig): string {
+    return typeof entry === 'string' ? '' : entry.name || '';
+  }
+
+  private _getMediaType(entry: string | MediaEntityConfig): string {
+    return typeof entry === 'string' ? 'speaker' : entry.player_type || 'speaker';
+  }
+
+  private _mediaEntityChanged(i: number, v: string): void {
+    const e = [...this._getMediaEntities()].map((x) => this._toMediaObj(x));
+    e[i] = { ...e[i], entity: v };
+    this._setMediaEntities(e);
+  }
+
+  private _mediaNameChanged(i: number, v: string): void {
+    const e = [...this._getMediaEntities()].map((x) => this._toMediaObj(x));
+    e[i] = { ...e[i], name: v || undefined };
+    this._setMediaEntities(e);
+  }
+
+  private _mediaTypeChanged(i: number, v: string): void {
+    const e = [...this._getMediaEntities()].map((x) => this._toMediaObj(x));
+    e[i] = { ...e[i], player_type: (v === 'tv' ? 'tv' : 'speaker') as MediaPlayerType };
+    this._setMediaEntities(e);
+  }
+
+  private _addMediaEntity(): void {
+    const e = [...this._getMediaEntities()].map((x) => this._toMediaObj(x));
+    e.push({ entity: '' });
+    this._setMediaEntities(e);
+  }
+
+  private _removeMediaEntity(i: number): void {
+    const e = [...this._getMediaEntities()].map((x) => this._toMediaObj(x));
+    e.splice(i, 1);
+    this._setMediaEntities(e);
+  }
+
+  private _setMediaEntities(entities: MediaEntityConfig[]): void {
+    // Always use media_entities, clear legacy media_entity
+    const c = { ...this._config, media_entities: entities } as Record<string, unknown>;
+    delete c.media_entity;
+    this._config = c as LuminaRoomCardConfig;
+    this._dispatch();
+  }
+
   protected render() {
     if (!this._config || !this.hass) return html``;
     if (!this._haLoaded) return html`<div class="loading">Loading editor...</div>`;
@@ -458,12 +520,24 @@ export class HaLuminaRoomCardEditor extends LitElement {
               </ha-switch>
             </div>
             ${this._config.show_media !== false ? html`
-              <div class="editor-row">
-                <ha-entity-picker .hass=${this.hass} label="Media Player"
-                  .value=${this._config.media_entity || ''} .includeDomains=${['media_player']}
-                  @value-changed=${(e: CustomEvent) => this._set('media_entity', e.detail.value)}
-                  allow-custom-entity></ha-entity-picker>
-              </div>
+              ${this._getMediaEntities().map((entry, i) => html`
+                <div class="entity-block">
+                  <div class="entity-row">
+                    <ha-entity-picker .hass=${this.hass} label="Player ${i + 1}"
+                      .value=${this._getMediaId(entry)} .includeDomains=${['media_player']}
+                      @value-changed=${(e: CustomEvent) => this._mediaEntityChanged(i, e.detail.value)}
+                      allow-custom-entity></ha-entity-picker>
+                    <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removeMediaEntity(i)}></ha-icon>
+                  </div>
+                  <div class="entity-extras">
+                    <ha-textfield label="Custom Name" .value=${this._getMediaName(entry)}
+                      @input=${(e: Event) => this._mediaNameChanged(i, (e.target as HTMLInputElement).value)}></ha-textfield>
+                    <ha-textfield label="Type (speaker / tv)" .value=${this._getMediaType(entry)}
+                      @input=${(e: Event) => this._mediaTypeChanged(i, (e.target as HTMLInputElement).value)}></ha-textfield>
+                  </div>
+                </div>
+              `)}
+              <div class="add-btn" @click=${this._addMediaEntity}>+ Add Media Player</div>
             ` : ''}
           </div>
         </div>
