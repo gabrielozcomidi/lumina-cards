@@ -70,7 +70,7 @@ export class HaLuminaRoomCard extends LitElement {
     const mediaEntities = c.media_entities?.length
       ? c.media_entities
       : c.media_entity ? [{ entity: c.media_entity }] : [];
-    this._mediaConfig = { type: 'custom:ha-lumina-media-card', entities: mediaEntities, image: c.image, show_source: true, show_progress: true };
+    this._mediaConfig = { type: 'custom:ha-lumina-media-card', entities: mediaEntities, image: c.image, show_source: true, show_progress: true, show_speaker_management: true };
     this._vacuumConfig = { type: 'custom:ha-lumina-vacuum-card', entity: c.vacuum_entity || '', image: c.image, show_fan_speed: true };
     this._roomPopupConfig = {
       type: 'custom:ha-lumina-room-popup',

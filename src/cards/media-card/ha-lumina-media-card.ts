@@ -240,6 +240,14 @@ export class HaLuminaMediaCard extends LitElement {
       if (match) return match[0];
     }
 
+    // Fallback: show media content type (music, tvshow, etc.)
+    const contentType = attrs.media_content_type as string | undefined;
+    if (contentType) return contentType.charAt(0).toUpperCase() + contentType.slice(1);
+
+    // Fallback: show current source as format indicator
+    const source = attrs.source as string | undefined;
+    if (source) return source;
+
     return null;
   }
 
@@ -322,25 +330,13 @@ export class HaLuminaMediaCard extends LitElement {
   }
 
   private _openMediaBrowser(): void {
-    // Try dispatching from self (composed crosses shadow DOM)
-    const event = new CustomEvent('hass-more-info', {
-      bubbles: true, composed: true,
-      detail: { entityId: this._activeId },
-    });
-    this.dispatchEvent(event);
-
-    // Fallback: traverse shadow roots to find HA root and dispatch there
-    let el: HTMLElement | null = this;
-    while (el) {
-      const root = el.getRootNode() as ShadowRoot | Document;
-      if (root instanceof ShadowRoot && root.host) {
-        el = root.host as HTMLElement;
-      } else {
-        break;
-      }
-    }
-    if (el && el !== this) {
-      el.dispatchEvent(new CustomEvent('hass-more-info', {
+    // The card may be inside a portal on document.body (bottom sheet),
+    // so we must find the home-assistant element and dispatch there
+    const ha = document.querySelector('home-assistant') as HTMLElement | null;
+    if (ha && ha.shadowRoot) {
+      const main = ha.shadowRoot.querySelector('home-assistant-main') as HTMLElement | null;
+      const target = main || ha;
+      target.dispatchEvent(new CustomEvent('hass-more-info', {
         bubbles: true, composed: true,
         detail: { entityId: this._activeId },
       }));
