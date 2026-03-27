@@ -18,7 +18,7 @@ export const mediaCardStyles = css`
     display: flex;
     gap: var(--lumina-space-2);
     overflow-x: auto;
-    padding-bottom: var(--lumina-space-1);
+    padding-bottom: var(--lumina-space-4);
     scrollbar-width: none;
   }
   .player-selector::-webkit-scrollbar { display: none; }
@@ -137,6 +137,7 @@ export const mediaCardStyles = css`
     font-weight: 700;
     color: var(--lumina-on-surface);
     line-height: 1.3;
+    margin-top: calc(-1 * var(--lumina-space-4));
   }
 
   /* ─── Album Art (responsive) ────────────────────────── */
