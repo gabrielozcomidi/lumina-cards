@@ -27,7 +27,7 @@ import './editors/media-card-editor';
 import './editors/vacuum-card-editor';
 
 // ─── Version ─────────────────────────────────────────────────
-const CARD_VERSION = '1.4.1';
+const CARD_VERSION = '1.6.7';
 
 // ─── Inject Fonts ────────────────────────────────────────────
 injectFonts();
