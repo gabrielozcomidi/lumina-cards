@@ -231,18 +231,23 @@ export class HaLuminaInfoCard extends LitElement {
 
     // Calculate sun position on arc (0 = sunrise, 1 = sunset)
     let sunPos = 0.5;
+    const isUp = elevation != null && elevation > 0;
     if (rising && setting) {
       const now = Date.now();
-      const riseMs = new Date(rising).getTime();
-      const setMs = new Date(setting).getTime();
-      // If sun is up (between rise and set)
-      if (elevation != null && elevation > 0) {
-        // Approximate position
-        const dayLen = setMs > riseMs ? setMs - riseMs : 86400000;
-        const elapsed = now - riseMs;
-        sunPos = Math.max(0, Math.min(1, elapsed / dayLen));
+      let riseMs = new Date(rising).getTime();
+      let setMs = new Date(setting).getTime();
+
+      if (isUp) {
+        // When sun is up, next_rising is TOMORROW. Estimate today's sunrise ~24h earlier.
+        if (riseMs > now) riseMs -= 86400000;
+        // next_setting should be today's sunset (still upcoming)
+        const dayLen = setMs - riseMs;
+        if (dayLen > 0) {
+          sunPos = Math.max(0, Math.min(1, (now - riseMs) / dayLen));
+        }
       } else {
-        sunPos = elevation != null && elevation <= -6 ? -1 : 0; // below horizon
+        // Sun is down. next_setting might be tomorrow's.
+        sunPos = -1; // below horizon, won't render dot
       }
     }
 
@@ -261,18 +266,17 @@ export class HaLuminaInfoCard extends LitElement {
     const dotX = arcCx + arcR * Math.cos(sunAngle);
     const dotY = arcCy + arcR * Math.sin(sunAngle);
 
-    // Daylight calculation
+    // Daylight calculation — use corrected rise/set times
     let daylightStr = '';
     if (rising && setting) {
-      const riseMs = new Date(rising).getTime();
-      const setMs = new Date(setting).getTime();
-      const diff = Math.abs(setMs - riseMs);
+      let dlRise = new Date(rising).getTime();
+      const dlSet = new Date(setting).getTime();
+      if (dlRise > Date.now()) dlRise -= 86400000; // today's sunrise
+      const diff = Math.abs(dlSet - dlRise);
       const hours = Math.floor(diff / 3600000);
       const mins = Math.floor((diff % 3600000) / 60000);
       daylightStr = `${hours}h ${mins}m daylight`;
     }
-
-    const isUp = elevation != null && elevation > 0;
 
     return html`
       <div class="sun-body">
