@@ -107,3 +107,37 @@ export interface MediaPlayerItem {
 export type HvacMode = 'off' | 'heat' | 'cool' | 'heat_cool' | 'auto' | 'dry' | 'fan_only';
 
 export type VacuumState = 'cleaning' | 'docked' | 'paused' | 'idle' | 'returning' | 'error';
+
+// ─── Weather Types ──────────────────────────────────────────
+
+export interface WeatherForecast {
+  datetime: string;
+  condition: string;
+  temperature: number;
+  templow?: number;
+  precipitation?: number;
+  precipitation_probability?: number;
+  humidity?: number;
+  wind_speed?: number;
+  wind_bearing?: number;
+}
+
+export interface WeatherEntity extends HassEntity {
+  attributes: {
+    temperature?: number;
+    temperature_unit?: string;
+    humidity?: number;
+    pressure?: number;
+    pressure_unit?: string;
+    wind_speed?: number;
+    wind_speed_unit?: string;
+    wind_bearing?: number;
+    visibility?: number;
+    visibility_unit?: string;
+    uv_index?: number;
+    friendly_name?: string;
+    icon?: string;
+    supported_features?: number;
+    [key: string]: unknown;
+  };
+}

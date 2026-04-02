@@ -130,6 +130,19 @@ export interface LuminaVacuumCardConfig extends LovelaceCardConfig {
   show_map?: boolean;
 }
 
+// ─── Weather Card Config ────────────────────────────────────
+
+export interface LuminaWeatherCardConfig extends LovelaceCardConfig {
+  type: string;
+  entity: string;
+  name?: string;
+  show_forecast_hourly?: boolean;
+  show_forecast_daily?: boolean;
+  show_details?: boolean;
+  hourly_count?: number;
+  daily_count?: number;
+}
+
 // ─── Bottom Bar Config ──────────────────────────────────────
 
 export type BottomBarActionType = 'navigate' | 'toggle' | 'call-service' | 'more-info' | 'url' | 'none';
@@ -183,6 +196,7 @@ declare global {
     'lumina-chip': HTMLElement;
     'lumina-slider': HTMLElement;
     'lumina-icon-button': HTMLElement;
+    'ha-lumina-weather-card': HTMLElement;
     'ha-lumina-bottom-bar': HTMLElement;
   }
 }
