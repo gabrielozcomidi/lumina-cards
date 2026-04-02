@@ -113,7 +113,7 @@ export class HaLuminaWeatherCard extends LitElement {
     };
   }
 
-  public getCardSize(): number { return 6; }
+  public getCardSize(): number { return this._config?.compact ? 1 : 6; }
 
   // --- Lifecycle ---
 
@@ -210,6 +210,8 @@ export class HaLuminaWeatherCard extends LitElement {
     const accent = CONDITION_ACCENTS[condition] || 'transparent';
     const iconColor = CONDITION_ICON_COLORS[condition] || 'var(--lumina-on-surface-variant)';
 
+    if (this._config.compact) return this._renderCompact(accent, iconColor);
+
     return html`
       <ha-card>
         <div class="weather-card" style="--weather-accent: ${accent}; --weather-icon-color: ${iconColor};">
@@ -220,6 +222,45 @@ export class HaLuminaWeatherCard extends LitElement {
             ${this._config.show_details !== false ? this._renderDetails() : nothing}
             ${this._config.show_forecast_hourly !== false && this._hourlyForecast.length ? this._renderHourly() : nothing}
             ${this._config.show_forecast_daily !== false && this._dailyForecast.length ? this._renderDaily() : nothing}
+          </div>
+        </div>
+      </ha-card>
+    `;
+  }
+
+  private _renderCompact(accent: string, iconColor: string) {
+    const icon = CONDITION_ICONS[this._condition] || 'mdi:weather-cloudy';
+    const label = CONDITION_LABELS[this._condition] || this._condition;
+    const temp = this._temperature;
+    const unit = this._tempUnit;
+    const high = this._todayHigh;
+    const low = this._todayLow;
+
+    return html`
+      <ha-card>
+        <div class="weather-card compact" style="--weather-accent: ${accent}; --weather-icon-color: ${iconColor};">
+          <div class="weather-tint"></div>
+          <div class="compact-row">
+            <ha-icon class="compact-icon" .icon=${icon}></ha-icon>
+            <span class="compact-temp">${temp != null ? `${Math.round(temp)}${unit}` : '--'}</span>
+            <span class="compact-condition">${label}</span>
+            ${high != null || low != null ? html`
+              <span class="compact-highlow">
+                ${high != null ? html`<span class="high">H:${Math.round(high)}°</span>` : nothing}
+                ${low != null ? html`<span>L:${Math.round(low)}°</span>` : nothing}
+              </span>
+            ` : nothing}
+            <span class="compact-spacer"></span>
+            ${this._humidity != null ? html`
+              <span class="compact-detail">
+                <ha-icon icon="mdi:water-percent"></ha-icon>${this._humidity}%
+              </span>
+            ` : nothing}
+            ${this._windSpeed != null ? html`
+              <span class="compact-detail">
+                <ha-icon icon="mdi:weather-windy"></ha-icon>${this._windSpeed}
+              </span>
+            ` : nothing}
           </div>
         </div>
       </ha-card>

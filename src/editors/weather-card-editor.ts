@@ -71,6 +71,14 @@ export class HaLuminaWeatherCardEditor extends LitElement {
         <div class="editor-section">Display Options</div>
 
         <div class="toggle-row">
+          <span class="editor-label">Compact Mode (single-line strip)</span>
+          <ha-switch
+            .checked=${this._config.compact === true}
+            @change=${(e: Event) => this._set('compact', (e.target as HTMLInputElement).checked || undefined)}
+          ></ha-switch>
+        </div>
+
+        <div class="toggle-row">
           <span class="editor-label">Show Hourly Forecast</span>
           <ha-switch
             .checked=${this._config.show_forecast_hourly !== false}

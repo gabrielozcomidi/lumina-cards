@@ -290,4 +290,82 @@ export const weatherCardStyles = css`
     color: var(--lumina-on-surface);
     width: 32px;
   }
+
+  /* ═══════════════════════════════════════════════════
+     COMPACT MODE — single-line weather strip
+     ═══════════════════════════════════════════════════ */
+
+  .weather-card.compact {
+    padding: var(--lumina-space-3) var(--lumina-space-4);
+  }
+
+  .weather-card.compact .weather-tint {
+    opacity: 0.1;
+  }
+
+  .compact-row {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--lumina-space-3);
+    min-height: 32px;
+  }
+
+  .compact-icon {
+    --mdc-icon-size: 24px;
+    color: var(--weather-icon-color, var(--lumina-on-surface-variant));
+    filter: drop-shadow(0 0 8px var(--weather-accent, transparent));
+    flex-shrink: 0;
+  }
+
+  .compact-temp {
+    font-family: var(--lumina-font-headline);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--lumina-on-surface);
+    letter-spacing: -0.02em;
+    flex-shrink: 0;
+    text-shadow: 0 0 16px var(--weather-accent, transparent);
+  }
+
+  .compact-condition {
+    font-family: var(--lumina-font-body);
+    font-size: 0.8125rem;
+    color: var(--lumina-on-surface-variant);
+    flex-shrink: 0;
+  }
+
+  .compact-highlow {
+    display: flex;
+    gap: var(--lumina-space-2);
+    font-family: var(--lumina-font-body);
+    font-size: 0.75rem;
+    color: var(--lumina-on-surface-variant);
+    flex-shrink: 0;
+  }
+
+  .compact-highlow .high {
+    color: var(--lumina-on-surface);
+  }
+
+  .compact-spacer {
+    flex: 1;
+  }
+
+  .compact-detail {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-family: var(--lumina-font-body);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--lumina-on-surface-variant);
+    flex-shrink: 0;
+  }
+
+  .compact-detail ha-icon {
+    --mdc-icon-size: 14px;
+    color: var(--lumina-outline);
+  }
 `;

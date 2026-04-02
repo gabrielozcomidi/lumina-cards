@@ -136,6 +136,7 @@ export interface LuminaWeatherCardConfig extends LovelaceCardConfig {
   type: string;
   entity: string;
   name?: string;
+  compact?: boolean;
   show_forecast_hourly?: boolean;
   show_forecast_daily?: boolean;
   show_details?: boolean;
