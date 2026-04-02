@@ -42,6 +42,8 @@ export interface LuminaRoomCardConfig extends LovelaceCardConfig {
   vacuum_label?: string;
   // Scenes shown in the light popup
   light_scenes?: SceneConfig[];
+  // Compact half-width variant for horizontal stacks
+  compact?: boolean;
 }
 
 // ─── Room Popup Config ───────────────────────────────────────

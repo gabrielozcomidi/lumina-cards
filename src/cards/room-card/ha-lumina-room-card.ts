@@ -85,7 +85,7 @@ export class HaLuminaRoomCard extends LitElement {
   }
 
   public getCardSize(): number {
-    return 4;
+    return this._config?.compact ? 2 : 4;
   }
 
   static getConfigElement(): HTMLElement {
@@ -273,9 +273,11 @@ export class HaLuminaRoomCard extends LitElement {
     const mediaActive = this._mediaActive;
     const vacuumActive = this._vacuumActive;
 
+    const compact = this._config.compact === true;
+
     return html`
       <ha-card>
-        <div class="room-card">
+        <div class="room-card ${compact ? 'compact' : ''}"
           <!-- 3D Background Element -->
           ${resolveImageUrl(this._config.image)
             ? html`
@@ -302,7 +304,7 @@ export class HaLuminaRoomCard extends LitElement {
                 ` : nothing}
               </div>
             ` : nothing}
-            <span class="device-count">${this._activeDeviceCount} device${this._activeDeviceCount !== 1 ? 's' : ''} active</span>
+            ${!compact ? html`<span class="device-count">${this._activeDeviceCount} device${this._activeDeviceCount !== 1 ? 's' : ''} active</span>` : nothing}
           </div>
 
           <!-- Action Buttons -->

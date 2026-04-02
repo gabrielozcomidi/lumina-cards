@@ -336,4 +336,65 @@ export const roomCardStyles = css`
   .action-btn.hidden {
     display: none;
   }
+
+  /* ═══════════════════════════════════════════════════
+     COMPACT MODE — half-width for horizontal stacks
+     ═══════════════════════════════════════════════════ */
+
+  .room-card.compact {
+    min-height: 140px;
+    padding: var(--lumina-space-4);
+    gap: var(--lumina-space-2);
+  }
+
+  /* ─── Compact Header ───────────────────────────── */
+  .room-card.compact .room-name {
+    font-size: 1rem;
+    line-height: 1.15;
+  }
+
+  .room-card.compact .room-sensors {
+    gap: var(--lumina-space-2);
+    margin-top: 0;
+  }
+
+  .room-card.compact .sensor-item {
+    font-size: 0.6875rem;
+  }
+
+  .room-card.compact .sensor-item ha-icon {
+    --mdc-icon-size: 12px;
+  }
+
+  /* ─── Compact Action Buttons ───────────────────── */
+  .room-card.compact .action-buttons {
+    gap: var(--lumina-space-2);
+    padding-top: var(--lumina-space-2);
+  }
+
+  .room-card.compact .action-icon-circle {
+    width: 36px;
+    height: 36px;
+  }
+
+  .room-card.compact .action-icon-circle ha-icon {
+    --mdc-icon-size: 16px;
+  }
+
+  .room-card.compact .action-label {
+    font-size: 0.5rem;
+    letter-spacing: 0.06em;
+  }
+
+  /* Compact ring geometry — smaller SVG */
+  .room-card.compact .action-ring-svg {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* ─── Compact 3D Background ────────────────────── */
+  .room-card.compact .room-bg img {
+    width: 55%;
+    opacity: 0.5;
+  }
 `;

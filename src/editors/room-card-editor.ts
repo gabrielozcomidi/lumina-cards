@@ -340,6 +340,13 @@ export class HaLuminaRoomCardEditor extends LitElement {
           ></ha-textfield>
         </div>
 
+        <div class="toggle-row">
+          <span class="editor-label">Compact Mode (half-width for stacks)</span>
+          <ha-switch .checked=${this._config.compact === true}
+            @change=${(e: Event) => this._set('compact', (e.target as HTMLInputElement).checked || undefined)}>
+          </ha-switch>
+        </div>
+
         <!-- ─── 3D Room Element (Collapsible) ──────────── -->
         <div class="section-collapsible">
           <div class="section-header" @click=${() => this._toggleSection('3d_asset')}>
