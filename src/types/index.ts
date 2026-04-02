@@ -147,6 +147,17 @@ export interface LuminaWeatherCardConfig extends LovelaceCardConfig {
   daily_count?: number;
 }
 
+// ─── Info Card Config ────────────────────────────────────────
+
+export type InfoCardMode = 'air_quality' | 'moon_phase' | 'precipitation' | 'sun_cycle' | 'weather_alert';
+
+export interface LuminaInfoCardConfig extends LovelaceCardConfig {
+  type: string;
+  mode: InfoCardMode;
+  entity: string;
+  name?: string;
+}
+
 // ─── Bottom Bar Config ──────────────────────────────────────
 
 export type BottomBarActionType = 'navigate' | 'toggle' | 'call-service' | 'more-info' | 'url' | 'none';
@@ -201,6 +212,7 @@ declare global {
     'lumina-slider': HTMLElement;
     'lumina-icon-button': HTMLElement;
     'ha-lumina-weather-card': HTMLElement;
+    'ha-lumina-info-card': HTMLElement;
     'ha-lumina-bottom-bar': HTMLElement;
   }
 }

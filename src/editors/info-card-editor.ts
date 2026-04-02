@@ -1,0 +1,102 @@
+import { LitElement, html, css } from 'lit';
+import { customElement, property, state } from 'lit/decorators.js';
+import { LuminaInfoCardConfig, InfoCardMode } from '../types';
+import { HomeAssistant } from '../types/ha-types';
+import { loadHaElements, fireConfigChanged } from '../utils/editor-helpers';
+
+const MODES: { value: InfoCardMode; label: string; hint: string }[] = [
+  { value: 'air_quality', label: 'Air Quality', hint: 'AQI sensor (e.g. sensor.aqi)' },
+  { value: 'moon_phase', label: 'Moon Phase', hint: 'sensor.moon_phase' },
+  { value: 'precipitation', label: 'Precipitation', hint: 'Rain/snow sensor or weather attr' },
+  { value: 'sun_cycle', label: 'Sun Cycle', hint: 'sun.sun (built-in)' },
+  { value: 'weather_alert', label: 'Weather Alerts', hint: 'Alert binary_sensor or sensor' },
+];
+
+@customElement('ha-lumina-info-card-editor')
+export class HaLuminaInfoCardEditor extends LitElement {
+  @property({ attribute: false }) public hass!: HomeAssistant;
+  @state() private _config!: LuminaInfoCardConfig;
+  @state() private _haLoaded = false;
+
+  static styles = css`
+    :host { display: block; }
+    .editor { display: flex; flex-direction: column; gap: 16px; padding: 16px 0; }
+    .editor-section {
+      font-size: 1rem; font-weight: 600; color: var(--primary-text-color);
+      margin-top: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--divider-color);
+    }
+    .editor-row { display: flex; flex-direction: column; gap: 4px; }
+    .editor-label { font-size: 0.875rem; font-weight: 500; color: var(--primary-text-color); }
+    .editor-hint { font-size: 0.75rem; color: var(--secondary-text-color); margin-top: 2px; }
+    .loading { padding: 24px; text-align: center; color: var(--secondary-text-color); }
+    ha-select { width: 100%; }
+  `;
+
+  public setConfig(config: LuminaInfoCardConfig): void {
+    this._config = { ...config };
+  }
+
+  async connectedCallback(): Promise<void> {
+    super.connectedCallback();
+    await loadHaElements();
+    this._haLoaded = true;
+  }
+
+  private _dispatch(): void { fireConfigChanged(this, this._config); }
+
+  private _set(field: string, value: unknown): void {
+    this._config = { ...this._config, [field]: value };
+    this._dispatch();
+  }
+
+  protected render() {
+    if (!this._config || !this.hass) return html``;
+    if (!this._haLoaded) return html`<div class="loading">Loading editor...</div>`;
+
+    const currentMode = MODES.find(m => m.value === this._config.mode);
+
+    return html`
+      <div class="editor">
+        <div class="editor-section">Info Card Mode</div>
+
+        <div class="editor-row">
+          <ha-select
+            label="Mode"
+            .value=${this._config.mode || ''}
+            @selected=${(e: CustomEvent) => {
+              const val = (e.target as any).value;
+              if (val) this._set('mode', val);
+            }}
+            fixedMenuPosition
+            naturalMenuWidth
+          >
+            ${MODES.map(m => html`
+              <mwc-list-item .value=${m.value}>${m.label}</mwc-list-item>
+            `)}
+          </ha-select>
+          ${currentMode ? html`<span class="editor-hint">${currentMode.hint}</span>` : ''}
+        </div>
+
+        <div class="editor-section">Entity</div>
+
+        <div class="editor-row">
+          <ha-entity-picker
+            .hass=${this.hass}
+            label="Entity"
+            .value=${this._config.entity || ''}
+            @value-changed=${(e: CustomEvent) => this._set('entity', e.detail.value)}
+            allow-custom-entity
+          ></ha-entity-picker>
+        </div>
+
+        <div class="editor-row">
+          <ha-textfield
+            label="Name Override"
+            .value=${this._config.name || ''}
+            @input=${(e: Event) => this._set('name', (e.target as HTMLInputElement).value || undefined)}
+          ></ha-textfield>
+        </div>
+      </div>
+    `;
+  }
+}

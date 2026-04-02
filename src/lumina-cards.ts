@@ -33,9 +33,11 @@ import './editors/bottom-bar-editor';
 // Phase 6
 import './cards/weather-card/ha-lumina-weather-card';
 import './editors/weather-card-editor';
+import './cards/info-card/ha-lumina-info-card';
+import './editors/info-card-editor';
 
 // ─── Version ─────────────────────────────────────────────────
-const CARD_VERSION = '1.8.2';
+const CARD_VERSION = '1.9.0';
 
 // ─── Inject Fonts ────────────────────────────────────────────
 injectFonts();
@@ -83,6 +85,12 @@ const CARDS: CustomCardEntry[] = [
     type: 'ha-lumina-vacuum-card',
     name: 'Lumina Vacuum Card',
     description: 'Vacuum/cleaning robot control with battery ring and actions',
+    preview: true,
+  },
+  {
+    type: 'ha-lumina-info-card',
+    name: 'Lumina Info Card',
+    description: 'Air quality, moon phase, precipitation, sun cycle, and weather alerts',
     preview: true,
   },
   {
