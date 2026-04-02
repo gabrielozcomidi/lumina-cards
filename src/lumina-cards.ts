@@ -26,6 +26,10 @@ import './cards/vacuum-card/ha-lumina-vacuum-card';
 import './editors/media-card-editor';
 import './editors/vacuum-card-editor';
 
+// Phase 5
+import './cards/bottom-bar/ha-lumina-bottom-bar';
+import './editors/bottom-bar-editor';
+
 // ─── Version ─────────────────────────────────────────────────
 const CARD_VERSION = '1.6.7';
 
@@ -76,6 +80,12 @@ const CARDS: CustomCardEntry[] = [
     name: 'Lumina Vacuum Card',
     description: 'Vacuum/cleaning robot control with battery ring and actions',
     preview: true,
+  },
+  {
+    type: 'ha-lumina-bottom-bar',
+    name: 'Lumina Bottom Bar',
+    description: 'Glassmorphism navigation bar with shortcuts and notification glow',
+    preview: false,
   },
 ];
 

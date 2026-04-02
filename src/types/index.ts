@@ -128,6 +128,23 @@ export interface LuminaVacuumCardConfig extends LovelaceCardConfig {
   show_map?: boolean;
 }
 
+// ─── Bottom Bar Config ──────────────────────────────────────
+
+export interface BottomBarItem {
+  icon: string;
+  label: string;
+  path: string;
+  notification_entity?: string;
+  glow_color?: string;
+}
+
+export interface LuminaBottomBarConfig extends LovelaceCardConfig {
+  type: string;
+  items: BottomBarItem[];
+  floating?: boolean;
+  active_color?: string;
+}
+
 // ─── HTMLElement Tag Declarations ─────────────────────────────
 
 declare global {
@@ -143,5 +160,6 @@ declare global {
     'lumina-chip': HTMLElement;
     'lumina-slider': HTMLElement;
     'lumina-icon-button': HTMLElement;
+    'ha-lumina-bottom-bar': HTMLElement;
   }
 }
