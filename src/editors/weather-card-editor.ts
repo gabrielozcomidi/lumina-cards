@@ -21,7 +21,30 @@ export class HaLuminaWeatherCardEditor extends LitElement {
     .editor-label { font-size: 0.875rem; font-weight: 500; color: var(--primary-text-color); }
     .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
     .loading { padding: 24px; text-align: center; color: var(--secondary-text-color); }
-    ha-select { width: 100%; }
+
+    .layout-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+    }
+    .layout-option {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 12px 8px; border-radius: 10px; cursor: pointer;
+      background: var(--card-background-color, #1a1a1d);
+      border: 2px solid transparent;
+      transition: border-color 0.2s, background 0.2s;
+      text-align: center;
+    }
+    .layout-option:hover {
+      border-color: rgba(133, 173, 255, 0.2);
+      background: var(--secondary-background-color, #222);
+    }
+    .layout-option.selected {
+      border-color: #85adff;
+      background: rgba(133, 173, 255, 0.08);
+    }
+    .layout-option ha-icon { --mdc-icon-size: 22px; color: var(--secondary-text-color); }
+    .layout-option.selected ha-icon { color: #85adff; }
+    .layout-option-label { font-size: 0.6875rem; font-weight: 600; color: var(--primary-text-color); }
+    .layout-option.selected .layout-option-label { color: #85adff; }
   `;
 
   public setConfig(config: LuminaWeatherCardConfig): void {
@@ -73,23 +96,20 @@ export class HaLuminaWeatherCardEditor extends LitElement {
 
         <div class="editor-row">
           <span class="editor-label">Card Layout</span>
-          <ha-select
-            label="Layout"
-            .value=${this._config.layout || (this._config.compact ? 'compact' : 'full')}
-            @selected=${(e: CustomEvent) => {
-              const val = (e.target as any).value;
-              if (val) {
-                this._config = { ...this._config, layout: val, compact: undefined } as any;
-                this._dispatch();
-              }
-            }}
-            fixedMenuPosition
-            naturalMenuWidth
-          >
-            <mwc-list-item value="full">Full (all sections)</mwc-list-item>
-            <mwc-list-item value="room">Room Card Size</mwc-list-item>
-            <mwc-list-item value="compact">Compact (single line)</mwc-list-item>
-          </ha-select>
+          <div class="layout-grid">
+            ${(['full', 'room', 'compact'] as const).map(l => {
+              const current = this._config.layout || (this._config.compact ? 'compact' : 'full');
+              const icons: Record<string, string> = { full: 'mdi:view-dashboard', room: 'mdi:card-outline', compact: 'mdi:text-short' };
+              const labels: Record<string, string> = { full: 'Full', room: 'Room Size', compact: 'Compact' };
+              return html`
+                <div class="layout-option ${current === l ? 'selected' : ''}"
+                  @click=${() => { this._config = { ...this._config, layout: l, compact: undefined } as any; this._dispatch(); }}>
+                  <ha-icon icon="${icons[l]}"></ha-icon>
+                  <span class="layout-option-label">${labels[l]}</span>
+                </div>
+              `;
+            })}
+          </div>
         </div>
 
         <div class="toggle-row">
