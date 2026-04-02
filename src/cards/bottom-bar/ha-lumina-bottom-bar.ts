@@ -15,8 +15,8 @@ export class HaLuminaBottomBar extends LitElement {
 
   // ─── HA Custom Card API ──────────────────────────────────
 
-  static getConfigElement(): string {
-    return 'ha-lumina-bottom-bar-editor';
+  static getConfigElement(): HTMLElement {
+    return document.createElement('ha-lumina-bottom-bar-editor');
   }
 
   static getStubConfig(): Record<string, unknown> {
