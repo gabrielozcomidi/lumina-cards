@@ -66,25 +66,16 @@ export class HaLuminaBottomBarEditor extends LitElement {
     .section-body.open { max-height: 3000px; padding: 12px 14px 16px; }
 
     /* ─── Item Block ─────────────────────────────── */
-    .item-block {
-      background: var(--card-background-color, #1a1a1d);
-      border-radius: 10px; padding: 12px;
-      display: flex; flex-direction: column; gap: 8px;
-    }
-    .item-header { display: flex; align-items: center; justify-content: space-between; }
-    .item-header-left { display: flex; align-items: center; gap: 8px; }
-    .item-number {
-      font-size: 0.75rem; font-weight: 700; color: var(--primary-color);
-      background: rgba(133, 173, 255, 0.1); border-radius: 6px; padding: 2px 8px;
-    }
+    .item-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .hero-tag {
       font-size: 0.625rem; font-weight: 700; color: var(--accent-color, #fecb00);
       background: rgba(254, 203, 0, 0.12); border-radius: 6px; padding: 2px 6px;
       text-transform: uppercase; letter-spacing: 0.04em;
     }
-    .item-label-preview { font-size: 0.8125rem; font-weight: 600; color: var(--primary-text-color); }
-    .item-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .item-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .item-number {
+      font-size: 0.75rem; font-weight: 700; color: var(--primary-color);
+      background: rgba(133, 173, 255, 0.1); border-radius: 6px; padding: 2px 8px;
+    }
 
     /* ─── Action Sub-section ──────────────────────── */
     .action-section {
@@ -96,6 +87,32 @@ export class HaLuminaBottomBarEditor extends LitElement {
       font-size: 0.75rem; font-weight: 600; color: var(--secondary-text-color);
       text-transform: uppercase; letter-spacing: 0.05em;
     }
+
+    /* ─── Color Picker ───────────────────────────── */
+    .color-picker-row {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .color-swatch {
+      width: 36px; height: 36px; border-radius: 8px;
+      border: 2px solid var(--divider-color);
+      cursor: pointer; flex-shrink: 0;
+      position: relative; overflow: hidden;
+    }
+    .color-swatch input[type="color"] {
+      position: absolute; inset: -8px;
+      width: calc(100% + 16px); height: calc(100% + 16px);
+      border: none; padding: 0; cursor: pointer;
+    }
+    .color-hex {
+      font-family: monospace; font-size: 0.8125rem;
+      color: var(--primary-text-color);
+      flex: 1; min-width: 0;
+    }
+    .color-clear {
+      cursor: pointer; --mdc-icon-size: 18px;
+      color: var(--secondary-text-color);
+    }
+    .color-clear:hover { color: var(--error-color, #db4437); }
 
     /* ─── Reorder & Remove ───────────────────────── */
     .item-actions { display: flex; gap: 4px; align-items: center; }
@@ -115,6 +132,7 @@ export class HaLuminaBottomBarEditor extends LitElement {
     .loading { padding: 24px; text-align: center; color: var(--secondary-text-color); }
 
     ha-select { width: 100%; }
+    ha-icon-picker { width: 100%; }
   `;
 
   public setConfig(config: LuminaBottomBarConfig): void {
@@ -154,7 +172,6 @@ export class HaLuminaBottomBarEditor extends LitElement {
     const currentAction = items[index][actionField] || defaultAction();
     const updated = { ...currentAction, [field]: value === '' ? undefined : value };
 
-    // When action type changes, clear irrelevant fields
     if (field === 'action') {
       delete updated.navigation_path;
       delete updated.entity;
@@ -186,6 +203,32 @@ export class HaLuminaBottomBarEditor extends LitElement {
     if (target < 0 || target >= items.length) return;
     [items[index], items[target]] = [items[target], items[index]];
     this._set('items', items);
+  }
+
+  // ─── Color Picker Helper ─────────────────────────────────
+
+  private _renderColorPicker(
+    label: string,
+    value: string | undefined,
+    onChange: (color: string | undefined) => void,
+  ) {
+    const color = value || '#85adff';
+    return html`
+      <div class="editor-row">
+        <span class="editor-label">${label}</span>
+        <div class="color-picker-row">
+          <div class="color-swatch" style="background: ${value || 'transparent'};">
+            <input type="color" .value=${color}
+              @input=${(e: Event) => onChange((e.target as HTMLInputElement).value)}
+            />
+          </div>
+          <span class="color-hex">${value || 'Default'}</span>
+          ${value ? html`
+            <ha-icon class="color-clear" icon="mdi:close-circle" @click=${() => onChange(undefined)}></ha-icon>
+          ` : nothing}
+        </div>
+      </div>
+    `;
   }
 
   // ─── Render Action Editor ────────────────────────────────
@@ -289,12 +332,11 @@ export class HaLuminaBottomBarEditor extends LitElement {
                 @change=${(e: Event) => this._set('floating', (e.target as HTMLInputElement).checked)}
               ></ha-switch>
             </div>
-            <div class="editor-row">
-              <ha-textfield label="Active Color (e.g. #85adff)"
-                .value=${this._config.active_color || ''}
-                @input=${(e: Event) => this._set('active_color', (e.target as HTMLInputElement).value || undefined)}
-              ></ha-textfield>
-            </div>
+            ${this._renderColorPicker(
+              'Active Color',
+              this._config.active_color,
+              (c) => this._set('active_color', c),
+            )}
           </div>
         </div>
 
@@ -331,11 +373,14 @@ export class HaLuminaBottomBarEditor extends LitElement {
           </div>
         </div>
         <div class="section-body ${this._openSections[`item_${i}`] ? 'open' : ''}">
-          <!-- Basic -->
+          <!-- Basic: Icon picker + Label -->
           <div class="item-grid">
-            <ha-textfield label="Icon (mdi:...)" .value=${item.icon || ''}
-              @input=${(e: Event) => this._updateItem(i, 'icon', (e.target as HTMLInputElement).value)}
-            ></ha-textfield>
+            <ha-icon-picker
+              .hass=${this.hass}
+              label="Icon"
+              .value=${item.icon || ''}
+              @value-changed=${(e: CustomEvent) => this._updateItem(i, 'icon', e.detail.value)}
+            ></ha-icon-picker>
             <ha-textfield label="Label" .value=${item.label || ''}
               @input=${(e: Event) => this._updateItem(i, 'label', (e.target as HTMLInputElement).value)}
             ></ha-textfield>
@@ -366,12 +411,18 @@ export class HaLuminaBottomBarEditor extends LitElement {
             ></ha-entity-picker>
             ${item.state_entity ? html`
               <div class="item-grid">
-                <ha-textfield label="Icon when On" .value=${item.icon_on || ''}
-                  @input=${(e: Event) => this._updateItem(i, 'icon_on', (e.target as HTMLInputElement).value)}
-                ></ha-textfield>
-                <ha-textfield label="Icon when Off" .value=${item.icon_off || ''}
-                  @input=${(e: Event) => this._updateItem(i, 'icon_off', (e.target as HTMLInputElement).value)}
-                ></ha-textfield>
+                <ha-icon-picker
+                  .hass=${this.hass}
+                  label="Icon when On"
+                  .value=${item.icon_on || ''}
+                  @value-changed=${(e: CustomEvent) => this._updateItem(i, 'icon_on', e.detail.value)}
+                ></ha-icon-picker>
+                <ha-icon-picker
+                  .hass=${this.hass}
+                  label="Icon when Off"
+                  .value=${item.icon_off || ''}
+                  @value-changed=${(e: CustomEvent) => this._updateItem(i, 'icon_off', e.detail.value)}
+                ></ha-icon-picker>
               </div>
             ` : nothing}
           </div>
@@ -379,16 +430,16 @@ export class HaLuminaBottomBarEditor extends LitElement {
           <!-- Notification -->
           <div class="action-section">
             <span class="action-title">Notification Badge</span>
-            <div class="item-grid">
-              <ha-entity-picker .hass=${this.hass} label="Badge Entity"
-                .value=${item.notification_entity || ''}
-                @value-changed=${(e: CustomEvent) => this._updateItem(i, 'notification_entity', e.detail.value)}
-                allow-custom-entity
-              ></ha-entity-picker>
-              <ha-textfield label="Glow Color" .value=${item.glow_color || ''}
-                @input=${(e: Event) => this._updateItem(i, 'glow_color', (e.target as HTMLInputElement).value)}
-              ></ha-textfield>
-            </div>
+            <ha-entity-picker .hass=${this.hass} label="Badge Entity"
+              .value=${item.notification_entity || ''}
+              @value-changed=${(e: CustomEvent) => this._updateItem(i, 'notification_entity', e.detail.value)}
+              allow-custom-entity
+            ></ha-entity-picker>
+            ${this._renderColorPicker(
+              'Glow Color',
+              item.glow_color,
+              (c) => this._updateItem(i, 'glow_color', c || ''),
+            )}
           </div>
         </div>
       </div>

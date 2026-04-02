@@ -13,10 +13,12 @@ export class HaLuminaBottomBar extends LitElement {
   @state() private _config!: LuminaBottomBarConfig;
   @state() private _currentPath = '';
   @state() private _confirmIndex: number | null = null;
+  @state() private _editMode = false;
 
   private _confirmTimer: ReturnType<typeof setTimeout> | null = null;
   private _holdTimer: ReturnType<typeof setTimeout> | null = null;
   private _held = false;
+  private _editObserver: MutationObserver | null = null;
 
   static styles = [luminaTokens, bottomBarStyles];
 
@@ -58,6 +60,8 @@ export class HaLuminaBottomBar extends LitElement {
     this._currentPath = window.location.pathname;
     window.addEventListener('popstate', this._onLocationChange);
     window.addEventListener('location-changed', this._onLocationChange);
+    this._detectEditMode();
+    this._observeEditMode();
   }
 
   disconnectedCallback(): void {
@@ -66,6 +70,21 @@ export class HaLuminaBottomBar extends LitElement {
     window.removeEventListener('location-changed', this._onLocationChange);
     if (this._confirmTimer) clearTimeout(this._confirmTimer);
     if (this._holdTimer) clearTimeout(this._holdTimer);
+    if (this._editObserver) { this._editObserver.disconnect(); this._editObserver = null; }
+  }
+
+  private _detectEditMode(): void {
+    // HA adds a query param or the card is inside a hui-card-edit-mode / dialog
+    const inDialog = !!this.closest('ha-dialog, hui-dialog-edit-card, ha-more-info-dialog');
+    const editToolbar = !!document.querySelector('hui-editor, hui-card-editor, .edit-mode');
+    const urlEdit = window.location.search.includes('edit=1');
+    this._editMode = inDialog || editToolbar || urlEdit;
+  }
+
+  private _observeEditMode(): void {
+    // Watch for HA adding/removing edit dialogs
+    this._editObserver = new MutationObserver(() => this._detectEditMode());
+    this._editObserver.observe(document.body, { childList: true, subtree: true });
   }
 
   private _onLocationChange = (): void => {
@@ -254,6 +273,7 @@ export class HaLuminaBottomBar extends LitElement {
 
   protected render() {
     if (!this._config?.items) return nothing;
+    if (this._editMode) return html`<div style="padding:16px; text-align:center; color:var(--lumina-on-surface-variant); font-family:var(--lumina-font-body); font-size:0.8125rem; opacity:0.6;">Bottom bar hidden in edit mode</div>`;
 
     const floating = this._config.floating === true;
     const activeColor = this._config.active_color;

@@ -31,7 +31,7 @@ import './cards/bottom-bar/ha-lumina-bottom-bar';
 import './editors/bottom-bar-editor';
 
 // ─── Version ─────────────────────────────────────────────────
-const CARD_VERSION = '1.7.0';
+const CARD_VERSION = '1.7.1';
 
 // ─── Inject Fonts ────────────────────────────────────────────
 injectFonts();
