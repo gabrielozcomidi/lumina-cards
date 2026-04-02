@@ -1,9 +1,16 @@
-# Lumina Cards
+<p align="center">
+  <img src="Lumina Logo.png" alt="Lumina Cards" width="400">
+</p>
 
-Premium glassmorphism Lovelace card collection for [Home Assistant](https://www.home-assistant.io/). Built with [Lit 3](https://lit.dev/) and TypeScript.
+<p align="center">
+  Premium glassmorphism Lovelace card collection for <a href="https://www.home-assistant.io/">Home Assistant</a>.<br>
+  Built with <a href="https://lit.dev/">Lit 3</a> and TypeScript.
+</p>
 
-![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.1%2B-41BDF5?logo=homeassistant&logoColor=white)
-![License](https://img.shields.io/github/license/gabrielozcomidi/lumina-cards)
+<p align="center">
+  <img src="https://img.shields.io/badge/Home%20Assistant-2024.1%2B-41BDF5?logo=homeassistant&logoColor=white" alt="Home Assistant">
+  <img src="https://img.shields.io/github/license/gabrielozcomidi/lumina-cards" alt="License">
+</p>
 
 ## Cards
 
@@ -15,6 +22,7 @@ Premium glassmorphism Lovelace card collection for [Home Assistant](https://www.
 | **Climate Card** | HVAC modes, fan speed, humidity, and temperature ring |
 | **Media Card** | Playback controls, album art, volume ring, and source selector |
 | **Vacuum Card** | Battery ring, status, suction power, and actions |
+| **Bottom Bar** | Glassmorphism navigation bar with actions, hero button, and notification glow |
 
 ## Design
 
@@ -91,7 +99,8 @@ src/
 │   ├── light-card/
 │   ├── climate-card/
 │   ├── media-card/
-│   └── vacuum-card/
+│   ├── vacuum-card/
+│   └── bottom-bar/
 ├── components/              # Shared UI components
 │   ├── lumina-ring.ts       # SVG arc indicator
 │   ├── lumina-slider.ts
