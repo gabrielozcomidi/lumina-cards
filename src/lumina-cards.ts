@@ -37,7 +37,7 @@ import './cards/info-card/ha-lumina-info-card';
 import './editors/info-card-editor';
 
 // ─── Version ─────────────────────────────────────────────────
-const CARD_VERSION = '1.9.1';
+const CARD_VERSION = '1.9.2';
 
 // ─── Inject Fonts ────────────────────────────────────────────
 injectFonts();

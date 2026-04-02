@@ -9,6 +9,7 @@ const MODES: { value: InfoCardMode; label: string; hint: string }[] = [
   { value: 'moon_phase', label: 'Moon Phase', hint: 'sensor.moon_phase' },
   { value: 'precipitation', label: 'Precipitation', hint: 'Rain/snow sensor or weather attr' },
   { value: 'sun_cycle', label: 'Sun Cycle', hint: 'sun.sun (built-in)' },
+  { value: 'sun_moon', label: 'Sun & Moon', hint: 'sun.sun + sensor.moon_phase' },
   { value: 'weather_alert', label: 'Weather Alerts', hint: 'Alert binary_sensor or sensor' },
 ];
 
@@ -88,6 +89,20 @@ export class HaLuminaInfoCardEditor extends LitElement {
             allow-custom-entity
           ></ha-entity-picker>
         </div>
+
+        ${this._config.mode === 'sun_moon' ? html`
+          <div class="editor-row">
+            <ha-entity-picker
+              .hass=${this.hass}
+              label="Moon Entity"
+              .value=${this._config.moon_entity || ''}
+              .includeDomains=${['sensor']}
+              @value-changed=${(e: CustomEvent) => this._set('moon_entity', e.detail.value)}
+              allow-custom-entity
+            ></ha-entity-picker>
+            <span class="editor-hint">sensor.moon_phase from the Moon integration</span>
+          </div>
+        ` : ''}
 
         <div class="editor-row">
           <ha-textfield

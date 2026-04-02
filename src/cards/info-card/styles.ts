@@ -363,6 +363,55 @@ export const infoCardStyles = css`
     margin-top: var(--lumina-space-1);
   }
 
+  /* ── SUN & MOON COMBINED ── */
+  .sun-moon-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--lumina-space-1);
+    flex: 1;
+    justify-content: center;
+  }
+
+  .sun-moon-arc-wrap {
+    position: relative;
+    width: 200px;
+    height: 80px;
+  }
+
+  .sun-moon-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+    padding: 0 var(--lumina-space-2);
+  }
+
+  .sun-moon-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .mini-moon-svg {
+    filter: drop-shadow(0 0 8px rgba(133, 173, 255, 0.25));
+  }
+
+  .mini-moon-label {
+    font-family: var(--lumina-font-body);
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: var(--lumina-primary);
+    text-align: center;
+  }
+
+  .mini-moon-illum {
+    font-family: var(--lumina-font-body);
+    font-size: 0.5625rem;
+    color: var(--lumina-on-surface-variant);
+  }
+
   /* ── WEATHER ALERT ── */
   .alert-strip {
     position: absolute;

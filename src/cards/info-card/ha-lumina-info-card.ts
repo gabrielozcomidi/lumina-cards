@@ -11,6 +11,7 @@ const MODE_CONFIG: Record<InfoCardMode, { icon: string; title: string; accent: s
   moon_phase: { icon: 'mdi:moon-waning-crescent', title: 'Moon Phase', accent: 'rgba(133, 173, 255, 0.10)', iconColor: 'var(--lumina-primary)' },
   precipitation: { icon: 'mdi:weather-rainy', title: 'Precipitation', accent: 'rgba(133, 173, 255, 0.12)', iconColor: 'var(--lumina-primary)' },
   sun_cycle: { icon: 'mdi:white-balance-sunny', title: 'Sun Cycle', accent: 'rgba(254, 203, 0, 0.10)', iconColor: 'var(--lumina-secondary)' },
+  sun_moon: { icon: 'mdi:sun-moon-stars', title: 'Sun & Moon', accent: 'rgba(254, 203, 0, 0.08)', iconColor: 'var(--lumina-secondary)' },
   weather_alert: { icon: 'mdi:alert', title: 'Weather Alerts', accent: 'rgba(254, 203, 0, 0.10)', iconColor: 'var(--lumina-secondary)' },
 };
 
@@ -64,6 +65,11 @@ export class HaLuminaInfoCard extends LitElement {
 
   private get _mode(): InfoCardMode { return this._config?.mode || 'sun_cycle'; }
 
+  private get _moonEntity() {
+    if (!this.hass || !this._config?.moon_entity) return undefined;
+    return this.hass.states[this._config.moon_entity];
+  }
+
   // ── Render ──
 
   protected render() {
@@ -111,6 +117,7 @@ export class HaLuminaInfoCard extends LitElement {
             ${mode === 'moon_phase' ? this._renderMoonPhase() : nothing}
             ${mode === 'precipitation' ? this._renderPrecipitation() : nothing}
             ${mode === 'sun_cycle' ? this._renderSunCycle() : nothing}
+            ${mode === 'sun_moon' ? this._renderSunMoon() : nothing}
             ${mode === 'weather_alert' ? this._renderWeatherAlert() : nothing}
           </div>
         </div>
@@ -303,6 +310,103 @@ export class HaLuminaInfoCard extends LitElement {
           </div>
         </div>
         ${daylightStr ? html`<span class="sun-daylight">${daylightStr}</span>` : nothing}
+      </div>
+    `;
+  }
+
+  // ── Sun & Moon Combined ──
+
+  private _renderSunMoon() {
+    const attrs = this._entity!.attributes;
+    const rising = attrs.next_rising as string;
+    const setting = attrs.next_setting as string;
+    const elevation = attrs.elevation as number;
+
+    const sunriseTime = rising ? new Date(rising).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--';
+    const sunsetTime = setting ? new Date(setting).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--';
+
+    // Sun position
+    let sunPos = 0.5;
+    const isUp = elevation != null && elevation > 0;
+    if (rising && setting) {
+      const now = Date.now();
+      let riseMs = new Date(rising).getTime();
+      const setMs = new Date(setting).getTime();
+      if (isUp) {
+        if (riseMs > now) riseMs -= 86400000;
+        const dayLen = setMs - riseMs;
+        if (dayLen > 0) sunPos = Math.max(0, Math.min(1, (now - riseMs) / dayLen));
+      } else {
+        sunPos = -1;
+      }
+    }
+
+    // Arc geometry (compact — smaller to leave room for moon)
+    const arcCx = 100;
+    const arcCy = 72;
+    const arcR = 64;
+    const arcStart = { x: arcCx - arcR, y: arcCy };
+    const arcEnd = { x: arcCx + arcR, y: arcCy };
+    const trackD = `M ${arcStart.x} ${arcStart.y} A ${arcR} ${arcR} 0 0 1 ${arcEnd.x} ${arcEnd.y}`;
+    const sunAngle = Math.PI - (sunPos * Math.PI);
+    const dotX = arcCx + arcR * Math.cos(sunAngle);
+    const dotY = arcCy + arcR * Math.sin(sunAngle);
+
+    // Moon data
+    const moonEnt = this._moonEntity;
+    let moonPhaseLabel = '';
+    let moonIllum = 0;
+    let moonOffset = 0;
+    const moonR = 14;
+    if (moonEnt) {
+      const phase = MOON_PHASES[moonEnt.state] || { label: moonEnt.state.replace(/_/g, ' '), illumination: 50 };
+      moonPhaseLabel = phase.label;
+      moonIllum = (moonEnt.attributes.illumination as number) ?? phase.illumination;
+      moonOffset = moonR * 2 * (1 - moonIllum / 100) - moonR;
+    }
+
+    return html`
+      <div class="sun-moon-body">
+        <div class="sun-moon-arc-wrap">
+          ${svg`
+            <svg class="sun-arc-svg" viewBox="0 0 200 80">
+              <path class="arc-track" d="${trackD}" stroke-width="2.5" />
+              ${isUp ? svg`<path class="arc-fill" d="${trackD}" stroke-width="2.5"
+                stroke-dasharray="${Math.PI * arcR}" stroke-dashoffset="${Math.PI * arcR * (1 - sunPos)}" />` : nothing}
+              ${sunPos >= 0 && sunPos <= 1 && isUp ? svg`<circle class="sun-dot" cx="${dotX}" cy="${dotY}" r="5" />` : nothing}
+            </svg>
+          `}
+        </div>
+        <div class="sun-moon-row">
+          <div class="sun-time-item">
+            <ha-icon icon="mdi:weather-sunset-up"></ha-icon>
+            <span>${sunriseTime}</span>
+            <span class="sun-label">Sunrise</span>
+          </div>
+          ${moonEnt ? html`
+            <div class="sun-moon-center">
+              ${svg`
+                <svg class="mini-moon-svg" width="32" height="32" viewBox="0 0 32 32">
+                  <defs>
+                    <mask id="minimoonmask">
+                      <rect width="32" height="32" fill="white" />
+                      <circle cx="${16 + moonOffset}" cy="16" r="${moonR}" fill="black" />
+                    </mask>
+                  </defs>
+                  <circle cx="16" cy="16" r="${moonR}" fill="#252528" />
+                  <circle cx="16" cy="16" r="${moonR}" fill="#85adff" mask="url(#minimoonmask)" opacity="0.85" />
+                </svg>
+              `}
+              <span class="mini-moon-label">${moonPhaseLabel}</span>
+              <span class="mini-moon-illum">${Math.round(moonIllum)}%</span>
+            </div>
+          ` : nothing}
+          <div class="sun-time-item">
+            <ha-icon icon="mdi:weather-sunset-down"></ha-icon>
+            <span>${sunsetTime}</span>
+            <span class="sun-label">Sunset</span>
+          </div>
+        </div>
       </div>
     `;
   }

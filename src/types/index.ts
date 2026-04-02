@@ -149,12 +149,13 @@ export interface LuminaWeatherCardConfig extends LovelaceCardConfig {
 
 // ─── Info Card Config ────────────────────────────────────────
 
-export type InfoCardMode = 'air_quality' | 'moon_phase' | 'precipitation' | 'sun_cycle' | 'weather_alert';
+export type InfoCardMode = 'air_quality' | 'moon_phase' | 'precipitation' | 'sun_cycle' | 'sun_moon' | 'weather_alert';
 
 export interface LuminaInfoCardConfig extends LovelaceCardConfig {
   type: string;
   mode: InfoCardMode;
   entity: string;
+  moon_entity?: string;
   name?: string;
 }
 
