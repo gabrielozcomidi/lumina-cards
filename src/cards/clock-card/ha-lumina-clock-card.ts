@@ -147,7 +147,7 @@ export class HaLuminaClockCard extends LitElement {
 
     return html`
       <ha-card>
-        <div class="clock-card ${this._noBg ? 'no-bg' : ''}"
+        <div class="clock-card ${this._noBg ? 'no-bg' : ''}">
           <div class="clock-tint"></div>
           <div class="clock-content">
             <div class="clock-hero">
@@ -176,7 +176,7 @@ export class HaLuminaClockCard extends LitElement {
 
     return html`
       <ha-card>
-        <div class="clock-card room ${this._noBg ? 'no-bg' : ''}"
+        <div class="clock-card room ${this._noBg ? 'no-bg' : ''}">
           <div class="clock-tint"></div>
           <div class="clock-content">
             <div class="clock-hero">
@@ -201,7 +201,7 @@ export class HaLuminaClockCard extends LitElement {
 
     return html`
       <ha-card>
-        <div class="clock-card compact ${this._noBg ? 'no-bg' : ''}"
+        <div class="clock-card compact ${this._noBg ? 'no-bg' : ''}">
           <div class="clock-tint"></div>
           <div class="compact-clock-row">
             <ha-icon class="compact-clock-icon" icon="mdi:clock-outline"></ha-icon>
