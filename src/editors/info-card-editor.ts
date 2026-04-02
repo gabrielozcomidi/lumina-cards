@@ -31,6 +31,30 @@ export class HaLuminaInfoCardEditor extends LitElement {
     .editor-hint { font-size: 0.75rem; color: var(--secondary-text-color); margin-top: 2px; }
     .loading { padding: 24px; text-align: center; color: var(--secondary-text-color); }
     ha-select { width: 100%; }
+
+    .mode-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    }
+    .mode-option {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 14px 8px; border-radius: 10px; cursor: pointer;
+      background: var(--card-background-color, #1a1a1d);
+      border: 2px solid transparent;
+      transition: border-color 0.2s, background 0.2s;
+      text-align: center;
+    }
+    .mode-option:hover {
+      border-color: rgba(133, 173, 255, 0.2);
+      background: var(--secondary-background-color, #222);
+    }
+    .mode-option.selected {
+      border-color: #85adff;
+      background: rgba(133, 173, 255, 0.08);
+    }
+    .mode-option ha-icon { --mdc-icon-size: 24px; color: var(--secondary-text-color); }
+    .mode-option.selected ha-icon { color: #85adff; }
+    .mode-option-label { font-size: 0.75rem; font-weight: 600; color: var(--primary-text-color); }
+    .mode-option.selected .mode-option-label { color: #85adff; }
   `;
 
   public setConfig(config: LuminaInfoCardConfig): void {
@@ -60,23 +84,21 @@ export class HaLuminaInfoCardEditor extends LitElement {
       <div class="editor">
         <div class="editor-section">Info Card Mode</div>
 
-        <div class="editor-row">
-          <ha-select
-            label="Mode"
-            .value=${this._config.mode || ''}
-            @selected=${(e: CustomEvent) => {
-              const val = (e.target as any).value;
-              if (val) this._set('mode', val);
-            }}
-            fixedMenuPosition
-            naturalMenuWidth
-          >
-            ${MODES.map(m => html`
-              <mwc-list-item .value=${m.value}>${m.label}</mwc-list-item>
-            `)}
-          </ha-select>
-          ${currentMode ? html`<span class="editor-hint">${currentMode.hint}</span>` : ''}
+        <div class="mode-grid">
+          ${MODES.map(m => html`
+            <div class="mode-option ${this._config.mode === m.value ? 'selected' : ''}"
+              @click=${() => this._set('mode', m.value)}>
+              <ha-icon icon="${m.value === 'air_quality' ? 'mdi:leaf' :
+                m.value === 'moon_phase' ? 'mdi:moon-waning-crescent' :
+                m.value === 'precipitation' ? 'mdi:weather-rainy' :
+                m.value === 'sun_cycle' ? 'mdi:white-balance-sunny' :
+                m.value === 'sun_moon' ? 'mdi:theme-light-dark' :
+                'mdi:alert'}"></ha-icon>
+              <span class="mode-option-label">${m.label}</span>
+            </div>
+          `)}
         </div>
+        ${currentMode ? html`<span class="editor-hint">${currentMode.hint}</span>` : ''}
 
         <div class="editor-section">Entity</div>
 
