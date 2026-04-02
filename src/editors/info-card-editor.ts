@@ -29,6 +29,7 @@ export class HaLuminaInfoCardEditor extends LitElement {
     .editor-row { display: flex; flex-direction: column; gap: 4px; }
     .editor-label { font-size: 0.875rem; font-weight: 500; color: var(--primary-text-color); }
     .editor-hint { font-size: 0.75rem; color: var(--secondary-text-color); margin-top: 2px; }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
     .loading { padding: 24px; text-align: center; color: var(--secondary-text-color); }
     ha-select { width: 100%; }
 
@@ -132,6 +133,14 @@ export class HaLuminaInfoCardEditor extends LitElement {
             .value=${this._config.name || ''}
             @input=${(e: Event) => this._set('name', (e.target as HTMLInputElement).value || undefined)}
           ></ha-textfield>
+        </div>
+
+        <div class="toggle-row">
+          <span class="editor-label">Compact (single line)</span>
+          <ha-switch
+            .checked=${this._config.compact === true}
+            @change=${(e: Event) => this._set('compact', (e.target as HTMLInputElement).checked || undefined)}
+          ></ha-switch>
         </div>
       </div>
     `;

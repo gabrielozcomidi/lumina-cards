@@ -363,6 +363,64 @@ export const infoCardStyles = css`
     margin-top: var(--lumina-space-1);
   }
 
+  /* ── COMPACT (one-line) ── */
+  .info-card.compact {
+    min-height: auto;
+    padding: var(--lumina-space-3) var(--lumina-space-4);
+  }
+
+  .info-card.compact .info-tint {
+    opacity: 0.1;
+  }
+
+  .info-card.compact .compact-row {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--lumina-space-3);
+    min-height: 32px;
+  }
+
+  .compact-icon {
+    --mdc-icon-size: 20px;
+    color: var(--info-icon-color, var(--lumina-on-surface-variant));
+    filter: drop-shadow(0 0 6px var(--info-accent, transparent));
+    flex-shrink: 0;
+  }
+
+  .compact-title {
+    font-family: var(--lumina-font-headline);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--lumina-on-surface);
+    flex-shrink: 0;
+  }
+
+  .compact-value {
+    font-family: var(--lumina-font-body);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--lumina-on-surface);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .compact-detail {
+    font-family: var(--lumina-font-body);
+    font-size: 0.6875rem;
+    color: var(--lumina-on-surface-variant);
+    flex-shrink: 0;
+  }
+
+  .compact-badge {
+    font-size: 0.5625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+  }
+
   /* ── SUN & MOON COMBINED ── */
   .sun-moon-body {
     display: flex;

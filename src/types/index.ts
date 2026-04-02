@@ -157,6 +157,7 @@ export interface LuminaInfoCardConfig extends LovelaceCardConfig {
   entity: string;
   moon_entity?: string;
   name?: string;
+  compact?: boolean;
 }
 
 // ─── Bottom Bar Config ──────────────────────────────────────

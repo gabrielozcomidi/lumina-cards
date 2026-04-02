@@ -56,7 +56,7 @@ export class HaLuminaInfoCard extends LitElement {
     this._config = { ...config };
   }
 
-  public getCardSize(): number { return 4; }
+  public getCardSize(): number { return this._config?.compact ? 1 : 4; }
 
   private get _entity() {
     if (!this.hass || !this._config?.entity) return undefined;
@@ -102,6 +102,10 @@ export class HaLuminaInfoCard extends LitElement {
 
     const title = this._config.name || mc.title;
 
+    if (this._config.compact) {
+      return this._renderCompact(mode, mc, accent, iconColor, badgeText, title);
+    }
+
     return html`
       <ha-card>
         <div class="info-card" style="--info-accent: ${accent}; --info-icon-color: ${iconColor};">
@@ -119,6 +123,81 @@ export class HaLuminaInfoCard extends LitElement {
             ${mode === 'sun_cycle' ? this._renderSunCycle() : nothing}
             ${mode === 'sun_moon' ? this._renderSunMoon() : nothing}
             ${mode === 'weather_alert' ? this._renderWeatherAlert() : nothing}
+          </div>
+        </div>
+      </ha-card>
+    `;
+  }
+
+  // ── Compact (one-line) ──
+
+  private _renderCompact(
+    mode: InfoCardMode,
+    mc: { icon: string; title: string },
+    accent: string,
+    iconColor: string,
+    badgeText: string,
+    title: string,
+  ) {
+    const entity = this._entity!;
+    const attrs = entity.attributes;
+    let value = '';
+    let detail = '';
+
+    switch (mode) {
+      case 'air_quality': {
+        const aqi = parseFloat(entity.state) || 0;
+        const level = AQI_LEVELS.find(l => aqi <= l.max) || AQI_LEVELS[AQI_LEVELS.length - 1];
+        value = `AQI ${Math.round(aqi)}`;
+        detail = level.label;
+        break;
+      }
+      case 'moon_phase': {
+        const phase = MOON_PHASES[entity.state] || { label: entity.state.replace(/_/g, ' '), illumination: 50 };
+        const illum = (attrs.illumination as number) ?? phase.illumination;
+        value = phase.label;
+        detail = `${Math.round(illum)}%`;
+        break;
+      }
+      case 'precipitation': {
+        const amount = parseFloat(entity.state) || 0;
+        const unit = (attrs.unit_of_measurement as string) || 'mm';
+        const prob = (attrs.precipitation_probability as number) ?? (attrs.probability as number) ?? null;
+        value = `${amount} ${unit}`;
+        detail = prob != null ? `${Math.round(prob)}% chance` : '';
+        break;
+      }
+      case 'sun_cycle':
+      case 'sun_moon': {
+        const rising = attrs.next_rising as string;
+        const setting = attrs.next_setting as string;
+        const rise = rising ? new Date(rising).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--';
+        const set = setting ? new Date(setting).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--';
+        value = `↑${rise}  ↓${set}`;
+        if (mode === 'sun_moon' && this._moonEntity) {
+          const mp = MOON_PHASES[this._moonEntity.state] || { label: this._moonEntity.state.replace(/_/g, ' '), illumination: 50 };
+          detail = mp.label;
+        }
+        break;
+      }
+      case 'weather_alert': {
+        const isActive = entity.state !== 'off' && entity.state !== 'none' && entity.state !== '0' && entity.state !== 'unavailable' && entity.state !== 'unknown';
+        value = isActive ? ((attrs.headline as string) || (attrs.title as string) || 'Active Alert') : 'No Alerts';
+        detail = isActive ? (attrs.severity as string) || '' : '';
+        break;
+      }
+    }
+
+    return html`
+      <ha-card>
+        <div class="info-card compact" style="--info-accent: ${accent}; --info-icon-color: ${iconColor};">
+          <div class="info-tint"></div>
+          <div class="compact-row">
+            <ha-icon class="compact-icon" .icon=${mc.icon}></ha-icon>
+            <span class="compact-title">${title}</span>
+            <span class="compact-value">${value}</span>
+            ${detail ? html`<span class="compact-detail">${detail}</span>` : nothing}
+            ${badgeText ? html`<span class="compact-badge" style="color: ${iconColor};">${badgeText}</span>` : nothing}
           </div>
         </div>
       </ha-card>
