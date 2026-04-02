@@ -153,6 +153,13 @@ export class HaLuminaClockCardEditor extends LitElement {
           ></ha-switch>
         </div>
 
+        <div class="toggle-row">
+          <span class="editor-label">Show Card Background</span>
+          <ha-switch .checked=${this._config.show_background !== false}
+            @change=${(e: Event) => this._set('show_background', (e.target as HTMLInputElement).checked)}
+          ></ha-switch>
+        </div>
+
         <div class="editor-section">World Clocks</div>
         <div class="editor-sublabel">Add cities with IANA timezone names (e.g. America/New_York, Asia/Tokyo)</div>
 

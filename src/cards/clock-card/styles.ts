@@ -18,6 +18,16 @@ export const clockCardStyles = css`
     color: var(--lumina-on-surface);
   }
 
+  /* ── No Background ── */
+  .clock-card.no-bg {
+    background: transparent;
+    border-color: transparent;
+  }
+  .clock-card.no-bg .clock-tint { display: none; }
+  .clock-card.no-bg .world-clock-row {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
   .clock-tint {
     position: absolute;
     inset: 0;

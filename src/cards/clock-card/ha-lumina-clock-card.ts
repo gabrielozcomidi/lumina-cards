@@ -112,6 +112,7 @@ export class HaLuminaClockCard extends LitElement {
 
   private get _is24h(): boolean { return this._config?.time_format !== '12h'; }
   private get _layout(): string { return this._config?.layout || 'full'; }
+  private get _noBg(): boolean { return this._config?.show_background === false; }
 
   private _formatTime(date: Date): { main: string; period: string; seconds: string } {
     let h = date.getHours();
@@ -146,7 +147,7 @@ export class HaLuminaClockCard extends LitElement {
 
     return html`
       <ha-card>
-        <div class="clock-card">
+        <div class="clock-card ${this._noBg ? 'no-bg' : ''}"
           <div class="clock-tint"></div>
           <div class="clock-content">
             <div class="clock-hero">
@@ -175,7 +176,7 @@ export class HaLuminaClockCard extends LitElement {
 
     return html`
       <ha-card>
-        <div class="clock-card room">
+        <div class="clock-card room ${this._noBg ? 'no-bg' : ''}"
           <div class="clock-tint"></div>
           <div class="clock-content">
             <div class="clock-hero">
@@ -200,7 +201,7 @@ export class HaLuminaClockCard extends LitElement {
 
     return html`
       <ha-card>
-        <div class="clock-card compact">
+        <div class="clock-card compact ${this._noBg ? 'no-bg' : ''}"
           <div class="clock-tint"></div>
           <div class="compact-clock-row">
             <ha-icon class="compact-clock-icon" icon="mdi:clock-outline"></ha-icon>

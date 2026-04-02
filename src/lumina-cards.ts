@@ -39,7 +39,7 @@ import './cards/clock-card/ha-lumina-clock-card';
 import './editors/clock-card-editor';
 
 // ─── Version ─────────────────────────────────────────────────
-const CARD_VERSION = '2.0.0';
+const CARD_VERSION = '2.0.1';
 
 // ─── Inject Fonts ────────────────────────────────────────────
 injectFonts();

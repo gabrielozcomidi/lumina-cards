@@ -162,6 +162,7 @@ export interface LuminaClockCardConfig extends LovelaceCardConfig {
   show_seconds?: boolean;
   show_date?: boolean;
   show_greeting?: boolean;
+  show_background?: boolean;
   world_clocks?: WorldClockEntry[];
 }
 
