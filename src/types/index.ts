@@ -130,12 +130,33 @@ export interface LuminaVacuumCardConfig extends LovelaceCardConfig {
 
 // ─── Bottom Bar Config ──────────────────────────────────────
 
+export type BottomBarActionType = 'navigate' | 'toggle' | 'call-service' | 'more-info' | 'url' | 'none';
+
+export interface BottomBarAction {
+  action: BottomBarActionType;
+  navigation_path?: string;
+  entity?: string;
+  service?: string;
+  service_data?: Record<string, unknown>;
+  url?: string;
+  confirmation?: boolean;
+  haptic?: boolean;
+}
+
 export interface BottomBarItem {
   icon: string;
   label: string;
-  path: string;
+  tap_action: BottomBarAction;
+  hold_action?: BottomBarAction;
+  // State-aware: entity whose state controls icon color & dynamic icon
+  state_entity?: string;
+  icon_on?: string;
+  icon_off?: string;
+  // Notification badge
   notification_entity?: string;
   glow_color?: string;
+  // Hero button
+  hero?: boolean;
 }
 
 export interface LuminaBottomBarConfig extends LovelaceCardConfig {

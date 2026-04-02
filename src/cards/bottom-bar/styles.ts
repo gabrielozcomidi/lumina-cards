@@ -22,7 +22,7 @@ export const bottomBarStyles = css`
     z-index: 5;
     display: flex;
     justify-content: space-around;
-    align-items: center;
+    align-items: flex-end;
     background: var(--lumina-glass-bg);
     backdrop-filter: blur(var(--lumina-glass-blur));
     -webkit-backdrop-filter: blur(var(--lumina-glass-blur));
@@ -80,12 +80,38 @@ export const bottomBarStyles = css`
                 filter var(--lumina-transition-fast);
   }
 
-  /* ─── Active State ─────────────────────────────────────── */
+  /* ─── Active State (navigation match) ──────────────────── */
   .nav-item.active {
     color: var(--bar-active-color, var(--lumina-primary));
   }
   .nav-item.active ha-icon {
     filter: drop-shadow(0 0 6px var(--bar-active-color, rgba(133, 173, 255, 0.5)));
+  }
+
+  /* ─── Entity On State ──────────────────────────────────── */
+  .nav-item.entity-on {
+    color: var(--bar-active-color, var(--lumina-primary));
+  }
+  .nav-item.entity-on ha-icon {
+    filter: drop-shadow(0 0 6px var(--bar-active-color, rgba(133, 173, 255, 0.5)));
+  }
+
+  /* ─── Confirmation Pulse ───────────────────────────────── */
+  .nav-item.confirming {
+    animation: confirm-pulse 500ms ease infinite alternate;
+  }
+  .nav-item.confirming ha-icon {
+    color: var(--lumina-secondary);
+    filter: drop-shadow(0 0 10px rgba(254, 203, 0, 0.6));
+  }
+  .nav-item.confirming span {
+    color: var(--lumina-secondary);
+    font-weight: 700;
+  }
+
+  @keyframes confirm-pulse {
+    from { opacity: 1; }
+    to   { opacity: 0.6; }
   }
 
   /* ─── Hover / Press ────────────────────────────────────── */
@@ -95,6 +121,68 @@ export const bottomBarStyles = css`
   .nav-item:active {
     transform: scale(0.92);
     transition: transform 80ms ease;
+  }
+
+  /* ─── Hero Button ──────────────────────────────────────── */
+  .nav-item.hero {
+    position: relative;
+    margin-top: -18px;
+  }
+
+  .nav-item.hero .hero-bg {
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 48px;
+    height: 48px;
+    border-radius: var(--lumina-radius-full);
+    background: linear-gradient(
+      135deg,
+      var(--lumina-primary-dim) 0%,
+      var(--lumina-primary-container) 100%
+    );
+    z-index: -1;
+    box-shadow: 0 0 20px -4px rgba(133, 173, 255, 0.4);
+    transition: box-shadow var(--lumina-transition-fast),
+                transform var(--lumina-transition-fast);
+  }
+
+  .nav-item.hero:hover .hero-bg {
+    box-shadow: 0 0 28px -2px rgba(133, 173, 255, 0.55);
+    transform: translateX(-50%) scale(1.05);
+  }
+
+  .nav-item.hero:active .hero-bg {
+    transform: translateX(-50%) scale(0.95);
+  }
+
+  .nav-item.hero ha-icon {
+    --mdc-icon-size: 26px;
+    color: var(--lumina-on-primary);
+    filter: none;
+    position: relative;
+    z-index: 1;
+    margin-top: 7px;
+  }
+
+  .nav-item.hero span {
+    position: relative;
+    z-index: 1;
+    margin-top: 2px;
+  }
+
+  .nav-item.hero.entity-on .hero-bg {
+    background: linear-gradient(
+      135deg,
+      var(--lumina-secondary-dim) 0%,
+      var(--lumina-secondary) 100%
+    );
+    box-shadow: 0 0 20px -4px rgba(254, 203, 0, 0.4);
+  }
+
+  .nav-item.hero.entity-on ha-icon {
+    color: var(--lumina-on-secondary);
   }
 
   /* ─── Notification Badge ───────────────────────────────── */
@@ -120,13 +208,18 @@ export const bottomBarStyles = css`
     animation: badge-in 250ms cubic-bezier(0.4, 0, 0.2, 1) both;
   }
 
-  /* Badge dot (no number) */
   .badge.dot {
     min-width: 8px;
     height: 8px;
     padding: 0;
     top: 2px;
     right: 8px;
+  }
+
+  /* Hero badge offset */
+  .nav-item.hero .badge {
+    top: -4px;
+    right: 0;
   }
 
   /* ─── Per-item glow (notification active) ──────────────── */
