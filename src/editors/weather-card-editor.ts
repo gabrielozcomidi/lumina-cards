@@ -21,6 +21,7 @@ export class HaLuminaWeatherCardEditor extends LitElement {
     .editor-label { font-size: 0.875rem; font-weight: 500; color: var(--primary-text-color); }
     .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
     .loading { padding: 24px; text-align: center; color: var(--secondary-text-color); }
+    ha-select { width: 100%; }
   `;
 
   public setConfig(config: LuminaWeatherCardConfig): void {
@@ -70,12 +71,25 @@ export class HaLuminaWeatherCardEditor extends LitElement {
 
         <div class="editor-section">Display Options</div>
 
-        <div class="toggle-row">
-          <span class="editor-label">Compact Mode (single-line strip)</span>
-          <ha-switch
-            .checked=${this._config.compact === true}
-            @change=${(e: Event) => this._set('compact', (e.target as HTMLInputElement).checked || undefined)}
-          ></ha-switch>
+        <div class="editor-row">
+          <span class="editor-label">Card Layout</span>
+          <ha-select
+            label="Layout"
+            .value=${this._config.layout || (this._config.compact ? 'compact' : 'full')}
+            @selected=${(e: CustomEvent) => {
+              const val = (e.target as any).value;
+              if (val) {
+                this._config = { ...this._config, layout: val, compact: undefined } as any;
+                this._dispatch();
+              }
+            }}
+            fixedMenuPosition
+            naturalMenuWidth
+          >
+            <mwc-list-item value="full">Full (all sections)</mwc-list-item>
+            <mwc-list-item value="room">Room Card Size</mwc-list-item>
+            <mwc-list-item value="compact">Compact (single line)</mwc-list-item>
+          </ha-select>
         </div>
 
         <div class="toggle-row">

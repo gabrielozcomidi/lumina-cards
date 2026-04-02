@@ -292,6 +292,98 @@ export const weatherCardStyles = css`
   }
 
   /* ═══════════════════════════════════════════════════
+     ROOM MODE — matches room card height & feel
+     ═══════════════════════════════════════════════════ */
+
+  .weather-card.room {
+    min-height: 220px;
+    padding: var(--lumina-space-6);
+  }
+
+  .weather-card.room .weather-tint {
+    opacity: 0.12;
+  }
+
+  .room-layout {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    min-height: 192px;
+    gap: var(--lumina-space-3);
+  }
+
+  /* Room hero: icon left, temp right */
+  .room-hero {
+    display: flex;
+    align-items: center;
+    gap: var(--lumina-space-4);
+    padding: var(--lumina-space-2) 0;
+  }
+
+  .room-hero-left {
+    flex-shrink: 0;
+  }
+
+  .room-hero-icon {
+    --mdc-icon-size: 48px;
+    color: var(--weather-icon-color, var(--lumina-on-surface-variant));
+    filter: drop-shadow(0 0 16px var(--weather-accent, transparent));
+  }
+
+  .room-hero-right {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .room-hero-temp {
+    font-family: var(--lumina-font-headline);
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--lumina-on-surface);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    text-shadow: 0 0 30px var(--weather-accent, transparent);
+  }
+
+  .room-hero-highlow {
+    display: flex;
+    gap: var(--lumina-space-3);
+    font-family: var(--lumina-font-body);
+    font-size: 0.75rem;
+    color: var(--lumina-on-surface-variant);
+  }
+
+  .room-hero-highlow .high {
+    color: var(--lumina-on-surface);
+  }
+
+  /* Room detail items — inline row */
+  .room-details {
+    display: flex;
+    gap: var(--lumina-space-4);
+    flex-wrap: wrap;
+  }
+
+  .room-detail-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--lumina-font-body);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--lumina-on-surface-variant);
+  }
+
+  .room-detail-item ha-icon {
+    --mdc-icon-size: 14px;
+    color: var(--lumina-outline);
+  }
+
+  /* ═══════════════════════════════════════════════════
      COMPACT MODE — single-line weather strip
      ═══════════════════════════════════════════════════ */
 

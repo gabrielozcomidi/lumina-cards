@@ -132,11 +132,14 @@ export interface LuminaVacuumCardConfig extends LovelaceCardConfig {
 
 // ─── Weather Card Config ────────────────────────────────────
 
+export type WeatherCardLayout = 'full' | 'compact' | 'room';
+
 export interface LuminaWeatherCardConfig extends LovelaceCardConfig {
   type: string;
   entity: string;
   name?: string;
-  compact?: boolean;
+  layout?: WeatherCardLayout;
+  compact?: boolean; // legacy alias for layout: 'compact'
   show_forecast_hourly?: boolean;
   show_forecast_daily?: boolean;
   show_details?: boolean;

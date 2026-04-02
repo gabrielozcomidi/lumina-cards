@@ -113,7 +113,18 @@ export class HaLuminaWeatherCard extends LitElement {
     };
   }
 
-  public getCardSize(): number { return this._config?.compact ? 1 : 6; }
+  private get _layout(): string {
+    if (this._config?.layout) return this._config.layout;
+    if (this._config?.compact) return 'compact';
+    return 'full';
+  }
+
+  public getCardSize(): number {
+    const l = this._layout;
+    if (l === 'compact') return 1;
+    if (l === 'room') return 4;
+    return 6;
+  }
 
   // --- Lifecycle ---
 
@@ -210,7 +221,9 @@ export class HaLuminaWeatherCard extends LitElement {
     const accent = CONDITION_ACCENTS[condition] || 'transparent';
     const iconColor = CONDITION_ICON_COLORS[condition] || 'var(--lumina-on-surface-variant)';
 
-    if (this._config.compact) return this._renderCompact(accent, iconColor);
+    const layout = this._layout;
+    if (layout === 'compact') return this._renderCompact(accent, iconColor);
+    if (layout === 'room') return this._renderRoom(accent, iconColor);
 
     return html`
       <ha-card>
@@ -260,6 +273,87 @@ export class HaLuminaWeatherCard extends LitElement {
               <span class="compact-detail">
                 <ha-icon icon="mdi:weather-windy"></ha-icon>${this._windSpeed}
               </span>
+            ` : nothing}
+          </div>
+        </div>
+      </ha-card>
+    `;
+  }
+
+  private _renderRoom(accent: string, iconColor: string) {
+    const icon = CONDITION_ICONS[this._condition] || 'mdi:weather-cloudy';
+    const label = CONDITION_LABELS[this._condition] || this._condition;
+    const temp = this._temperature;
+    const unit = this._tempUnit;
+    const high = this._todayHigh;
+    const low = this._todayLow;
+    const count = this._config.hourly_count || 6;
+    const hourlyItems = this._hourlyForecast.slice(0, count);
+    const now = new Date();
+
+    return html`
+      <ha-card>
+        <div class="weather-card room" style="--weather-accent: ${accent}; --weather-icon-color: ${iconColor};">
+          <div class="weather-tint"></div>
+          <div class="room-layout">
+            <!-- Top: header row -->
+            <div class="weather-header">
+              <span class="location-name">${this._locationName}</span>
+              <span class="condition-badge">${label}</span>
+            </div>
+
+            <!-- Middle: icon + temp side by side -->
+            <div class="room-hero">
+              <div class="room-hero-left">
+                <ha-icon class="room-hero-icon" .icon=${icon}></ha-icon>
+              </div>
+              <div class="room-hero-right">
+                <span class="room-hero-temp">${temp != null ? `${Math.round(temp)}${unit}` : '--'}</span>
+                ${high != null || low != null ? html`
+                  <div class="room-hero-highlow">
+                    ${high != null ? html`<span class="high">H: ${Math.round(high)}°</span>` : nothing}
+                    ${low != null ? html`<span>L: ${Math.round(low)}°</span>` : nothing}
+                  </div>
+                ` : nothing}
+              </div>
+            </div>
+
+            <!-- Bottom: mini detail chips -->
+            <div class="room-details">
+              ${this._windSpeed != null ? html`
+                <span class="room-detail-item">
+                  <ha-icon icon="mdi:weather-windy"></ha-icon>${this._windSpeed} ${this._windUnit}
+                </span>
+              ` : nothing}
+              ${this._humidity != null ? html`
+                <span class="room-detail-item">
+                  <ha-icon icon="mdi:water-percent"></ha-icon>${this._humidity}%
+                </span>
+              ` : nothing}
+              ${this._uvIndex != null ? html`
+                <span class="room-detail-item">
+                  <ha-icon icon="mdi:white-balance-sunny"></ha-icon>UV ${this._uvIndex}
+                </span>
+              ` : nothing}
+            </div>
+
+            <!-- Hourly mini-scroll -->
+            ${hourlyItems.length ? html`
+              <div class="hourly-scroll">
+                ${hourlyItems.map((f, i) => {
+                  const dt = new Date(f.datetime);
+                  const isNow = i === 0 && Math.abs(dt.getTime() - now.getTime()) < 3600000;
+                  const timeLabel = isNow ? 'Now' : dt.toLocaleTimeString([], { hour: 'numeric' });
+                  const fIcon = CONDITION_ICONS[f.condition] || 'mdi:weather-cloudy';
+                  return html`
+                    <div class="hourly-slot ${isNow ? 'now' : ''}">
+                      <span class="hourly-time">${timeLabel}</span>
+                      <ha-icon class="hourly-icon" .icon=${fIcon}></ha-icon>
+                      <span class="hourly-temp">${Math.round(f.temperature)}°</span>
+                    </div>
+                  `;
+                })}
+              </div>
             ` : nothing}
           </div>
         </div>

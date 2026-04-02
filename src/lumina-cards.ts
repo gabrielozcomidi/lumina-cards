@@ -35,7 +35,7 @@ import './cards/weather-card/ha-lumina-weather-card';
 import './editors/weather-card-editor';
 
 // ─── Version ─────────────────────────────────────────────────
-const CARD_VERSION = '1.8.1';
+const CARD_VERSION = '1.8.2';
 
 // ─── Inject Fonts ────────────────────────────────────────────
 injectFonts();
