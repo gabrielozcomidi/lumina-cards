@@ -147,6 +147,24 @@ export interface LuminaWeatherCardConfig extends LovelaceCardConfig {
   daily_count?: number;
 }
 
+// ─── Clock Card Config ──────────────────────────────────────
+
+export interface WorldClockEntry {
+  city: string;
+  timezone: string;
+}
+
+export interface LuminaClockCardConfig extends LovelaceCardConfig {
+  type: string;
+  layout?: 'full' | 'room' | 'compact';
+  name?: string;
+  time_format?: '12h' | '24h';
+  show_seconds?: boolean;
+  show_date?: boolean;
+  show_greeting?: boolean;
+  world_clocks?: WorldClockEntry[];
+}
+
 // ─── Info Card Config ────────────────────────────────────────
 
 export type InfoCardMode = 'air_quality' | 'moon_phase' | 'precipitation' | 'sun_cycle' | 'sun_moon' | 'weather_alert';
@@ -214,6 +232,7 @@ declare global {
     'lumina-slider': HTMLElement;
     'lumina-icon-button': HTMLElement;
     'ha-lumina-weather-card': HTMLElement;
+    'ha-lumina-clock-card': HTMLElement;
     'ha-lumina-info-card': HTMLElement;
     'ha-lumina-bottom-bar': HTMLElement;
   }

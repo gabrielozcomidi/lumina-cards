@@ -35,9 +35,11 @@ import './cards/weather-card/ha-lumina-weather-card';
 import './editors/weather-card-editor';
 import './cards/info-card/ha-lumina-info-card';
 import './editors/info-card-editor';
+import './cards/clock-card/ha-lumina-clock-card';
+import './editors/clock-card-editor';
 
 // ─── Version ─────────────────────────────────────────────────
-const CARD_VERSION = '1.9.5';
+const CARD_VERSION = '2.0.0';
 
 // ─── Inject Fonts ────────────────────────────────────────────
 injectFonts();
@@ -85,6 +87,12 @@ const CARDS: CustomCardEntry[] = [
     type: 'ha-lumina-vacuum-card',
     name: 'Lumina Vacuum Card',
     description: 'Vacuum/cleaning robot control with battery ring and actions',
+    preview: true,
+  },
+  {
+    type: 'ha-lumina-clock-card',
+    name: 'Lumina Clock Card',
+    description: 'Premium clock with greeting, date, and world clocks',
     preview: true,
   },
   {
