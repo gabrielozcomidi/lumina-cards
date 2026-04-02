@@ -13,6 +13,13 @@ export const vacuumCardStyles = css`
     gap: var(--lumina-space-6);
   }
 
+  /* ── No Background ── */
+  .vacuum-card.no-bg {
+    background: transparent;
+    border-color: transparent;
+  }
+  .vacuum-card.no-bg::before { display: none; }
+
   /* ─── Hero Battery Ring ─────────────────────────── */
   .hero-section {
     display: flex;

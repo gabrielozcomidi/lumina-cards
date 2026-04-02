@@ -13,6 +13,13 @@ export const climateCardStyles = css`
     gap: var(--lumina-space-6);
   }
 
+  /* ── No Background ── */
+  .climate-card.no-bg {
+    background: transparent;
+    border-color: transparent;
+  }
+  .climate-card.no-bg::before { display: none; }
+
   /* ─── Header with Status Badge ───────────────────── */
   .climate-header {
     display: flex;

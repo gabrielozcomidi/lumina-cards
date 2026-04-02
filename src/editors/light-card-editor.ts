@@ -22,6 +22,7 @@ export class HaLuminaLightCardEditor extends LitElement {
     .add-btn { cursor: pointer; color: var(--primary-color); font-size: 0.875rem; font-weight: 500; padding: 8px; }
     .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
     .toggle-label { font-size: 0.875rem; font-weight: 500; }
+    .editor-label { font-size: 0.875rem; font-weight: 500; color: var(--primary-text-color); }
     .scene-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
     .scene-row ha-textfield, .scene-row ha-entity-picker { flex: 1; }
     .loading { padding: 24px; text-align: center; color: var(--secondary-text-color); }
@@ -161,6 +162,13 @@ export class HaLuminaLightCardEditor extends LitElement {
           </div>
         `)}
         <div class="add-btn" @click=${this._addScene}>+ Add Scene</div>
+
+        <div class="toggle-row">
+          <span class="editor-label">Show Card Background</span>
+          <ha-switch .checked=${this._config.show_background !== false}
+            @change=${(e: Event) => this._set('show_background', (e.target as HTMLInputElement).checked)}
+          ></ha-switch>
+        </div>
       </div>
     `;
   }

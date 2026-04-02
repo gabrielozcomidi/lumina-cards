@@ -44,6 +44,7 @@ export interface LuminaRoomCardConfig extends LovelaceCardConfig {
   light_scenes?: SceneConfig[];
   // Compact half-width variant for horizontal stacks
   compact?: boolean;
+  show_background?: boolean;
 }
 
 // ─── Room Popup Config ───────────────────────────────────────
@@ -78,6 +79,7 @@ export interface LuminaLightCardConfig extends LovelaceCardConfig {
   show_color_temp?: boolean;
   show_individual_controls?: boolean;
   scenes?: SceneConfig[];
+  show_background?: boolean;
 }
 
 // ─── Climate Card Config ─────────────────────────────────────
@@ -88,6 +90,7 @@ export interface LuminaClimateCardConfig extends LovelaceCardConfig {
   image?: string;
   show_humidity?: boolean;
   show_fan_speed?: boolean;
+  show_background?: boolean;
 }
 
 // ─── Media Card Config ───────────────────────────────────────
@@ -118,6 +121,7 @@ export interface LuminaMediaCardConfig extends LovelaceCardConfig {
   show_progress?: boolean;
   show_speaker_management?: boolean;
   shortcuts?: MediaShortcut[];
+  show_background?: boolean;
 }
 
 // ─── Vacuum Card Config ──────────────────────────────────────
@@ -128,6 +132,7 @@ export interface LuminaVacuumCardConfig extends LovelaceCardConfig {
   image?: string;
   show_fan_speed?: boolean;
   show_map?: boolean;
+  show_background?: boolean;
 }
 
 // ─── Weather Card Config ────────────────────────────────────
@@ -145,6 +150,7 @@ export interface LuminaWeatherCardConfig extends LovelaceCardConfig {
   show_details?: boolean;
   hourly_count?: number;
   daily_count?: number;
+  show_background?: boolean;
 }
 
 // ─── Clock Card Config ──────────────────────────────────────
@@ -177,6 +183,7 @@ export interface LuminaInfoCardConfig extends LovelaceCardConfig {
   moon_entity?: string;
   name?: string;
   compact?: boolean;
+  show_background?: boolean;
 }
 
 // ─── Bottom Bar Config ──────────────────────────────────────

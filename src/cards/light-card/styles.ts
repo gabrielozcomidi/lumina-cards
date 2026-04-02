@@ -13,6 +13,13 @@ export const lightCardStyles = css`
     gap: var(--lumina-space-6);
   }
 
+  /* ── No Background ── */
+  .light-card.no-bg {
+    background: transparent;
+    border-color: transparent;
+  }
+  .light-card.no-bg::before { display: none; }
+
   /* ─── Hero Ring + All On/Off ────────────────────── */
   .hero-section {
     display: flex;

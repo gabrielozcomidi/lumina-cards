@@ -16,6 +16,7 @@ export class HaLuminaClimateCardEditor extends LitElement {
     .editor-section { font-size: 1rem; font-weight: 600; color: var(--primary-text-color); margin-top: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--divider-color); }
     .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
     .toggle-label { font-size: 0.875rem; font-weight: 500; }
+    .editor-label { font-size: 0.875rem; font-weight: 500; color: var(--primary-text-color); }
     .loading { padding: 24px; text-align: center; color: var(--secondary-text-color); }
   `;
 
@@ -54,6 +55,12 @@ export class HaLuminaClimateCardEditor extends LitElement {
           <span class="toggle-label">Show Fan Speed</span>
           <ha-switch .checked=${this._config.show_fan_speed !== false}
             @change=${(e: Event) => this._set('show_fan_speed', (e.target as HTMLInputElement).checked)}></ha-switch>
+        </div>
+        <div class="toggle-row">
+          <span class="editor-label">Show Card Background</span>
+          <ha-switch .checked=${this._config.show_background !== false}
+            @change=${(e: Event) => this._set('show_background', (e.target as HTMLInputElement).checked)}
+          ></ha-switch>
         </div>
       </div>
     `;

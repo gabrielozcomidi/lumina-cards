@@ -460,4 +460,8 @@ export const weatherCardStyles = css`
     --mdc-icon-size: 14px;
     color: var(--lumina-outline);
   }
+
+  /* ── No Background ── */
+  .weather-card.no-bg { background: transparent; border-color: transparent; }
+  .weather-card.no-bg .weather-tint { display: none; }
 `;

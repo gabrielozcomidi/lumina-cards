@@ -581,6 +581,13 @@ export class HaLuminaRoomCardEditor extends LitElement {
             ` : ''}
           </div>
         </div>
+
+        <div class="toggle-row">
+          <span class="editor-label">Show Card Background</span>
+          <ha-switch .checked=${this._config.show_background !== false}
+            @change=${(e: Event) => this._set('show_background', (e.target as HTMLInputElement).checked)}
+          ></ha-switch>
+        </div>
       </div>
     `;
   }

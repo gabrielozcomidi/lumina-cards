@@ -21,6 +21,7 @@ export class HaLuminaMediaCardEditor extends LitElement {
     .add-btn { cursor: pointer; color: var(--primary-color); font-size: 0.875rem; font-weight: 500; padding: 8px; }
     .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
     .toggle-label { font-size: 0.875rem; font-weight: 500; }
+    .editor-label { font-size: 0.875rem; font-weight: 500; color: var(--primary-text-color); }
     .entity-extras { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: end; }
     .type-select { width: 100%; padding: 10px 12px; background: var(--card-background-color, #1a1a1d); border: 1px solid var(--divider-color); border-radius: 8px; color: var(--primary-text-color); font-size: 0.875rem; font-family: inherit; appearance: none; -webkit-appearance: none; cursor: pointer; }
     .type-select-wrapper { position: relative; }
@@ -214,6 +215,13 @@ export class HaLuminaMediaCardEditor extends LitElement {
           </div>
         `)}
         <div class="add-btn" @click=${this._addShortcut}>+ Add Shortcut</div>
+
+        <div class="toggle-row">
+          <span class="editor-label">Show Card Background</span>
+          <ha-switch .checked=${this._config.show_background !== false}
+            @change=${(e: Event) => this._set('show_background', (e.target as HTMLInputElement).checked)}
+          ></ha-switch>
+        </div>
       </div>
     `;
   }

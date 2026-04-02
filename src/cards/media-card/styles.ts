@@ -940,4 +940,7 @@ export const mediaCardStyles = css`
     font-size: 0.75rem;
     color: var(--lumina-on-surface-variant);
   }
+
+  /* ── No Background ── */
+  .media-card.no-bg { background: transparent; border-color: transparent; }
 `;

@@ -108,7 +108,7 @@ export class HaLuminaInfoCard extends LitElement {
 
     return html`
       <ha-card>
-        <div class="info-card" style="--info-accent: ${accent}; --info-icon-color: ${iconColor};">
+        <div class="info-card ${this._config.show_background === false ? 'no-bg' : ''}" style="--info-accent: ${accent}; --info-icon-color: ${iconColor};">
           ${mode === 'weather_alert' ? html`<div class="alert-strip" style="--alert-color: ${iconColor};"></div>` : nothing}
           <div class="info-tint"></div>
           <div class="info-content">
@@ -190,7 +190,7 @@ export class HaLuminaInfoCard extends LitElement {
 
     return html`
       <ha-card>
-        <div class="info-card compact" style="--info-accent: ${accent}; --info-icon-color: ${iconColor};">
+        <div class="info-card compact ${this._config.show_background === false ? 'no-bg' : ''}" style="--info-accent: ${accent}; --info-icon-color: ${iconColor};">
           <div class="info-tint"></div>
           <div class="compact-row">
             <ha-icon class="compact-icon" .icon=${mc.icon}></ha-icon>

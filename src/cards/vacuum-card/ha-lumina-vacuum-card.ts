@@ -136,7 +136,7 @@ export class HaLuminaVacuumCard extends LitElement {
     const isCleaning = this._state === 'cleaning';
 
     return html`
-      <div class="vacuum-card" style="position:relative;">
+      <div class="vacuum-card ${this.config.show_background === false ? 'no-bg' : ''}" style="position:relative;">
         ${render3dBackground(this.config.image, true)}
         <div class="lumina-3d-content">
         <!-- Hero Battery Ring -->

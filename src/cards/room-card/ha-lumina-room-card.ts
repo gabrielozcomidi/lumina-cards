@@ -277,7 +277,7 @@ export class HaLuminaRoomCard extends LitElement {
 
     return html`
       <ha-card>
-        <div class="room-card ${compact ? 'compact' : ''}"
+        <div class="room-card ${compact ? 'compact' : ''} ${this._config.show_background === false ? 'no-bg' : ''}">
           <!-- 3D Background Element -->
           ${resolveImageUrl(this._config.image)
             ? html`

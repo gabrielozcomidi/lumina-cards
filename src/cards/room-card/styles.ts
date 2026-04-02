@@ -35,6 +35,13 @@ export const roomCardStyles = css`
     z-index: 2;
   }
 
+  /* ── No Background ── */
+  .room-card.no-bg {
+    background: transparent;
+    border-color: transparent;
+  }
+  .room-card.no-bg::before { display: none; }
+
   /* ─── 3D Background Image — Full Height ──────────── */
   .room-bg {
     position: absolute;

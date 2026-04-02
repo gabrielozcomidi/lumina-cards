@@ -183,7 +183,7 @@ export class HaLuminaClimateCard extends LitElement {
     const isActive = this._mode !== 'off';
 
     return html`
-      <div class="climate-card" style="position:relative;">
+      <div class="climate-card ${this.config.show_background === false ? 'no-bg' : ''}" style="position:relative;">
         ${render3dBackground(this.config.image, true)}
         <div class="lumina-3d-content">
 

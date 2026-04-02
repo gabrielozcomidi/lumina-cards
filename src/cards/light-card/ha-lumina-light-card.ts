@@ -400,7 +400,7 @@ export class HaLuminaLightCard extends LitElement {
     const total = this._entityIds.length;
 
     return html`
-      <div class="light-card" style="position:relative;">
+      <div class="light-card ${this.config.show_background === false ? 'no-bg' : ''}" style="position:relative;">
         ${render3dBackground(this.config.image, true)}
         <div class="lumina-3d-content">
         <!-- Hero Ring + All On/Off underneath -->

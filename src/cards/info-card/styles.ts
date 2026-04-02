@@ -553,4 +553,8 @@ export const infoCardStyles = css`
     font-size: 0.875rem;
     color: var(--lumina-on-surface-variant);
   }
+
+  /* ── No Background ── */
+  .info-card.no-bg { background: transparent; border-color: transparent; }
+  .info-card.no-bg .info-tint { display: none; }
 `;

@@ -496,12 +496,12 @@ export class HaLuminaMediaCard extends LitElement {
   protected render() {
     if (!this.config || !this.hass) return nothing;
     if (!this._allEntities.length) {
-      return html`<div class="media-card"><span class="body-md text-muted">No media players configured</span></div>`;
+      return html`<div class="media-card ${this.config.show_background === false ? 'no-bg' : ''}"><span class="body-md text-muted">No media players configured</span></div>`;
     }
 
     const entity = this._entity;
     if (!entity || !isEntityAvailable(entity)) {
-      return html`<div class="media-card">
+      return html`<div class="media-card ${this.config.show_background === false ? 'no-bg' : ''}">
         ${this._hasMultiple ? this._renderPlayerSelector() : nothing}
         <div class="idle-state">
           <ha-icon icon="mdi:speaker-off"></ha-icon>
@@ -518,7 +518,7 @@ export class HaLuminaMediaCard extends LitElement {
       const sourceList = (entity.attributes.source_list as string[]) || [];
       const currentSource = entity.attributes.source as string | undefined;
       return html`
-        <div class="media-card" style="position:relative;">
+        <div class="media-card ${this.config.show_background === false ? 'no-bg' : ''}" style="position:relative;">
           ${this._hasMultiple ? this._renderPlayerSelector() : nothing}
 
           <!-- Idle header with actions on the right -->
@@ -586,7 +586,7 @@ export class HaLuminaMediaCard extends LitElement {
     const showArt = this._artUrl && !this._artError;
 
     return html`
-      <div class="media-card" style="position:relative;">
+      <div class="media-card ${this.config.show_background === false ? 'no-bg' : ''}" style="position:relative;">
         ${render3dBackground(this.config.image, true)}
         <div class="lumina-3d-content">
 

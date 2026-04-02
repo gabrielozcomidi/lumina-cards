@@ -227,7 +227,7 @@ export class HaLuminaWeatherCard extends LitElement {
 
     return html`
       <ha-card>
-        <div class="weather-card" style="--weather-accent: ${accent}; --weather-icon-color: ${iconColor};">
+        <div class="weather-card ${this._config.show_background === false ? 'no-bg' : ''}" style="--weather-accent: ${accent}; --weather-icon-color: ${iconColor};">
           <div class="weather-tint"></div>
           <div class="weather-content">
             ${this._renderHeader()}
@@ -251,7 +251,7 @@ export class HaLuminaWeatherCard extends LitElement {
 
     return html`
       <ha-card>
-        <div class="weather-card compact" style="--weather-accent: ${accent}; --weather-icon-color: ${iconColor};">
+        <div class="weather-card compact ${this._config.show_background === false ? 'no-bg' : ''}" style="--weather-accent: ${accent}; --weather-icon-color: ${iconColor};">
           <div class="weather-tint"></div>
           <div class="compact-row">
             <ha-icon class="compact-icon" .icon=${icon}></ha-icon>
@@ -293,7 +293,7 @@ export class HaLuminaWeatherCard extends LitElement {
 
     return html`
       <ha-card>
-        <div class="weather-card room" style="--weather-accent: ${accent}; --weather-icon-color: ${iconColor};">
+        <div class="weather-card room ${this._config.show_background === false ? 'no-bg' : ''}" style="--weather-accent: ${accent}; --weather-icon-color: ${iconColor};">
           <div class="weather-tint"></div>
           <div class="room-layout">
             <!-- Top: header row -->
