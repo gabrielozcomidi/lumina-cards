@@ -1,10 +1,19 @@
 import { css } from 'lit';
 
 export const clockCardStyles = css`
+  :host {
+    --ha-card-background: none;
+    --ha-card-border-color: transparent;
+    --ha-card-border-width: 0;
+    --ha-card-box-shadow: none;
+  }
+
   ha-card {
     background: none !important;
     border: none !important;
     box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
   }
 
   .clock-card {
