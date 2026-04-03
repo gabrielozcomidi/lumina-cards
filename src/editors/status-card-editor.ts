@@ -67,6 +67,21 @@ export class HaLuminaStatusCardEditor extends LitElement {
     this._set('person_entities', p);
   }
 
+  // ─── Stock helpers ─────────────────────────────────
+
+  private _addStock(): void {
+    const s = [...(this._config.stock_entities || []), ''];
+    this._set('stock_entities', s);
+  }
+  private _removeStock(i: number): void {
+    const s = [...(this._config.stock_entities || [])]; s.splice(i, 1);
+    this._set('stock_entities', s);
+  }
+  private _stockChanged(i: number, v: string): void {
+    const s = [...(this._config.stock_entities || [])]; s[i] = v;
+    this._set('stock_entities', s);
+  }
+
   // ─── Custom chip helpers ────────────────────────────
 
   private _addChip(): void {
@@ -96,6 +111,12 @@ export class HaLuminaStatusCardEditor extends LitElement {
           <span class="editor-label">Show Greeting</span>
           <ha-switch .checked=${this._config.show_greeting !== false}
             @change=${(e: Event) => this._set('show_greeting', (e.target as HTMLInputElement).checked)}
+          ></ha-switch>
+        </div>
+        <div class="toggle-row">
+          <span class="editor-label">Show Clock</span>
+          <ha-switch .checked=${this._config.show_clock === true}
+            @change=${(e: Event) => this._set('show_clock', (e.target as HTMLInputElement).checked || undefined)}
           ></ha-switch>
         </div>
         <div class="editor-row">
@@ -160,6 +181,12 @@ export class HaLuminaStatusCardEditor extends LitElement {
             allow-custom-entity></ha-entity-picker>
           <span class="editor-hint">Install Feedparser integration from HACS for RSS feeds</span>
         </div>
+        <div class="toggle-row">
+          <span class="editor-label">Scrolling News Ticker</span>
+          <ha-switch .checked=${this._config.rss_scroll === true}
+            @change=${(e: Event) => this._set('rss_scroll', (e.target as HTMLInputElement).checked || undefined)}
+          ></ha-switch>
+        </div>
 
         <!-- Calendar -->
         <div class="editor-section">Calendar</div>
@@ -168,6 +195,28 @@ export class HaLuminaStatusCardEditor extends LitElement {
             .value=${this._config.calendar_entity || ''} .includeDomains=${['calendar']}
             @value-changed=${(e: CustomEvent) => this._set('calendar_entity', e.detail.value)}
             allow-custom-entity></ha-entity-picker>
+        </div>
+
+        <!-- Stocks -->
+        <div class="editor-section">Stocks (Yahoo Finance)</div>
+        <span class="editor-hint">Install Yahoo Finance integration from HACS. Add sensor entities like sensor.yahoofinance_aapl</span>
+
+        ${(this._config.stock_entities || []).map((id: string, i: number) => html`
+          <div class="entity-row">
+            <ha-entity-picker .hass=${this.hass} label="Stock ${i + 1}"
+              .value=${id} .includeDomains=${['sensor']}
+              @value-changed=${(e: CustomEvent) => this._stockChanged(i, e.detail.value)}
+              allow-custom-entity></ha-entity-picker>
+            <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removeStock(i)}></ha-icon>
+          </div>
+        `)}
+        <div class="add-btn" @click=${this._addStock}>+ Add Stock</div>
+
+        <div class="toggle-row">
+          <span class="editor-label">Scrolling Stock Ticker</span>
+          <ha-switch .checked=${this._config.stock_scroll === true}
+            @change=${(e: Event) => this._set('stock_scroll', (e.target as HTMLInputElement).checked || undefined)}
+          ></ha-switch>
         </div>
 
         <!-- Custom Chips -->

@@ -247,4 +247,76 @@ export const statusCardStyles = css`
     font-size: 0.625rem;
     color: var(--lumina-on-surface-variant);
   }
+
+  /* ── Clock ── */
+  .greeting-clock {
+    font-family: var(--lumina-font-headline);
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--lumina-on-surface);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .greeting-clock .clock-period {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--lumina-on-surface-variant);
+    margin-left: 4px;
+  }
+
+  /* ── Person Location ── */
+  .person-location {
+    font-size: 0.625rem;
+    color: var(--lumina-outline);
+    margin-left: 2px;
+  }
+
+  /* ── Stocks ── */
+  .stocks-section { display: flex; flex-direction: column; gap: var(--lumina-space-2); }
+  .stock-item {
+    display: flex; align-items: center; gap: var(--lumina-space-3);
+    padding: 8px 12px; background: var(--lumina-surface-container-high);
+    border-radius: var(--lumina-radius-lg);
+  }
+  .stock-symbol {
+    font-family: var(--lumina-font-headline); font-size: 0.75rem; font-weight: 700;
+    color: var(--lumina-on-surface); width: 50px; flex-shrink: 0;
+  }
+  .stock-name {
+    font-size: 0.6875rem; color: var(--lumina-on-surface-variant);
+    flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .stock-price {
+    font-family: var(--lumina-font-headline); font-size: 0.875rem; font-weight: 600;
+    color: var(--lumina-on-surface); flex-shrink: 0;
+  }
+  .stock-change {
+    font-size: 0.6875rem; font-weight: 600; flex-shrink: 0; padding: 2px 6px;
+    border-radius: var(--lumina-radius-full);
+  }
+  .stock-change.up { color: var(--lumina-tertiary-container); background: rgba(111, 251, 133, 0.1); }
+  .stock-change.down { color: var(--lumina-error); background: rgba(255, 113, 108, 0.1); }
+
+  /* ── Scrolling Ticker ── */
+  .scroll-ticker {
+    overflow: hidden; white-space: nowrap; position: relative;
+  }
+  .scroll-ticker-inner {
+    display: inline-flex; gap: var(--lumina-space-6);
+    animation: ticker-scroll 30s linear infinite;
+  }
+  .scroll-ticker-inner:hover { animation-play-state: paused; }
+  @keyframes ticker-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .ticker-item {
+    display: inline-flex; align-items: center; gap: var(--lumina-space-2);
+    font-size: 0.75rem; color: var(--lumina-on-surface-variant);
+    flex-shrink: 0;
+  }
+  .ticker-item .ticker-label { font-weight: 600; color: var(--lumina-on-surface); }
+  .ticker-item .ticker-up { color: var(--lumina-tertiary-container); }
+  .ticker-item .ticker-down { color: var(--lumina-error); }
+  .ticker-sep { color: var(--lumina-outline-variant); margin: 0 var(--lumina-space-1); }
 `;

@@ -31,6 +31,8 @@ const WEATHER_ICONS: Record<string, string> = {
 export class HaLuminaStatusCard extends LitElement {
   @property({ attribute: false }) hass!: HomeAssistant;
   @state() private _config!: LuminaStatusCardConfig;
+  @state() private _time = new Date();
+  private _timer?: ReturnType<typeof setInterval>;
 
   static styles = [luminaTokens, sharedStyles, statusCardStyles];
 
@@ -56,6 +58,16 @@ export class HaLuminaStatusCard extends LitElement {
 
   public getCardSize(): number { return 4; }
 
+  connectedCallback(): void {
+    super.connectedCallback();
+    this._timer = setInterval(() => { this._time = new Date(); }, 1000);
+  }
+
+  disconnectedCallback(): void {
+    if (this._timer) clearInterval(this._timer);
+    super.disconnectedCallback();
+  }
+
   // ─── Helpers ──────────────────────────────────────
 
   private _getUserName(): string {
@@ -80,13 +92,15 @@ export class HaLuminaStatusCard extends LitElement {
     ).length;
   }
 
-  private _getPeopleStatus(): { name: string; home: boolean }[] {
+  private _getPeopleStatus(): { name: string; home: boolean; location: string }[] {
     if (!this.hass || !this._config.person_entities?.length) return [];
     return this._config.person_entities.map((id) => {
       const entity = this.hass.states[id];
+      const state = entity?.state || 'unknown';
       return {
         name: (entity?.attributes?.friendly_name as string) || id.split('.').pop() || id,
-        home: entity?.state === 'home',
+        home: state === 'home',
+        location: state === 'home' ? 'Home' : state === 'not_home' ? 'Away' : state.charAt(0).toUpperCase() + state.slice(1),
       };
     });
   }
@@ -108,6 +122,7 @@ export class HaLuminaStatusCard extends LitElement {
             ${this._renderGreeting()}
             ${this._renderPeople()}
             ${this._renderChips()}
+            ${this._renderStocks()}
             ${this._renderFeed()}
             ${this._renderCalendar()}
           </div>
@@ -127,11 +142,25 @@ export class HaLuminaStatusCard extends LitElement {
     return html`
       <div class="greeting-section">
         <span class="greeting-text">${greeting}${name ? `, ${name}` : ''}</span>
+        ${this._config.show_clock ? html`
+          <span class="greeting-clock">${this._formatTime()}${nothing}</span>
+        ` : nothing}
         ${totalPeople > 0 ? html`
           <span class="greeting-sub">${peopleHome} of ${totalPeople} ${totalPeople === 1 ? 'person' : 'people'} home</span>
         ` : nothing}
       </div>
     `;
+  }
+
+  private _formatTime(): ReturnType<typeof html> {
+    const d = this._time;
+    const is24 = this._config.time_format !== '12h';
+    let h = d.getHours();
+    const m = d.getMinutes().toString().padStart(2, '0');
+    let period = '';
+    if (!is24) { period = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; }
+    const hStr = is24 ? h.toString().padStart(2, '0') : h.toString();
+    return html`${hStr}:${m}${period ? html`<span class="clock-period">${period}</span>` : nothing}`;
   }
 
   private _renderPeople() {
@@ -143,7 +172,7 @@ export class HaLuminaStatusCard extends LitElement {
         ${people.map(p => html`
           <span class="person-chip ${p.home ? 'home' : ''}">
             <span class="person-dot"></span>
-            ${p.name}
+            ${p.name}<span class="person-location"> · ${p.location}</span>
           </span>
         `)}
       </div>
@@ -243,6 +272,67 @@ export class HaLuminaStatusCard extends LitElement {
     `;
   }
 
+  private _renderStocks() {
+    if (!this._config.stock_entities?.length) return nothing;
+
+    const stocks = this._config.stock_entities.map(id => {
+      const entity = this.hass.states[id];
+      if (!entity) return null;
+      const price = parseFloat(entity.state) || 0;
+      const attrs = entity.attributes;
+      const change = (attrs.regular_market_change as number) ?? 0;
+      const changePct = (attrs.regular_market_change_percent as number) ?? 0;
+      const symbol = (attrs.symbol as string) || id.split('.').pop()?.replace('yahoofinance_', '').toUpperCase() || '';
+      const name = (attrs.short_name as string) || '';
+      const up = change >= 0;
+      const currency = (attrs.currency_symbol as string) || (attrs.currency as string) || '$';
+      return { symbol, name, price, change, changePct, up, currency };
+    }).filter(Boolean) as any[];
+
+    if (!stocks.length) return nothing;
+
+    if (this._config.stock_scroll) {
+      return this._renderStockTicker(stocks);
+    }
+
+    return html`
+      <div>
+        <span class="section-label">Markets</span>
+        <div class="stocks-section" style="margin-top: var(--lumina-space-2);">
+          ${stocks.map(s => html`
+            <div class="stock-item">
+              <span class="stock-symbol">${s.symbol}</span>
+              <span class="stock-name">${s.name}</span>
+              <span class="stock-price">${s.currency}${s.price.toFixed(2)}</span>
+              <span class="stock-change ${s.up ? 'up' : 'down'}">${s.up ? '+' : ''}${s.changePct.toFixed(2)}%</span>
+            </div>
+          `)}
+        </div>
+      </div>
+    `;
+  }
+
+  private _renderStockTicker(stocks: any[]) {
+    const items = stocks.map(s => html`
+      <span class="ticker-item">
+        <span class="ticker-label">${s.symbol}</span>
+        ${s.currency}${s.price.toFixed(2)}
+        <span class="${s.up ? 'ticker-up' : 'ticker-down'}">${s.up ? '▲' : '▼'}${Math.abs(s.changePct).toFixed(2)}%</span>
+      </span>
+    `);
+    // Duplicate for seamless loop
+    return html`
+      <div>
+        <span class="section-label">Markets</span>
+        <div class="scroll-ticker" style="margin-top: var(--lumina-space-2);">
+          <div class="scroll-ticker-inner">
+            ${items}${items}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   private _renderFeed() {
     if (!this._config.rss_entity) return nothing;
     const entity = this.hass.states[this._config.rss_entity];
@@ -251,6 +341,25 @@ export class HaLuminaStatusCard extends LitElement {
     // Feedparser integration stores entries in attributes.entries
     const entries = (entity.attributes.entries as any[]) || [];
     if (!entries.length) return nothing;
+
+    if (this._config.rss_scroll) {
+      const tickerItems = entries.slice(0, 10).map(entry => html`
+        <span class="ticker-item">
+          <span class="ticker-label">${entry.title || ''}</span>
+          ${entry.published ? html`<span>${this._formatFeedTime(entry.published)}</span>` : nothing}
+        </span>
+      `);
+      return html`
+        <div>
+          <span class="section-label">News</span>
+          <div class="scroll-ticker" style="margin-top: var(--lumina-space-2);">
+            <div class="scroll-ticker-inner">
+              ${tickerItems}${tickerItems}
+            </div>
+          </div>
+        </div>
+      `;
+    }
 
     return html`
       <div>

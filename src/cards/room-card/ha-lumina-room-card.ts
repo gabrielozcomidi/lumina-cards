@@ -369,6 +369,7 @@ export class HaLuminaRoomCard extends LitElement {
         <!-- Bottom Sheets -->
         <lumina-bottom-sheet
           .open=${this._activeSheet === 'lights'}
+          .fullscreen=${this._config.popup_fullscreen === true}
           title="Lights"
           @sheet-closed=${this._closeSheet}
         >
@@ -380,6 +381,7 @@ export class HaLuminaRoomCard extends LitElement {
 
         <lumina-bottom-sheet
           .open=${this._activeSheet === 'climate'}
+          .fullscreen=${this._config.popup_fullscreen === true}
           title="Climate"
           @sheet-closed=${this._closeSheet}
         >
@@ -391,6 +393,7 @@ export class HaLuminaRoomCard extends LitElement {
 
         <lumina-bottom-sheet
           .open=${this._activeSheet === 'media'}
+          .fullscreen=${this._config.popup_fullscreen === true}
           title="Media"
           @sheet-closed=${this._closeSheet}
         >
@@ -402,6 +405,7 @@ export class HaLuminaRoomCard extends LitElement {
 
         <lumina-bottom-sheet
           .open=${this._activeSheet === 'vacuum'}
+          .fullscreen=${this._config.popup_fullscreen === true}
           title="Cleaning"
           @sheet-closed=${this._closeSheet}
         >
@@ -413,6 +417,7 @@ export class HaLuminaRoomCard extends LitElement {
 
         <lumina-bottom-sheet
           .open=${this._activeSheet === 'room'}
+          .fullscreen=${this._config.popup_fullscreen === true}
           title=${this._config.name}
           @sheet-closed=${this._closeSheet}
         >

@@ -45,6 +45,7 @@ export interface LuminaRoomCardConfig extends LovelaceCardConfig {
   // Compact half-width variant for horizontal stacks
   compact?: boolean;
   show_background?: boolean;
+  popup_fullscreen?: boolean;
 }
 
 // ─── Room Popup Config ───────────────────────────────────────
@@ -173,7 +174,9 @@ export interface LuminaStatusCardConfig extends LovelaceCardConfig {
   name?: string;
   // Greeting
   show_greeting?: boolean;
-  greeting_entity?: string; // person entity to get user name
+  show_clock?: boolean;
+  time_format?: '12h' | '24h';
+  greeting_entity?: string;
   // Home status
   person_entities?: string[];
   // Quick status chips
@@ -188,6 +191,10 @@ export interface LuminaStatusCardConfig extends LovelaceCardConfig {
   show_lights_summary?: boolean;
   // RSS Feed
   rss_entity?: string;
+  rss_scroll?: boolean;
+  // Stocks (Yahoo Finance integration)
+  stock_entities?: string[];
+  stock_scroll?: boolean;
   // Calendar
   calendar_entity?: string;
   // Layout

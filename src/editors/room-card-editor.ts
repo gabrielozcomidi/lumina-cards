@@ -584,6 +584,13 @@ export class HaLuminaRoomCardEditor extends LitElement {
         </div>
 
         <div class="toggle-row">
+          <span class="editor-label">Fullscreen Popups</span>
+          <ha-switch .checked=${this._config.popup_fullscreen === true}
+            @change=${(e: Event) => this._set('popup_fullscreen', (e.target as HTMLInputElement).checked || undefined)}
+          ></ha-switch>
+        </div>
+
+        <div class="toggle-row">
           <span class="editor-label">Show Card Background</span>
           <ha-switch .checked=${this._config.show_background !== false}
             @change=${(e: Event) => this._set('show_background', (e.target as HTMLInputElement).checked)}
