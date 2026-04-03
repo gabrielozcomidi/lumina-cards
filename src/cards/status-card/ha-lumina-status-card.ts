@@ -33,7 +33,11 @@ export class HaLuminaStatusCard extends LitElement {
   @state() private _config!: LuminaStatusCardConfig;
   @state() private _time = new Date();
   @state() private _activeFeedIndex = 0;
+  @state() private _fadeItemIndex = 0;
+  @state() private _fadeStockIndex = 0;
   private _timer?: ReturnType<typeof setInterval>;
+  private _fadeTimer?: ReturnType<typeof setInterval>;
+  private _fadeStockTimer?: ReturnType<typeof setInterval>;
 
   static styles = [luminaTokens, sharedStyles, statusCardStyles];
 
@@ -62,11 +66,21 @@ export class HaLuminaStatusCard extends LitElement {
   connectedCallback(): void {
     super.connectedCallback();
     this._timer = setInterval(() => { this._time = new Date(); }, 1000);
+    this._startFadeTimers();
   }
 
   disconnectedCallback(): void {
     if (this._timer) clearInterval(this._timer);
+    if (this._fadeTimer) clearInterval(this._fadeTimer);
+    if (this._fadeStockTimer) clearInterval(this._fadeStockTimer);
     super.disconnectedCallback();
+  }
+
+  private _startFadeTimers(): void {
+    const feedSpeed = (this._config?.rss_speed || 6) * 1000;
+    const stockSpeed = (this._config?.stock_speed || 5) * 1000;
+    this._fadeTimer = setInterval(() => { this._fadeItemIndex++; }, feedSpeed);
+    this._fadeStockTimer = setInterval(() => { this._fadeStockIndex++; }, stockSpeed);
   }
 
   // ─── Helpers ──────────────────────────────────────
@@ -333,6 +347,7 @@ export class HaLuminaStatusCard extends LitElement {
   }
 
   private _renderStockTicker(stocks: any[]) {
+    const speed = this._config.stock_speed || 45;
     const items = stocks.map(s => html`
       <span class="ticker-item">
         <span class="ticker-label">${s.symbol}</span>
@@ -340,11 +355,10 @@ export class HaLuminaStatusCard extends LitElement {
         <span class="${s.up ? 'ticker-up' : 'ticker-down'}">${s.up ? '▲' : '▼'}${Math.abs(s.changePct).toFixed(2)}%</span>
       </span>
     `);
-    // Duplicate for seamless loop
     return html`
       <div>
         <span class="section-label">Markets</span>
-        <div class="scroll-ticker" style="margin-top: var(--lumina-space-2);">
+        <div class="scroll-ticker" style="margin-top: var(--lumina-space-2); --ticker-speed: ${speed}s;">
           <div class="scroll-ticker-inner">
             ${items}${items}
           </div>
@@ -384,8 +398,9 @@ export class HaLuminaStatusCard extends LitElement {
     const activeIdx = Math.min(this._activeFeedIndex, allFeeds.length - 1);
     const activeFeed = allFeeds[activeIdx];
 
+    const speed = this._config.rss_speed || 60;
+
     if (this._config.rss_scroll) {
-      // Scrolling ticker: mix all feeds
       const allEntries = allFeeds.flatMap(f => f.entries.slice(0, 5).map(e => ({ ...e, _source: f.name })));
       const tickerItems = allEntries.map(entry => html`
         <span class="ticker-item">
@@ -397,9 +412,33 @@ export class HaLuminaStatusCard extends LitElement {
       return html`
         <div>
           <span class="section-label">News</span>
-          <div class="scroll-ticker" style="margin-top: var(--lumina-space-2);">
+          <div class="scroll-ticker" style="margin-top: var(--lumina-space-2); --ticker-speed: ${speed}s;">
             <div class="scroll-ticker-inner">
               ${tickerItems}${tickerItems}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (this._config.rss_fade) {
+      const allEntries = allFeeds.flatMap(f => f.entries.slice(0, maxItems).map(e => ({ ...e, _source: f.name })));
+      if (!allEntries.length) return nothing;
+      const idx = this._fadeItemIndex % allEntries.length;
+      const entry = allEntries[idx];
+      const fadeSpeed = this._config.rss_speed || 6;
+      return html`
+        <div>
+          <span class="section-label">News</span>
+          <div class="fade-rotator" style="margin-top: var(--lumina-space-2); --fade-speed: ${fadeSpeed}s;">
+            <div class="fade-item" .key=${idx}>
+              <span class="fade-dot"></span>
+              <div class="fade-item-content">
+                <span class="fade-item-title">${entry.title || ''}</span>
+                <span class="fade-item-meta">
+                  ${entry._source ? html`${entry._source} · ` : nothing}${entry.published ? this._formatFeedTime(entry.published) : ''}
+                </span>
+              </div>
             </div>
           </div>
         </div>

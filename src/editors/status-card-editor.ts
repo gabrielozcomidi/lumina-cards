@@ -220,9 +220,27 @@ export class HaLuminaStatusCardEditor extends LitElement {
         <div class="toggle-row">
           <span class="editor-label">Scrolling News Ticker</span>
           <ha-switch .checked=${this._config.rss_scroll === true}
-            @change=${(e: Event) => this._set('rss_scroll', (e.target as HTMLInputElement).checked || undefined)}
+            @change=${(e: Event) => { this._set('rss_scroll', (e.target as HTMLInputElement).checked || undefined); if ((e.target as HTMLInputElement).checked) this._set('rss_fade', undefined); }}
           ></ha-switch>
         </div>
+
+        <div class="toggle-row">
+          <span class="editor-label">Fading Headlines (one at a time)</span>
+          <ha-switch .checked=${this._config.rss_fade === true}
+            @change=${(e: Event) => { this._set('rss_fade', (e.target as HTMLInputElement).checked || undefined); if ((e.target as HTMLInputElement).checked) this._set('rss_scroll', undefined); }}
+          ></ha-switch>
+        </div>
+
+        ${this._config.rss_scroll || this._config.rss_fade ? html`
+          <div class="editor-row">
+            <ha-textfield label="Speed (seconds — scroll duration or fade interval)"
+              type="number" min="3" max="300"
+              .value=${String(this._config.rss_speed || (this._config.rss_scroll ? 60 : 6))}
+              @input=${(e: Event) => { const v = parseInt((e.target as HTMLInputElement).value); if (v > 0) this._set('rss_speed', v); }}
+            ></ha-textfield>
+            <span class="editor-hint">${this._config.rss_scroll ? 'Total scroll duration in seconds (higher = slower). Default: 60' : 'Seconds per headline. Default: 6'}</span>
+          </div>
+        ` : nothing}
 
         <!-- Calendar -->
         <div class="editor-section">Calendar</div>
@@ -262,6 +280,17 @@ export class HaLuminaStatusCardEditor extends LitElement {
             @change=${(e: Event) => this._set('stock_scroll', (e.target as HTMLInputElement).checked || undefined)}
           ></ha-switch>
         </div>
+
+        ${this._config.stock_scroll ? html`
+          <div class="editor-row">
+            <ha-textfield label="Stock Scroll Speed (seconds)"
+              type="number" min="10" max="300"
+              .value=${String(this._config.stock_speed || 45)}
+              @input=${(e: Event) => { const v = parseInt((e.target as HTMLInputElement).value); if (v > 0) this._set('stock_speed', v); }}
+            ></ha-textfield>
+            <span class="editor-hint">Total scroll duration. Higher = slower. Default: 45</span>
+          </div>
+        ` : nothing}
 
         <!-- Custom Chips -->
         <div class="editor-section">Custom Status Chips</div>

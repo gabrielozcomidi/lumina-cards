@@ -329,7 +329,7 @@ export const statusCardStyles = css`
   }
   .scroll-ticker-inner {
     display: inline-flex; gap: var(--lumina-space-6);
-    animation: ticker-scroll 30s linear infinite;
+    animation: ticker-scroll var(--ticker-speed, 60s) linear infinite;
   }
   .scroll-ticker-inner:hover { animation-play-state: paused; }
   @keyframes ticker-scroll {
@@ -345,4 +345,37 @@ export const statusCardStyles = css`
   .ticker-item .ticker-up { color: var(--lumina-tertiary-container); }
   .ticker-item .ticker-down { color: var(--lumina-error); }
   .ticker-sep { color: var(--lumina-outline-variant); margin: 0 var(--lumina-space-1); }
+
+  /* ── Fade Rotator ── */
+  .fade-rotator {
+    position: relative;
+    min-height: 48px;
+    overflow: hidden;
+  }
+  .fade-item {
+    display: flex; align-items: flex-start; gap: var(--lumina-space-3);
+    padding: 10px 12px;
+    background: var(--lumina-surface-container-high);
+    border-radius: var(--lumina-radius-lg);
+    animation: fade-cycle var(--fade-speed, 6s) ease-in-out infinite;
+  }
+  .fade-item .fade-dot {
+    width: 4px; height: 4px; border-radius: var(--lumina-radius-full);
+    background: var(--lumina-primary); margin-top: 6px; flex-shrink: 0;
+  }
+  .fade-item-content {
+    display: flex; flex-direction: column; gap: 2px; min-width: 0;
+  }
+  .fade-item-title {
+    font-size: 0.8125rem; font-weight: 500; color: var(--lumina-on-surface);
+    white-space: normal; line-height: 1.4;
+  }
+  .fade-item-meta {
+    font-size: 0.625rem; color: var(--lumina-outline);
+  }
+  @keyframes fade-cycle {
+    0%, 8% { opacity: 0; transform: translateY(8px); }
+    15%, 85% { opacity: 1; transform: translateY(0); }
+    92%, 100% { opacity: 0; transform: translateY(-8px); }
+  }
 `;

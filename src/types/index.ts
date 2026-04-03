@@ -199,11 +199,14 @@ export interface LuminaStatusCardConfig extends LovelaceCardConfig {
   rss_entity?: string; // legacy single feed
   rss_feeds?: RssFeedConfig[];
   rss_scroll?: boolean;
+  rss_fade?: boolean;
+  rss_speed?: number; // seconds: scroll duration or fade interval
   rss_max_items?: number;
   // Stocks (Lumina Feeds or Yahoo Finance)
   stock_entities?: string[];
   stocks_summary_entity?: string; // sensor.lumina_stocks_summary
   stock_scroll?: boolean;
+  stock_speed?: number;
   // Calendar
   calendar_entity?: string;
   // Layout
