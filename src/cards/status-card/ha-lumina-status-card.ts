@@ -464,6 +464,7 @@ export class HaLuminaStatusCard extends LitElement {
               <span class="feed-item-dot"></span>
               <div class="feed-item-content">
                 <span class="feed-item-title">${entry.title || ''}</span>
+                ${entry.summary ? html`<span class="feed-item-summary">${entry.summary}</span>` : nothing}
                 <span class="feed-item-meta">
                   ${entry.source ? html`${entry.source} · ` : nothing}${entry.published ? this._formatFeedTime(entry.published) : ''}
                 </span>

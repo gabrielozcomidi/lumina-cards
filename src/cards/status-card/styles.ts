@@ -213,6 +213,15 @@ export const statusCardStyles = css`
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+  .feed-item-summary {
+    font-size: 0.6875rem;
+    color: var(--lumina-on-surface-variant);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
   .feed-item-meta {
     font-size: 0.625rem;
     color: var(--lumina-outline);
