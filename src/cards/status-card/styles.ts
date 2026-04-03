@@ -8,6 +8,8 @@ export const statusCardStyles = css`
     --ha-card-box-shadow: none;
     display: block;
     width: 100%;
+    min-width: 0;
+    grid-column: 1 / -1 !important;
   }
   ha-card {
     background: none !important;
@@ -15,6 +17,7 @@ export const statusCardStyles = css`
     box-shadow: none !important;
     border-radius: 0 !important;
     width: 100%;
+    max-width: none !important;
   }
 
   .status-card {
