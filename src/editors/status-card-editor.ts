@@ -82,6 +82,23 @@ export class HaLuminaStatusCardEditor extends LitElement {
     this._set('stock_entities', s);
   }
 
+  // ─── RSS feed helpers ─────────────────────────────
+
+  private _addRssFeed(): void {
+    const f = [...(this._config.rss_feeds || []), { entity: '' }];
+    this._set('rss_feeds', f);
+  }
+  private _removeRssFeed(i: number): void {
+    const f = [...(this._config.rss_feeds || [])]; f.splice(i, 1);
+    this._set('rss_feeds', f);
+  }
+  private _rssFeedChanged(i: number, field: string, v: string): void {
+    const f = [...(this._config.rss_feeds || [])];
+    f[i] = { ...f[i], [field]: v || undefined };
+    if (field === 'entity') f[i].entity = v;
+    this._set('rss_feeds', f);
+  }
+
   // ─── Custom chip helpers ────────────────────────────
 
   private _addChip(): void {
@@ -172,15 +189,34 @@ export class HaLuminaStatusCardEditor extends LitElement {
           ></ha-switch>
         </div>
 
-        <!-- RSS Feed -->
-        <div class="editor-section">News Feed (RSS)</div>
-        <div class="editor-row">
-          <ha-entity-picker .hass=${this.hass} label="Feedparser Sensor"
-            .value=${this._config.rss_entity || ''} .includeDomains=${['sensor']}
-            @value-changed=${(e: CustomEvent) => this._set('rss_entity', e.detail.value)}
-            allow-custom-entity></ha-entity-picker>
-          <span class="editor-hint">Install Feedparser integration from HACS for RSS feeds</span>
-        </div>
+        <!-- News Feeds (Lumina Feeds) -->
+        <div class="editor-section">News Feeds</div>
+        <span class="editor-hint">Add Lumina Feeds sensors (sensor.lumina_feed_*) or any Feedparser sensor</span>
+
+        ${(this._config.rss_feeds || []).map((feed: any, i: number) => html`
+          <div class="entity-block">
+            <div class="entity-row">
+              <ha-entity-picker .hass=${this.hass} label="Feed ${i + 1}"
+                .value=${feed.entity || ''} .includeDomains=${['sensor']}
+                @value-changed=${(e: CustomEvent) => this._rssFeedChanged(i, 'entity', e.detail.value)}
+                allow-custom-entity></ha-entity-picker>
+              <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removeRssFeed(i)}></ha-icon>
+            </div>
+            <ha-textfield label="Category Name (optional)" .value=${feed.name || ''}
+              @input=${(e: Event) => this._rssFeedChanged(i, 'name', (e.target as HTMLInputElement).value)}></ha-textfield>
+          </div>
+        `)}
+        <div class="add-btn" @click=${this._addRssFeed}>+ Add News Feed</div>
+
+        ${!this._config.rss_feeds?.length && this._config.rss_entity ? html`
+          <div class="editor-row">
+            <ha-entity-picker .hass=${this.hass} label="Legacy Feed (single)"
+              .value=${this._config.rss_entity || ''} .includeDomains=${['sensor']}
+              @value-changed=${(e: CustomEvent) => this._set('rss_entity', e.detail.value)}
+              allow-custom-entity></ha-entity-picker>
+          </div>
+        ` : nothing}
+
         <div class="toggle-row">
           <span class="editor-label">Scrolling News Ticker</span>
           <ha-switch .checked=${this._config.rss_scroll === true}
@@ -198,8 +234,16 @@ export class HaLuminaStatusCardEditor extends LitElement {
         </div>
 
         <!-- Stocks -->
-        <div class="editor-section">Stocks (Yahoo Finance)</div>
-        <span class="editor-hint">Install Yahoo Finance integration from HACS. Add sensor entities like sensor.yahoofinance_aapl</span>
+        <div class="editor-section">Stocks</div>
+        <span class="editor-hint">Add Lumina Feeds stock sensors (sensor.lumina_stock_*) or Lumina Stocks Summary</span>
+
+        <div class="editor-row">
+          <ha-entity-picker .hass=${this.hass} label="Stocks Summary Sensor (all-in-one)"
+            .value=${this._config.stocks_summary_entity || ''} .includeDomains=${['sensor']}
+            @value-changed=${(e: CustomEvent) => this._set('stocks_summary_entity', e.detail.value)}
+            allow-custom-entity></ha-entity-picker>
+          <span class="editor-hint">sensor.lumina_stocks_summary — or add individual stocks below</span>
+        </div>
 
         ${(this._config.stock_entities || []).map((id: string, i: number) => html`
           <div class="entity-row">

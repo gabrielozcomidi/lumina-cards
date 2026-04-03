@@ -32,6 +32,7 @@ export class HaLuminaStatusCard extends LitElement {
   @property({ attribute: false }) hass!: HomeAssistant;
   @state() private _config!: LuminaStatusCardConfig;
   @state() private _time = new Date();
+  @state() private _activeFeedIndex = 0;
   private _timer?: ReturnType<typeof setInterval>;
 
   static styles = [luminaTokens, sharedStyles, statusCardStyles];
@@ -273,21 +274,40 @@ export class HaLuminaStatusCard extends LitElement {
   }
 
   private _renderStocks() {
-    if (!this._config.stock_entities?.length) return nothing;
+    let stocks: any[] = [];
 
-    const stocks = this._config.stock_entities.map(id => {
-      const entity = this.hass.states[id];
-      if (!entity) return null;
-      const price = parseFloat(entity.state) || 0;
-      const attrs = entity.attributes;
-      const change = (attrs.regular_market_change as number) ?? 0;
-      const changePct = (attrs.regular_market_change_percent as number) ?? 0;
-      const symbol = (attrs.symbol as string) || id.split('.').pop()?.replace('yahoofinance_', '').toUpperCase() || '';
-      const name = (attrs.short_name as string) || '';
-      const up = change >= 0;
-      const currency = (attrs.currency_symbol as string) || (attrs.currency as string) || '$';
-      return { symbol, name, price, change, changePct, up, currency };
-    }).filter(Boolean) as any[];
+    // Option 1: Lumina Feeds summary sensor (all stocks in one entity)
+    if (this._config.stocks_summary_entity) {
+      const entity = this.hass.states[this._config.stocks_summary_entity];
+      if (entity) {
+        const items = (entity.attributes.stocks as any[]) || [];
+        stocks = items.map(s => ({
+          symbol: s.symbol || '',
+          name: s.short_name || '',
+          price: s.price || 0,
+          change: s.change || 0,
+          changePct: s.change_percent || 0,
+          up: (s.trending === 'up') || (s.change || 0) >= 0,
+          currency: s.currency_symbol || s.currency || '$',
+        }));
+      }
+    }
+    // Option 2: Individual stock entity sensors
+    else if (this._config.stock_entities?.length) {
+      stocks = this._config.stock_entities.map(id => {
+        const entity = this.hass.states[id];
+        if (!entity) return null;
+        const price = parseFloat(entity.state) || 0;
+        const attrs = entity.attributes;
+        const change = (attrs.regular_market_change as number) ?? 0;
+        const changePct = (attrs.regular_market_change_percent as number) ?? 0;
+        const symbol = (attrs.symbol as string) || id.split('.').pop()?.replace('yahoofinance_', '').replace('lumina_stock_', '').toUpperCase() || '';
+        const name = (attrs.short_name as string) || '';
+        const up = change >= 0;
+        const currency = (attrs.currency_symbol as string) || (attrs.currency as string) || '$';
+        return { symbol, name, price, change, changePct, up, currency };
+      }).filter(Boolean) as any[];
+    }
 
     if (!stocks.length) return nothing;
 
@@ -334,17 +354,42 @@ export class HaLuminaStatusCard extends LitElement {
   }
 
   private _renderFeed() {
-    if (!this._config.rss_entity) return nothing;
-    const entity = this.hass.states[this._config.rss_entity];
-    if (!entity) return nothing;
+    // Collect all feed entries with their source labels
+    const allFeeds: { name: string; entries: any[] }[] = [];
 
-    // Feedparser integration stores entries in attributes.entries
-    const entries = (entity.attributes.entries as any[]) || [];
-    if (!entries.length) return nothing;
+    // Multiple feeds (rss_feeds[])
+    if (this._config.rss_feeds?.length) {
+      for (const feed of this._config.rss_feeds) {
+        const entity = this.hass.states[feed.entity];
+        if (!entity) continue;
+        const entries = (entity.attributes.entries as any[]) || [];
+        const name = feed.name || (entity.attributes.feed_name as string) || (entity.attributes.friendly_name as string) || 'News';
+        if (entries.length) allFeeds.push({ name, entries });
+      }
+    }
+    // Legacy single feed
+    else if (this._config.rss_entity) {
+      const entity = this.hass.states[this._config.rss_entity];
+      if (entity) {
+        const entries = (entity.attributes.entries as any[]) || [];
+        const name = (entity.attributes.feed_name as string) || 'News';
+        if (entries.length) allFeeds.push({ name, entries });
+      }
+    }
+
+    if (!allFeeds.length) return nothing;
+
+    const maxItems = this._config.rss_max_items || 5;
+    const hasMultiple = allFeeds.length > 1;
+    const activeIdx = Math.min(this._activeFeedIndex, allFeeds.length - 1);
+    const activeFeed = allFeeds[activeIdx];
 
     if (this._config.rss_scroll) {
-      const tickerItems = entries.slice(0, 10).map(entry => html`
+      // Scrolling ticker: mix all feeds
+      const allEntries = allFeeds.flatMap(f => f.entries.slice(0, 5).map(e => ({ ...e, _source: f.name })));
+      const tickerItems = allEntries.map(entry => html`
         <span class="ticker-item">
+          <span class="ticker-source">${entry._source}</span>
           <span class="ticker-label">${entry.title || ''}</span>
           ${entry.published ? html`<span>${this._formatFeedTime(entry.published)}</span>` : nothing}
         </span>
@@ -363,14 +408,26 @@ export class HaLuminaStatusCard extends LitElement {
 
     return html`
       <div>
-        <span class="section-label">News</span>
+        <div class="feed-header">
+          <span class="section-label">News</span>
+          ${hasMultiple ? html`
+            <div class="feed-tabs">
+              ${allFeeds.map((f, i) => html`
+                <span class="feed-tab ${i === activeIdx ? 'active' : ''}"
+                  @click=${() => { this._activeFeedIndex = i; }}>${f.name}</span>
+              `)}
+            </div>
+          ` : nothing}
+        </div>
         <div class="feed-section" style="margin-top: var(--lumina-space-2);">
-          ${entries.slice(0, 5).map(entry => html`
+          ${activeFeed.entries.slice(0, maxItems).map(entry => html`
             <div class="feed-item">
               <span class="feed-item-dot"></span>
               <div class="feed-item-content">
                 <span class="feed-item-title">${entry.title || ''}</span>
-                ${entry.published ? html`<span class="feed-item-meta">${this._formatFeedTime(entry.published)}</span>` : nothing}
+                <span class="feed-item-meta">
+                  ${entry.source ? html`${entry.source} · ` : nothing}${entry.published ? this._formatFeedTime(entry.published) : ''}
+                </span>
               </div>
             </div>
           `)}

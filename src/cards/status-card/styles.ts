@@ -218,6 +218,32 @@ export const statusCardStyles = css`
     color: var(--lumina-outline);
   }
 
+  /* ── Feed Tabs ── */
+  .feed-header {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--lumina-space-2);
+  }
+  .feed-tabs {
+    display: flex; gap: var(--lumina-space-1); overflow-x: auto; scrollbar-width: none;
+  }
+  .feed-tabs::-webkit-scrollbar { display: none; }
+  .feed-tab {
+    font-size: 0.625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+    padding: 4px 10px; border-radius: var(--lumina-radius-full); cursor: pointer;
+    color: var(--lumina-on-surface-variant); background: transparent;
+    transition: all var(--lumina-transition-fast); white-space: nowrap; flex-shrink: 0;
+  }
+  .feed-tab:hover { background: var(--lumina-surface-container-high); }
+  .feed-tab.active {
+    color: var(--lumina-primary); background: rgba(133, 173, 255, 0.1);
+  }
+
+  /* ── Ticker Source Label ── */
+  .ticker-source {
+    font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--lumina-primary); padding: 1px 6px; background: rgba(133, 173, 255, 0.1);
+    border-radius: var(--lumina-radius-full); margin-right: 4px;
+  }
+
   /* ── Calendar ── */
   .calendar-item {
     display: flex;

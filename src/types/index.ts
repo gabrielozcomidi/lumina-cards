@@ -200,8 +200,9 @@ export interface LuminaStatusCardConfig extends LovelaceCardConfig {
   rss_feeds?: RssFeedConfig[];
   rss_scroll?: boolean;
   rss_max_items?: number;
-  // Stocks (Yahoo Finance integration)
+  // Stocks (Lumina Feeds or Yahoo Finance)
   stock_entities?: string[];
+  stocks_summary_entity?: string; // sensor.lumina_stocks_summary
   stock_scroll?: boolean;
   // Calendar
   calendar_entity?: string;
