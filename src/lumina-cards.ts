@@ -41,7 +41,7 @@ import './cards/status-card/ha-lumina-status-card';
 import './editors/status-card-editor';
 
 // ─── Version ─────────────────────────────────────────────────
-const CARD_VERSION = '2.4.0';
+const CARD_VERSION = '2.5.0';
 
 // ─── Inject Fonts ────────────────────────────────────────────
 injectFonts();

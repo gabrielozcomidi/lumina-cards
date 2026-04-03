@@ -169,6 +169,12 @@ export interface StatusChipConfig {
   icon?: string;
 }
 
+export interface RssFeedConfig {
+  entity: string;
+  name?: string;
+  icon?: string;
+}
+
 export interface LuminaStatusCardConfig extends LovelaceCardConfig {
   type: string;
   name?: string;
@@ -189,9 +195,11 @@ export interface LuminaStatusCardConfig extends LovelaceCardConfig {
   energy_entity?: string;
   // Lighting summary
   show_lights_summary?: boolean;
-  // RSS Feed
-  rss_entity?: string;
+  // RSS Feeds (multiple with categories)
+  rss_entity?: string; // legacy single feed
+  rss_feeds?: RssFeedConfig[];
   rss_scroll?: boolean;
+  rss_max_items?: number;
   // Stocks (Yahoo Finance integration)
   stock_entities?: string[];
   stock_scroll?: boolean;
