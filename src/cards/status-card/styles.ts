@@ -6,12 +6,15 @@ export const statusCardStyles = css`
     --ha-card-border-color: transparent;
     --ha-card-border-width: 0;
     --ha-card-box-shadow: none;
+    display: block;
+    width: 100%;
   }
   ha-card {
     background: none !important;
     border: none !important;
     box-shadow: none !important;
     border-radius: 0 !important;
+    width: 100%;
   }
 
   .status-card {
