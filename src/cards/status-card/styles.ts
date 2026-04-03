@@ -166,6 +166,14 @@ export const statusCardStyles = css`
     color: var(--lumina-secondary);
   }
 
+  /* ── Fade Chip ── */
+  .fade-chip-item {
+    animation: fade-cycle var(--fade-speed, 4s) ease-in-out infinite;
+  }
+  .fade-chip-active {
+    width: 100%;
+  }
+
   /* ── Section Label ── */
   .section-label {
     font-size: 0.6875rem;

@@ -35,9 +35,11 @@ export class HaLuminaStatusCard extends LitElement {
   @state() private _activeFeedIndex = 0;
   @state() private _fadeItemIndex = 0;
   @state() private _fadeStockIndex = 0;
+  @state() private _fadeChipIndex = 0;
   private _timer?: ReturnType<typeof setInterval>;
   private _fadeTimer?: ReturnType<typeof setInterval>;
   private _fadeStockTimer?: ReturnType<typeof setInterval>;
+  private _fadeChipTimer?: ReturnType<typeof setInterval>;
 
   static styles = [luminaTokens, sharedStyles, statusCardStyles];
 
@@ -73,14 +75,17 @@ export class HaLuminaStatusCard extends LitElement {
     if (this._timer) clearInterval(this._timer);
     if (this._fadeTimer) clearInterval(this._fadeTimer);
     if (this._fadeStockTimer) clearInterval(this._fadeStockTimer);
+    if (this._fadeChipTimer) clearInterval(this._fadeChipTimer);
     super.disconnectedCallback();
   }
 
   private _startFadeTimers(): void {
     const feedSpeed = (this._config?.rss_speed || 6) * 1000;
     const stockSpeed = (this._config?.stock_speed || 5) * 1000;
+    const chipSpeed = (this._config?.chips_speed || 4) * 1000;
     this._fadeTimer = setInterval(() => { this._fadeItemIndex++; }, feedSpeed);
     this._fadeStockTimer = setInterval(() => { this._fadeStockIndex++; }, stockSpeed);
+    this._fadeChipTimer = setInterval(() => { this._fadeChipIndex++; }, chipSpeed);
   }
 
   // ─── Helpers ──────────────────────────────────────
@@ -272,6 +277,27 @@ export class HaLuminaStatusCard extends LitElement {
 
     if (!chips.length) return nothing;
 
+    // Fade mode: show one chip at a time with crossfade
+    if (this._config.chips_fade && chips.length > 1) {
+      const idx = this._fadeChipIndex % chips.length;
+      const c = chips[idx];
+      const fadeSpeed = this._config.chips_speed || 4;
+      return html`
+        <div class="fade-rotator" style="--fade-speed: ${fadeSpeed}s;">
+          <div class="fade-chip-item" .key=${idx}>
+            <div class="status-chip ${c.cls} fade-chip-active">
+              <ha-icon icon="${c.icon}"></ha-icon>
+              <div class="status-chip-info">
+                <span class="status-chip-label">${c.label}</span>
+                <span class="status-chip-value">${c.value}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Default: static grid
     return html`
       <div class="chips-grid">
         ${chips.map(c => html`

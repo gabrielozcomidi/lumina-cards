@@ -161,6 +161,19 @@ export class HaLuminaStatusCardEditor extends LitElement {
             <ha-switch .checked=${this._config.show_lights_summary !== false}
               @change=${(e: Event) => this._set('show_lights_summary', (e.target as HTMLInputElement).checked)}></ha-switch>
           </div>
+          <div class="toggle-row">
+            <span class="editor-label">Fade Between Status Chips</span>
+            <ha-switch .checked=${this._config.chips_fade === true}
+              @change=${(e: Event) => this._set('chips_fade', (e.target as HTMLInputElement).checked || undefined)}></ha-switch>
+          </div>
+          ${this._config.chips_fade ? html`
+            <div class="editor-row">
+              <ha-textfield label="Chip Fade Speed (seconds)" type="number" min="2" max="30"
+                .value=${String(this._config.chips_speed || 4)}
+                @input=${(e: Event) => { const v = parseInt((e.target as HTMLInputElement).value); if (v > 0) this._set('chips_speed', v); }}></ha-textfield>
+              <span class="editor-hint">Seconds per chip. Default: 4</span>
+            </div>
+          ` : nothing}
         `)}
 
         <!-- ═══ News Feeds ═══ -->

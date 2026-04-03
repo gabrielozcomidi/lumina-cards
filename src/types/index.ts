@@ -187,6 +187,8 @@ export interface LuminaStatusCardConfig extends LovelaceCardConfig {
   person_entities?: string[];
   // Quick status chips
   chips?: StatusChipConfig[];
+  chips_fade?: boolean;
+  chips_speed?: number; // seconds per chip rotation
   // Weather
   weather_entity?: string;
   // Security
