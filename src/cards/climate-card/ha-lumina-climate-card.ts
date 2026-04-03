@@ -1,9 +1,9 @@
 import { LitElement, html, nothing } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { luminaTokens } from '../../styles/tokens';
 import { sharedStyles } from '../../styles/shared';
 import { climateCardStyles } from './styles';
-import { LuminaClimateCardConfig } from '../../types';
+import { LuminaClimateCardConfig, ClimateEntityConfig } from '../../types';
 import { HomeAssistant, ClimateEntity, HvacMode } from '../../types/ha-types';
 import { getEntity, isEntityAvailable, formatTemperature, callService } from '../../utils/ha-helpers';
 import { render3dBackground } from '../../utils/render-3d-bg';
@@ -42,22 +42,38 @@ const MODE_LABELS: Record<string, string> = {
   fan_only: 'Fan',
 };
 
+interface NormalizedClimate {
+  id: string;
+  customName?: string;
+}
+
+function normalizeClimateEntity(cfg: string | ClimateEntityConfig): NormalizedClimate {
+  if (typeof cfg === 'string') return { id: cfg };
+  return { id: cfg.entity, customName: cfg.name };
+}
+
 @customElement('ha-lumina-climate-card')
 export class HaLuminaClimateCard extends LitElement {
   @property({ attribute: false }) hass!: HomeAssistant;
   @property({ attribute: false }) config!: LuminaClimateCardConfig;
+  @state() private _activeEntityId: string | null = null;
 
   static styles = [luminaTokens, sharedStyles, climateCardStyles];
 
   public setConfig(config: LuminaClimateCardConfig): void {
-    if (!config.entity) {
-      throw new Error('Please define a climate entity');
+    const entities = this._getEntityList(config);
+    if (!entities.length) {
+      throw new Error('Please define at least one climate entity');
     }
     this.config = {
       show_humidity: true,
       show_fan_speed: true,
       ...config,
     };
+    // Set active to first entity if not set
+    if (!this._activeEntityId || !entities.find(e => e.id === this._activeEntityId)) {
+      this._activeEntityId = entities[0].id;
+    }
   }
 
   public getCardSize(): number {
@@ -72,10 +88,33 @@ export class HaLuminaClimateCard extends LitElement {
     return { type: 'custom:ha-lumina-climate-card', entity: '', show_humidity: true, show_fan_speed: true };
   }
 
-  // ─── Computed ─────────────────────────────────────
+  // ─── Entity List ────────────────────────────────────
+
+  private _getEntityList(config?: LuminaClimateCardConfig): NormalizedClimate[] {
+    const c = config || this.config;
+    if (c.entities?.length) {
+      return c.entities.map(normalizeClimateEntity).filter(e => e.id);
+    }
+    if (c.entity) return [{ id: c.entity }];
+    return [];
+  }
+
+  private get _entities(): NormalizedClimate[] {
+    return this._getEntityList();
+  }
+
+  private get _isMulti(): boolean {
+    return this._entities.length > 1;
+  }
+
+  private get _activeId(): string {
+    return this._activeEntityId || this._entities[0]?.id || '';
+  }
+
+  // ─── Computed (uses active entity) ──────────────────
 
   private get _entity(): ClimateEntity | undefined {
-    return getEntity(this.hass, this.config.entity) as ClimateEntity | undefined;
+    return getEntity(this.hass, this._activeId) as ClimateEntity | undefined;
   }
 
   private get _isAvailable(): boolean {
@@ -146,18 +185,24 @@ export class HaLuminaClimateCard extends LitElement {
     return MODE_LABELS[this._mode] || this._mode.charAt(0).toUpperCase() + this._mode.slice(1).replaceAll('_', ' ');
   }
 
+  private _entityName(e: NormalizedClimate): string {
+    if (e.customName) return e.customName;
+    const stateObj = this.hass?.states[e.id];
+    return (stateObj?.attributes?.friendly_name as string) || e.id.split('.').pop() || e.id;
+  }
+
   // ─── Actions ──────────────────────────────────────
 
   private _setMode(mode: string): void {
     callService(this.hass, 'climate', 'set_hvac_mode', {
-      entity_id: this.config.entity,
+      entity_id: this._activeId,
       hvac_mode: mode,
     });
   }
 
   private _setFanMode(fanMode: string): void {
     callService(this.hass, 'climate', 'set_fan_mode', {
-      entity_id: this.config.entity,
+      entity_id: this._activeId,
       fan_mode: fanMode,
     });
   }
@@ -167,9 +212,13 @@ export class HaLuminaClimateCard extends LitElement {
     if (current === undefined) return;
     const newTemp = Math.min(this._maxTemp, Math.max(this._minTemp, current + delta));
     callService(this.hass, 'climate', 'set_temperature', {
-      entity_id: this.config.entity,
+      entity_id: this._activeId,
       temperature: newTemp,
     });
+  }
+
+  private _switchEntity(id: string): void {
+    this._activeEntityId = id;
   }
 
   // ─── Render ───────────────────────────────────────
@@ -187,10 +236,24 @@ export class HaLuminaClimateCard extends LitElement {
         ${render3dBackground(this.config.image, true)}
         <div class="lumina-3d-content">
 
+        <!-- Entity Tabs (multi-entity) -->
+        ${this._isMulti ? html`
+          <div class="entity-tabs">
+            ${this._entities.map(e => html`
+              <lumina-chip
+                .label=${this._entityName(e)}
+                ?active=${e.id === this._activeId}
+                size="sm"
+                @click=${() => this._switchEntity(e.id)}
+              ></lumina-chip>
+            `)}
+          </div>
+        ` : nothing}
+
         <!-- Header with status badge + humidity -->
         <div class="climate-header">
           <div class="header-left">
-            <span class="header-title">HVAC Control</span>
+            <span class="header-title">${this._isMulti ? this._entityName(this._entities.find(e => e.id === this._activeId)!) : 'HVAC Control'}</span>
             ${this.config.show_humidity && this._humidity !== undefined
               ? html`
                 <div class="header-humidity">

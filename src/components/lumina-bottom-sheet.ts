@@ -14,6 +14,7 @@ import { luminaTokens } from '../styles/tokens';
 export class LuminaBottomSheet extends LitElement {
   @property({ type: Boolean, reflect: true }) open = false;
   @property({ type: String }) title = '';
+  @property({ type: Boolean }) fullscreen = false;
 
   @state() private _closing = false;
 
@@ -127,6 +128,14 @@ export class LuminaBottomSheet extends LitElement {
     .lbs-content::-webkit-scrollbar-track { background: transparent; }
     .lbs-content::-webkit-scrollbar-thumb { background: #48474a; border-radius: 9999px; }
 
+    .lumina-sheet-panel.fullscreen {
+      max-height: 100vh;
+      height: 100vh;
+      border-radius: 0;
+      border-top: none;
+    }
+    .lumina-sheet-panel.fullscreen .lbs-drag-area { display: none; }
+
     @keyframes lbs-sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
     @keyframes lbs-sheet-down { from { transform: translateY(0); } to { transform: translateY(100%); } }
     @keyframes lbs-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
@@ -182,7 +191,7 @@ export class LuminaBottomSheet extends LitElement {
 
     // Panel
     const panel = document.createElement('div');
-    panel.className = 'lumina-sheet-panel';
+    panel.className = `lumina-sheet-panel${this.fullscreen ? ' fullscreen' : ''}`;
     this._panel = panel;
 
     // Drag handle

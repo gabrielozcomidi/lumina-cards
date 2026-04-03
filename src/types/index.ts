@@ -61,6 +61,7 @@ export interface LuminaRoomPopupConfig extends LovelaceCardConfig {
   media_entity?: string;
   vacuum_entity?: string;
   sections?: RoomSection[];
+  fullscreen?: boolean;
 }
 
 // ─── Light Card Config ───────────────────────────────────────
@@ -84,9 +85,15 @@ export interface LuminaLightCardConfig extends LovelaceCardConfig {
 
 // ─── Climate Card Config ─────────────────────────────────────
 
+export interface ClimateEntityConfig {
+  entity: string;
+  name?: string;
+}
+
 export interface LuminaClimateCardConfig extends LovelaceCardConfig {
   type: string;
-  entity: string;
+  entity?: string;
+  entities?: (string | ClimateEntityConfig)[];
   image?: string;
   show_humidity?: boolean;
   show_fan_speed?: boolean;

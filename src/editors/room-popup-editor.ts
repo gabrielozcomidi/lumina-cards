@@ -19,6 +19,8 @@ export class HaLuminaRoomPopupEditor extends LitElement {
     .remove-btn { cursor: pointer; color: var(--error-color, #db4437); --mdc-icon-size: 20px; }
     .add-btn { cursor: pointer; color: var(--primary-color); font-size: 0.875rem; font-weight: 500; padding: 8px; }
     .loading { padding: 24px; text-align: center; color: var(--secondary-text-color); }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
+    .toggle-label { font-size: 0.875rem; font-weight: 500; color: var(--primary-text-color); }
   `;
 
   public setConfig(config: LuminaRoomPopupConfig): void { this._config = { ...config }; }
@@ -87,6 +89,14 @@ export class HaLuminaRoomPopupEditor extends LitElement {
           .value=${this._config.vacuum_entity || ''} .includeDomains=${['vacuum']}
           @value-changed=${(e: CustomEvent) => this._set('vacuum_entity', e.detail.value)}
           allow-custom-entity></ha-entity-picker>
+
+        <div class="editor-section">Display</div>
+        <div class="toggle-row">
+          <span class="toggle-label">Fullscreen Popup</span>
+          <ha-switch .checked=${this._config.fullscreen === true}
+            @change=${(e: Event) => this._set('fullscreen', (e.target as HTMLInputElement).checked || undefined)}
+          ></ha-switch>
+        </div>
       </div>
     `;
   }

@@ -459,8 +459,9 @@ export class HaLuminaRoomCardEditor extends LitElement {
                 <div class="entity-extras">
                   <ha-textfield label="Custom Name" .value=${this._getLightName(entry)}
                     @input=${(e: Event) => this._lightNameChanged(i, (e.target as HTMLInputElement).value)}></ha-textfield>
-                  <ha-textfield label="Icon (e.g. mdi:desk-lamp)" .value=${this._getLightIcon(entry)}
-                    @input=${(e: Event) => this._lightIconChanged(i, (e.target as HTMLInputElement).value)}></ha-textfield>
+                  <ha-icon-picker .hass=${this.hass} label="Icon"
+                    .value=${this._getLightIcon(entry)}
+                    @value-changed=${(e: CustomEvent) => this._lightIconChanged(i, e.detail.value)}></ha-icon-picker>
                 </div>
               </div>
             `)}

@@ -13,6 +13,16 @@ export const climateCardStyles = css`
     gap: var(--lumina-space-6);
   }
 
+  /* ── Entity Tabs (multi-entity) ── */
+  .entity-tabs {
+    display: flex;
+    gap: var(--lumina-space-2);
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: var(--lumina-space-1);
+  }
+  .entity-tabs::-webkit-scrollbar { display: none; }
+
   /* ── No Background ── */
   .climate-card.no-bg {
     background: transparent;
