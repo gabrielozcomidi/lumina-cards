@@ -160,6 +160,40 @@ export interface LuminaWeatherCardConfig extends LovelaceCardConfig {
   show_background?: boolean;
 }
 
+// ─── Home Status Card Config ────────────────────────────────
+
+export interface StatusChipConfig {
+  entity: string;
+  name?: string;
+  icon?: string;
+}
+
+export interface LuminaStatusCardConfig extends LovelaceCardConfig {
+  type: string;
+  name?: string;
+  // Greeting
+  show_greeting?: boolean;
+  greeting_entity?: string; // person entity to get user name
+  // Home status
+  person_entities?: string[];
+  // Quick status chips
+  chips?: StatusChipConfig[];
+  // Weather
+  weather_entity?: string;
+  // Security
+  alarm_entity?: string;
+  // Energy
+  energy_entity?: string;
+  // Lighting summary
+  show_lights_summary?: boolean;
+  // RSS Feed
+  rss_entity?: string;
+  // Calendar
+  calendar_entity?: string;
+  // Layout
+  show_background?: boolean;
+}
+
 // ─── Clock Card Config ──────────────────────────────────────
 
 export interface WorldClockEntry {
@@ -247,6 +281,7 @@ declare global {
     'lumina-slider': HTMLElement;
     'lumina-icon-button': HTMLElement;
     'ha-lumina-weather-card': HTMLElement;
+    'ha-lumina-status-card': HTMLElement;
     'ha-lumina-clock-card': HTMLElement;
     'ha-lumina-info-card': HTMLElement;
     'ha-lumina-bottom-bar': HTMLElement;
