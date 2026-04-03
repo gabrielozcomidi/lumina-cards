@@ -166,6 +166,36 @@ export const statusCardStyles = css`
     color: var(--lumina-secondary);
   }
 
+  /* ── Summary Rotator Chip ── */
+  .summary-chip {
+    display: flex; align-items: center; gap: var(--lumina-space-3);
+    padding: 14px 16px; background: var(--lumina-surface-container-high);
+    border-radius: var(--lumina-radius-lg); border: 1px solid var(--lumina-ghost-border);
+    width: 100%;
+    transition: all var(--lumina-transition-fast);
+  }
+  .summary-chip.on {
+    border-color: rgba(254, 203, 0, 0.15);
+  }
+  .summary-chip ha-icon {
+    --mdc-icon-size: 22px; color: var(--lumina-on-surface-variant); flex-shrink: 0;
+  }
+  .summary-chip.on ha-icon {
+    color: var(--lumina-secondary);
+    filter: drop-shadow(0 0 6px rgba(254, 203, 0, 0.3));
+  }
+  .summary-chip-info {
+    display: flex; flex-direction: column; gap: 1px; min-width: 0;
+  }
+  .summary-chip-name {
+    font-family: var(--lumina-font-body); font-size: 0.8125rem; font-weight: 600;
+    color: var(--lumina-on-surface);
+  }
+  .summary-chip-detail {
+    font-family: var(--lumina-font-body); font-size: 0.6875rem;
+    color: var(--lumina-on-surface-variant);
+  }
+
   /* ── Fade Chip ── */
   .fade-chip-item {
     animation: fade-cycle var(--fade-speed, 4s) ease-in-out infinite;

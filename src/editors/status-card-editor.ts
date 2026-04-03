@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { LuminaStatusCardConfig, StatusChipConfig } from '../types';
+import { LuminaStatusCardConfig, StatusChipConfig, SummaryItemConfig } from '../types';
 import { HomeAssistant } from '../types/ha-types';
 import { loadHaElements, fireConfigChanged } from '../utils/editor-helpers';
 
@@ -102,6 +102,16 @@ export class HaLuminaStatusCardEditor extends LitElement {
     const c = [...(this._config.chips || [])]; c[i] = { ...c[i], [field]: v || undefined }; if (field === 'entity') c[i].entity = v; this._set('chips', c);
   }
 
+  // ─── Summary item helpers ─────────────────────────
+  private _addSummaryItem(): void { this._set('summary_items', [...(this._config.summary_items || []), { entity: '', show_state: true }]); }
+  private _removeSummaryItem(i: number): void { const s = [...(this._config.summary_items || [])]; s.splice(i, 1); this._set('summary_items', s); }
+  private _summaryItemChanged(i: number, field: string, v: unknown): void {
+    const s = [...(this._config.summary_items || [])];
+    s[i] = { ...s[i], [field]: v === '' ? undefined : v };
+    if (field === 'entity') s[i].entity = v as string;
+    this._set('summary_items', s);
+  }
+
   // ─── Render ───────────────────────────────────────
 
   protected render() {
@@ -172,6 +182,45 @@ export class HaLuminaStatusCardEditor extends LitElement {
                 .value=${String(this._config.chips_speed || 4)}
                 @input=${(e: Event) => { const v = parseInt((e.target as HTMLInputElement).value); if (v > 0) this._set('chips_speed', v); }}></ha-textfield>
               <span class="editor-hint">Seconds per chip. Default: 4</span>
+            </div>
+          ` : nothing}
+        `)}
+
+        <!-- ═══ Summary Rotator ═══ -->
+        ${this._renderSection('summary', 'mdi:rotate-3d-variant', 'Summary Rotator', html`
+          <span class="editor-hint">Add entities to cycle through with fade animation. Choose what info each one shows.</span>
+          ${(this._config.summary_items || []).map((item: SummaryItemConfig, i: number) => html`
+            <div class="entity-block">
+              <div class="entity-row">
+                <ha-entity-picker .hass=${this.hass} label="Entity ${i + 1}" .value=${item.entity || ''}
+                  @value-changed=${(e: CustomEvent) => this._summaryItemChanged(i, 'entity', e.detail.value)} allow-custom-entity></ha-entity-picker>
+                <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removeSummaryItem(i)}></ha-icon>
+              </div>
+              <div class="entity-extras">
+                <ha-textfield label="Name" .value=${item.name || ''}
+                  @input=${(e: Event) => this._summaryItemChanged(i, 'name', (e.target as HTMLInputElement).value)}></ha-textfield>
+                <ha-icon-picker .hass=${this.hass} label="Icon" .value=${item.icon || ''}
+                  @value-changed=${(e: CustomEvent) => this._summaryItemChanged(i, 'icon', e.detail.value)}></ha-icon-picker>
+              </div>
+              <div class="toggle-row">
+                <span class="editor-label">Show State</span>
+                <ha-switch .checked=${item.show_state !== false}
+                  @change=${(e: Event) => this._summaryItemChanged(i, 'show_state', (e.target as HTMLInputElement).checked)}></ha-switch>
+              </div>
+              <div class="toggle-row">
+                <span class="editor-label">Show Brightness</span>
+                <ha-switch .checked=${item.show_brightness === true}
+                  @change=${(e: Event) => this._summaryItemChanged(i, 'show_brightness', (e.target as HTMLInputElement).checked || undefined)}></ha-switch>
+              </div>
+            </div>
+          `)}
+          <div class="add-btn" @click=${this._addSummaryItem}>+ Add Summary Item</div>
+          ${(this._config.summary_items?.length || 0) > 1 ? html`
+            <div class="editor-row">
+              <ha-textfield label="Fade Speed (seconds)" type="number" min="2" max="30"
+                .value=${String(this._config.summary_speed || 4)}
+                @input=${(e: Event) => { const v = parseInt((e.target as HTMLInputElement).value); if (v > 0) this._set('summary_speed', v); }}></ha-textfield>
+              <span class="editor-hint">Seconds per item. Default: 4</span>
             </div>
           ` : nothing}
         `)}

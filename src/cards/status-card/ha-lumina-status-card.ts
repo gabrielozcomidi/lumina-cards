@@ -36,10 +36,12 @@ export class HaLuminaStatusCard extends LitElement {
   @state() private _fadeItemIndex = 0;
   @state() private _fadeStockIndex = 0;
   @state() private _fadeChipIndex = 0;
+  @state() private _fadeSummaryIndex = 0;
   private _timer?: ReturnType<typeof setInterval>;
   private _fadeTimer?: ReturnType<typeof setInterval>;
   private _fadeStockTimer?: ReturnType<typeof setInterval>;
   private _fadeChipTimer?: ReturnType<typeof setInterval>;
+  private _fadeSummaryTimer?: ReturnType<typeof setInterval>;
 
   static styles = [luminaTokens, sharedStyles, statusCardStyles];
 
@@ -76,6 +78,7 @@ export class HaLuminaStatusCard extends LitElement {
     if (this._fadeTimer) clearInterval(this._fadeTimer);
     if (this._fadeStockTimer) clearInterval(this._fadeStockTimer);
     if (this._fadeChipTimer) clearInterval(this._fadeChipTimer);
+    if (this._fadeSummaryTimer) clearInterval(this._fadeSummaryTimer);
     super.disconnectedCallback();
   }
 
@@ -86,6 +89,8 @@ export class HaLuminaStatusCard extends LitElement {
     this._fadeTimer = setInterval(() => { this._fadeItemIndex++; }, feedSpeed);
     this._fadeStockTimer = setInterval(() => { this._fadeStockIndex++; }, stockSpeed);
     this._fadeChipTimer = setInterval(() => { this._fadeChipIndex++; }, chipSpeed);
+    const summarySpeed = (this._config?.summary_speed || 4) * 1000;
+    this._fadeSummaryTimer = setInterval(() => { this._fadeSummaryIndex++; }, summarySpeed);
   }
 
   // ─── Helpers ──────────────────────────────────────
@@ -142,6 +147,7 @@ export class HaLuminaStatusCard extends LitElement {
             ${this._renderGreeting()}
             ${this._renderPeople()}
             ${this._renderChips()}
+            ${this._renderSummaryRotator()}
             ${this._renderStocks()}
             ${this._renderFeed()}
             ${this._renderCalendar()}
@@ -309,6 +315,74 @@ export class HaLuminaStatusCard extends LitElement {
             </div>
           </div>
         `)}
+      </div>
+    `;
+  }
+
+  private _renderSummaryRotator() {
+    const items = this._config.summary_items;
+    if (!items?.length) return nothing;
+
+    const rendered = items.map(item => {
+      const entity = this.hass.states[item.entity];
+      if (!entity) return null;
+
+      const name = item.name || (entity.attributes.friendly_name as string) || item.entity;
+      const icon = item.icon || (entity.attributes.icon as string) || 'mdi:information';
+      const state = entity.state;
+      const attrs = entity.attributes;
+
+      // Build detail parts
+      const parts: string[] = [];
+      if (item.show_state !== false) {
+        const stateLabel = state === 'on' ? 'On' : state === 'off' ? 'Off' : state.charAt(0).toUpperCase() + state.slice(1);
+        parts.push(stateLabel);
+      }
+      if (item.show_brightness && attrs.brightness != null) {
+        parts.push(`${Math.round(((attrs.brightness as number) / 255) * 100)}%`);
+      }
+      if (item.show_unit) {
+        const unit = (attrs.unit_of_measurement as string) || '';
+        if (unit) parts.push(unit);
+      }
+      const detail = parts.join(' · ');
+      const isOn = state === 'on' || state === 'playing' || state === 'home';
+
+      return { name, icon, detail, isOn };
+    }).filter(Boolean) as { name: string; icon: string; detail: string; isOn: boolean }[];
+
+    if (!rendered.length) return nothing;
+
+    // Single item: static
+    if (rendered.length === 1) {
+      const s = rendered[0];
+      return html`
+        <div class="summary-chip ${s.isOn ? 'on' : ''}">
+          <ha-icon icon="${s.icon}"></ha-icon>
+          <div class="summary-chip-info">
+            <span class="summary-chip-name">${s.name}</span>
+            ${s.detail ? html`<span class="summary-chip-detail">${s.detail}</span>` : nothing}
+          </div>
+        </div>
+      `;
+    }
+
+    // Multiple: fade between them
+    const idx = this._fadeSummaryIndex % rendered.length;
+    const s = rendered[idx];
+    const fadeSpeed = this._config.summary_speed || 4;
+
+    return html`
+      <div class="fade-rotator" style="--fade-speed: ${fadeSpeed}s;">
+        <div class="fade-chip-item" .key=${idx}>
+          <div class="summary-chip ${s.isOn ? 'on' : ''}">
+            <ha-icon icon="${s.icon}"></ha-icon>
+            <div class="summary-chip-info">
+              <span class="summary-chip-name">${s.name}</span>
+              ${s.detail ? html`<span class="summary-chip-detail">${s.detail}</span>` : nothing}
+            </div>
+          </div>
+        </div>
       </div>
     `;
   }

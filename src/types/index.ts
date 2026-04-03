@@ -169,6 +169,15 @@ export interface StatusChipConfig {
   icon?: string;
 }
 
+export interface SummaryItemConfig {
+  entity: string;
+  name?: string;
+  icon?: string;
+  show_state?: boolean;
+  show_brightness?: boolean;
+  show_unit?: boolean;
+}
+
 export interface RssFeedConfig {
   entity: string;
   name?: string;
@@ -195,8 +204,10 @@ export interface LuminaStatusCardConfig extends LovelaceCardConfig {
   alarm_entity?: string;
   // Energy
   energy_entity?: string;
-  // Lighting summary
+  // Lighting / summary rotator
   show_lights_summary?: boolean;
+  summary_items?: SummaryItemConfig[];
+  summary_speed?: number;
   // RSS Feeds (multiple with categories)
   rss_entity?: string; // legacy single feed
   rss_feeds?: RssFeedConfig[];
