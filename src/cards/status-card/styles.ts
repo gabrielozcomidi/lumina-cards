@@ -38,7 +38,7 @@ export const statusCardStyles = css`
   .status-card.no-bg {
     background: transparent;
     border-color: transparent;
-    padding: 0;
+    padding: var(--lumina-space-2) var(--lumina-space-3);
   }
   .status-card.no-bg .status-tint {
     display: none;
