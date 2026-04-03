@@ -9,14 +9,11 @@ export class HaLuminaStatusCardEditor extends LitElement {
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() private _config!: LuminaStatusCardConfig;
   @state() private _haLoaded = false;
+  @state() private _openSections: Record<string, boolean> = { greeting: true };
 
   static styles = css`
     :host { display: block; }
-    .editor { display: flex; flex-direction: column; gap: 16px; padding: 16px 0; }
-    .editor-section {
-      font-size: 1rem; font-weight: 600; color: var(--primary-text-color);
-      margin-top: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--divider-color);
-    }
+    .editor { display: flex; flex-direction: column; gap: 12px; padding: 16px 0; }
     .editor-row { display: flex; flex-direction: column; gap: 4px; }
     .editor-label { font-size: 0.875rem; font-weight: 500; color: var(--primary-text-color); }
     .editor-hint { font-size: 0.75rem; color: var(--secondary-text-color); }
@@ -34,6 +31,34 @@ export class HaLuminaStatusCardEditor extends LitElement {
       font-weight: 500; padding: 8px; display: flex; align-items: center; gap: 4px;
     }
     .loading { padding: 24px; text-align: center; color: var(--secondary-text-color); }
+
+    /* ─── Collapsible Sections ──────────────────────── */
+    .section-collapsible {
+      border: 1px solid var(--divider-color);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; cursor: pointer; user-select: none;
+      background: var(--card-background-color, #1a1a1d);
+      transition: background 0.2s;
+    }
+    .section-header:hover { background: var(--secondary-background-color, #222); }
+    .section-header-left { display: flex; align-items: center; gap: 10px; }
+    .section-header-left ha-icon { --mdc-icon-size: 20px; color: var(--primary-color); }
+    .section-title { font-size: 0.9375rem; font-weight: 600; color: var(--primary-text-color); }
+    .section-chevron {
+      --mdc-icon-size: 20px; color: var(--secondary-text-color);
+      transition: transform 0.25s ease;
+    }
+    .section-chevron.open { transform: rotate(180deg); }
+    .section-body {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      padding: 0 14px;
+    }
+    .section-body.open { max-height: 3000px; padding: 12px 14px 16px; }
   `;
 
   public setConfig(config: LuminaStatusCardConfig): void {
@@ -51,70 +76,33 @@ export class HaLuminaStatusCardEditor extends LitElement {
     this._config = { ...this._config, [field]: value };
     this._dispatch();
   }
-
-  // ─── Person helpers ─────────────────────────────────
-
-  private _addPerson(): void {
-    const p = [...(this._config.person_entities || []), ''];
-    this._set('person_entities', p);
-  }
-  private _removePerson(i: number): void {
-    const p = [...(this._config.person_entities || [])]; p.splice(i, 1);
-    this._set('person_entities', p);
-  }
-  private _personChanged(i: number, v: string): void {
-    const p = [...(this._config.person_entities || [])]; p[i] = v;
-    this._set('person_entities', p);
+  private _toggleSection(key: string): void {
+    this._openSections = { ...this._openSections, [key]: !this._openSections[key] };
   }
 
-  // ─── Stock helpers ─────────────────────────────────
+  // ─── CRUD helpers ─────────────────────────────────
 
-  private _addStock(): void {
-    const s = [...(this._config.stock_entities || []), ''];
-    this._set('stock_entities', s);
-  }
-  private _removeStock(i: number): void {
-    const s = [...(this._config.stock_entities || [])]; s.splice(i, 1);
-    this._set('stock_entities', s);
-  }
-  private _stockChanged(i: number, v: string): void {
-    const s = [...(this._config.stock_entities || [])]; s[i] = v;
-    this._set('stock_entities', s);
-  }
+  private _addPerson(): void { this._set('person_entities', [...(this._config.person_entities || []), '']); }
+  private _removePerson(i: number): void { const p = [...(this._config.person_entities || [])]; p.splice(i, 1); this._set('person_entities', p); }
+  private _personChanged(i: number, v: string): void { const p = [...(this._config.person_entities || [])]; p[i] = v; this._set('person_entities', p); }
 
-  // ─── RSS feed helpers ─────────────────────────────
+  private _addStock(): void { this._set('stock_entities', [...(this._config.stock_entities || []), '']); }
+  private _removeStock(i: number): void { const s = [...(this._config.stock_entities || [])]; s.splice(i, 1); this._set('stock_entities', s); }
+  private _stockChanged(i: number, v: string): void { const s = [...(this._config.stock_entities || [])]; s[i] = v; this._set('stock_entities', s); }
 
-  private _addRssFeed(): void {
-    const f = [...(this._config.rss_feeds || []), { entity: '' }];
-    this._set('rss_feeds', f);
-  }
-  private _removeRssFeed(i: number): void {
-    const f = [...(this._config.rss_feeds || [])]; f.splice(i, 1);
-    this._set('rss_feeds', f);
-  }
+  private _addRssFeed(): void { this._set('rss_feeds', [...(this._config.rss_feeds || []), { entity: '' }]); }
+  private _removeRssFeed(i: number): void { const f = [...(this._config.rss_feeds || [])]; f.splice(i, 1); this._set('rss_feeds', f); }
   private _rssFeedChanged(i: number, field: string, v: string): void {
-    const f = [...(this._config.rss_feeds || [])];
-    f[i] = { ...f[i], [field]: v || undefined };
-    if (field === 'entity') f[i].entity = v;
-    this._set('rss_feeds', f);
+    const f = [...(this._config.rss_feeds || [])]; f[i] = { ...f[i], [field]: v || undefined }; if (field === 'entity') f[i].entity = v; this._set('rss_feeds', f);
   }
 
-  // ─── Custom chip helpers ────────────────────────────
-
-  private _addChip(): void {
-    const c = [...(this._config.chips || []), { entity: '' }];
-    this._set('chips', c);
-  }
-  private _removeChip(i: number): void {
-    const c = [...(this._config.chips || [])]; c.splice(i, 1);
-    this._set('chips', c);
-  }
+  private _addChip(): void { this._set('chips', [...(this._config.chips || []), { entity: '' }]); }
+  private _removeChip(i: number): void { const c = [...(this._config.chips || [])]; c.splice(i, 1); this._set('chips', c); }
   private _chipChanged(i: number, field: keyof StatusChipConfig, v: string): void {
-    const c = [...(this._config.chips || [])];
-    c[i] = { ...c[i], [field]: v || undefined };
-    if (field === 'entity') c[i].entity = v;
-    this._set('chips', c);
+    const c = [...(this._config.chips || [])]; c[i] = { ...c[i], [field]: v || undefined }; if (field === 'entity') c[i].entity = v; this._set('chips', c);
   }
+
+  // ─── Render ───────────────────────────────────────
 
   protected render() {
     if (!this._config || !this.hass) return html``;
@@ -122,206 +110,179 @@ export class HaLuminaStatusCardEditor extends LitElement {
 
     return html`
       <div class="editor">
-        <!-- Greeting -->
-        <div class="editor-section">Greeting</div>
-        <div class="toggle-row">
-          <span class="editor-label">Show Greeting</span>
-          <ha-switch .checked=${this._config.show_greeting !== false}
-            @change=${(e: Event) => this._set('show_greeting', (e.target as HTMLInputElement).checked)}
-          ></ha-switch>
-        </div>
-        <div class="toggle-row">
-          <span class="editor-label">Show Clock</span>
-          <ha-switch .checked=${this._config.show_clock === true}
-            @change=${(e: Event) => this._set('show_clock', (e.target as HTMLInputElement).checked || undefined)}
-          ></ha-switch>
-        </div>
-        <div class="editor-row">
-          <ha-textfield label="Display Name (optional)"
-            .value=${this._config.name || ''}
-            @input=${(e: Event) => this._set('name', (e.target as HTMLInputElement).value || undefined)}
-          ></ha-textfield>
-          <span class="editor-hint">Leave empty to auto-detect from HA user</span>
-        </div>
 
-        <!-- People -->
-        <div class="editor-section">People Tracking</div>
-        ${(this._config.person_entities || []).map((id, i) => html`
-          <div class="entity-row">
-            <ha-entity-picker .hass=${this.hass} label="Person ${i + 1}"
-              .value=${id} .includeDomains=${['person']}
-              @value-changed=${(e: CustomEvent) => this._personChanged(i, e.detail.value)}
-              allow-custom-entity></ha-entity-picker>
-            <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removePerson(i)}></ha-icon>
+        <!-- ═══ Greeting ═══ -->
+        ${this._renderSection('greeting', 'mdi:hand-wave', 'Greeting', html`
+          <div class="toggle-row">
+            <span class="editor-label">Show Greeting</span>
+            <ha-switch .checked=${this._config.show_greeting !== false}
+              @change=${(e: Event) => this._set('show_greeting', (e.target as HTMLInputElement).checked)}></ha-switch>
+          </div>
+          <div class="toggle-row">
+            <span class="editor-label">Show Clock</span>
+            <ha-switch .checked=${this._config.show_clock === true}
+              @change=${(e: Event) => this._set('show_clock', (e.target as HTMLInputElement).checked || undefined)}></ha-switch>
+          </div>
+          <div class="editor-row">
+            <ha-textfield label="Display Name (optional)" .value=${this._config.name || ''}
+              @input=${(e: Event) => this._set('name', (e.target as HTMLInputElement).value || undefined)}></ha-textfield>
+            <span class="editor-hint">Leave empty to auto-detect from HA user</span>
           </div>
         `)}
-        <div class="add-btn" @click=${this._addPerson}>+ Add Person</div>
 
-        <!-- Built-in Data Sources -->
-        <div class="editor-section">Data Sources</div>
-
-        <div class="editor-row">
-          <ha-entity-picker .hass=${this.hass} label="Weather Entity"
-            .value=${this._config.weather_entity || ''} .includeDomains=${['weather']}
-            @value-changed=${(e: CustomEvent) => this._set('weather_entity', e.detail.value)}
-            allow-custom-entity></ha-entity-picker>
-        </div>
-
-        <div class="editor-row">
-          <ha-entity-picker .hass=${this.hass} label="Alarm Entity"
-            .value=${this._config.alarm_entity || ''}
-            .includeDomains=${['alarm_control_panel']}
-            @value-changed=${(e: CustomEvent) => this._set('alarm_entity', e.detail.value)}
-            allow-custom-entity></ha-entity-picker>
-        </div>
-
-        <div class="editor-row">
-          <ha-entity-picker .hass=${this.hass} label="Energy Sensor"
-            .value=${this._config.energy_entity || ''} .includeDomains=${['sensor']}
-            @value-changed=${(e: CustomEvent) => this._set('energy_entity', e.detail.value)}
-            allow-custom-entity></ha-entity-picker>
-        </div>
-
-        <div class="toggle-row">
-          <span class="editor-label">Show Lights Summary</span>
-          <ha-switch .checked=${this._config.show_lights_summary !== false}
-            @change=${(e: Event) => this._set('show_lights_summary', (e.target as HTMLInputElement).checked)}
-          ></ha-switch>
-        </div>
-
-        <!-- News Feeds (Lumina Feeds) -->
-        <div class="editor-section">News Feeds</div>
-        <span class="editor-hint">Add Lumina Feeds sensors (sensor.lumina_feed_*) or any Feedparser sensor</span>
-
-        ${(this._config.rss_feeds || []).map((feed: any, i: number) => html`
-          <div class="entity-block">
+        <!-- ═══ People ═══ -->
+        ${this._renderSection('people', 'mdi:account-group', 'People Tracking', html`
+          ${(this._config.person_entities || []).map((id, i) => html`
             <div class="entity-row">
-              <ha-entity-picker .hass=${this.hass} label="Feed ${i + 1}"
-                .value=${feed.entity || ''} .includeDomains=${['sensor']}
-                @value-changed=${(e: CustomEvent) => this._rssFeedChanged(i, 'entity', e.detail.value)}
-                allow-custom-entity></ha-entity-picker>
-              <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removeRssFeed(i)}></ha-icon>
+              <ha-entity-picker .hass=${this.hass} label="Person ${i + 1}" .value=${id} .includeDomains=${['person']}
+                @value-changed=${(e: CustomEvent) => this._personChanged(i, e.detail.value)} allow-custom-entity></ha-entity-picker>
+              <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removePerson(i)}></ha-icon>
             </div>
-            <ha-textfield label="Category Name (optional)" .value=${feed.name || ''}
-              @input=${(e: Event) => this._rssFeedChanged(i, 'name', (e.target as HTMLInputElement).value)}></ha-textfield>
+          `)}
+          <div class="add-btn" @click=${this._addPerson}>+ Add Person</div>
+        `)}
+
+        <!-- ═══ Data Sources ═══ -->
+        ${this._renderSection('data', 'mdi:database', 'Data Sources', html`
+          <div class="editor-row">
+            <ha-entity-picker .hass=${this.hass} label="Weather Entity" .value=${this._config.weather_entity || ''}
+              .includeDomains=${['weather']} @value-changed=${(e: CustomEvent) => this._set('weather_entity', e.detail.value)} allow-custom-entity></ha-entity-picker>
+          </div>
+          <div class="editor-row">
+            <ha-entity-picker .hass=${this.hass} label="Alarm Entity" .value=${this._config.alarm_entity || ''}
+              .includeDomains=${['alarm_control_panel']} @value-changed=${(e: CustomEvent) => this._set('alarm_entity', e.detail.value)} allow-custom-entity></ha-entity-picker>
+          </div>
+          <div class="editor-row">
+            <ha-entity-picker .hass=${this.hass} label="Energy Sensor" .value=${this._config.energy_entity || ''}
+              .includeDomains=${['sensor']} @value-changed=${(e: CustomEvent) => this._set('energy_entity', e.detail.value)} allow-custom-entity></ha-entity-picker>
+          </div>
+          <div class="toggle-row">
+            <span class="editor-label">Show Lights Summary</span>
+            <ha-switch .checked=${this._config.show_lights_summary !== false}
+              @change=${(e: Event) => this._set('show_lights_summary', (e.target as HTMLInputElement).checked)}></ha-switch>
           </div>
         `)}
-        <div class="add-btn" @click=${this._addRssFeed}>+ Add News Feed</div>
 
-        ${!this._config.rss_feeds?.length && this._config.rss_entity ? html`
-          <div class="editor-row">
-            <ha-entity-picker .hass=${this.hass} label="Legacy Feed (single)"
-              .value=${this._config.rss_entity || ''} .includeDomains=${['sensor']}
-              @value-changed=${(e: CustomEvent) => this._set('rss_entity', e.detail.value)}
-              allow-custom-entity></ha-entity-picker>
+        <!-- ═══ News Feeds ═══ -->
+        ${this._renderSection('news', 'mdi:newspaper', 'News Feeds', html`
+          <span class="editor-hint">Add Lumina Feeds sensors or any Feedparser sensor</span>
+          ${(this._config.rss_feeds || []).map((feed: any, i: number) => html`
+            <div class="entity-block">
+              <div class="entity-row">
+                <ha-entity-picker .hass=${this.hass} label="Feed ${i + 1}" .value=${feed.entity || ''} .includeDomains=${['sensor']}
+                  @value-changed=${(e: CustomEvent) => this._rssFeedChanged(i, 'entity', e.detail.value)} allow-custom-entity></ha-entity-picker>
+                <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removeRssFeed(i)}></ha-icon>
+              </div>
+              <ha-textfield label="Category Name (optional)" .value=${feed.name || ''}
+                @input=${(e: Event) => this._rssFeedChanged(i, 'name', (e.target as HTMLInputElement).value)}></ha-textfield>
+            </div>
+          `)}
+          <div class="add-btn" @click=${this._addRssFeed}>+ Add News Feed</div>
+
+          <div class="toggle-row">
+            <span class="editor-label">Scrolling Ticker</span>
+            <ha-switch .checked=${this._config.rss_scroll === true}
+              @change=${(e: Event) => { this._set('rss_scroll', (e.target as HTMLInputElement).checked || undefined); if ((e.target as HTMLInputElement).checked) this._set('rss_fade', undefined); }}></ha-switch>
           </div>
-        ` : nothing}
-
-        <div class="toggle-row">
-          <span class="editor-label">Scrolling News Ticker</span>
-          <ha-switch .checked=${this._config.rss_scroll === true}
-            @change=${(e: Event) => { this._set('rss_scroll', (e.target as HTMLInputElement).checked || undefined); if ((e.target as HTMLInputElement).checked) this._set('rss_fade', undefined); }}
-          ></ha-switch>
-        </div>
-
-        <div class="toggle-row">
-          <span class="editor-label">Fading Headlines (one at a time)</span>
-          <ha-switch .checked=${this._config.rss_fade === true}
-            @change=${(e: Event) => { this._set('rss_fade', (e.target as HTMLInputElement).checked || undefined); if ((e.target as HTMLInputElement).checked) this._set('rss_scroll', undefined); }}
-          ></ha-switch>
-        </div>
-
-        ${this._config.rss_scroll || this._config.rss_fade ? html`
-          <div class="editor-row">
-            <ha-textfield label="Speed (seconds — scroll duration or fade interval)"
-              type="number" min="3" max="300"
-              .value=${String(this._config.rss_speed || (this._config.rss_scroll ? 60 : 6))}
-              @input=${(e: Event) => { const v = parseInt((e.target as HTMLInputElement).value); if (v > 0) this._set('rss_speed', v); }}
-            ></ha-textfield>
-            <span class="editor-hint">${this._config.rss_scroll ? 'Total scroll duration in seconds (higher = slower). Default: 60' : 'Seconds per headline. Default: 6'}</span>
+          <div class="toggle-row">
+            <span class="editor-label">Fading Headlines</span>
+            <ha-switch .checked=${this._config.rss_fade === true}
+              @change=${(e: Event) => { this._set('rss_fade', (e.target as HTMLInputElement).checked || undefined); if ((e.target as HTMLInputElement).checked) this._set('rss_scroll', undefined); }}></ha-switch>
           </div>
-        ` : nothing}
+          ${this._config.rss_scroll || this._config.rss_fade ? html`
+            <div class="editor-row">
+              <ha-textfield label="Speed (seconds)" type="number" min="3" max="300"
+                .value=${String(this._config.rss_speed || (this._config.rss_scroll ? 60 : 6))}
+                @input=${(e: Event) => { const v = parseInt((e.target as HTMLInputElement).value); if (v > 0) this._set('rss_speed', v); }}></ha-textfield>
+              <span class="editor-hint">${this._config.rss_scroll ? 'Scroll duration (higher = slower). Default: 60' : 'Seconds per headline. Default: 6'}</span>
+            </div>
+          ` : nothing}
+        `)}
 
-        <!-- Calendar -->
-        <div class="editor-section">Calendar</div>
-        <div class="editor-row">
-          <ha-entity-picker .hass=${this.hass} label="Calendar Entity"
-            .value=${this._config.calendar_entity || ''} .includeDomains=${['calendar']}
-            @value-changed=${(e: CustomEvent) => this._set('calendar_entity', e.detail.value)}
-            allow-custom-entity></ha-entity-picker>
-        </div>
-
-        <!-- Stocks -->
-        <div class="editor-section">Stocks</div>
-        <span class="editor-hint">Add Lumina Feeds stock sensors (sensor.lumina_stock_*) or Lumina Stocks Summary</span>
-
-        <div class="editor-row">
-          <ha-entity-picker .hass=${this.hass} label="Stocks Summary Sensor (all-in-one)"
-            .value=${this._config.stocks_summary_entity || ''} .includeDomains=${['sensor']}
-            @value-changed=${(e: CustomEvent) => this._set('stocks_summary_entity', e.detail.value)}
-            allow-custom-entity></ha-entity-picker>
-          <span class="editor-hint">sensor.lumina_stocks_summary — or add individual stocks below</span>
-        </div>
-
-        ${(this._config.stock_entities || []).map((id: string, i: number) => html`
-          <div class="entity-row">
-            <ha-entity-picker .hass=${this.hass} label="Stock ${i + 1}"
-              .value=${id} .includeDomains=${['sensor']}
-              @value-changed=${(e: CustomEvent) => this._stockChanged(i, e.detail.value)}
-              allow-custom-entity></ha-entity-picker>
-            <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removeStock(i)}></ha-icon>
+        <!-- ═══ Calendar ═══ -->
+        ${this._renderSection('calendar', 'mdi:calendar', 'Calendar', html`
+          <div class="editor-row">
+            <ha-entity-picker .hass=${this.hass} label="Calendar Entity" .value=${this._config.calendar_entity || ''}
+              .includeDomains=${['calendar']} @value-changed=${(e: CustomEvent) => this._set('calendar_entity', e.detail.value)} allow-custom-entity></ha-entity-picker>
           </div>
         `)}
-        <div class="add-btn" @click=${this._addStock}>+ Add Stock</div>
 
-        <div class="toggle-row">
-          <span class="editor-label">Scrolling Stock Ticker</span>
-          <ha-switch .checked=${this._config.stock_scroll === true}
-            @change=${(e: Event) => this._set('stock_scroll', (e.target as HTMLInputElement).checked || undefined)}
-          ></ha-switch>
-        </div>
-
-        ${this._config.stock_scroll ? html`
+        <!-- ═══ Stocks ═══ -->
+        ${this._renderSection('stocks', 'mdi:chart-line', 'Stocks', html`
           <div class="editor-row">
-            <ha-textfield label="Stock Scroll Speed (seconds)"
-              type="number" min="10" max="300"
-              .value=${String(this._config.stock_speed || 45)}
-              @input=${(e: Event) => { const v = parseInt((e.target as HTMLInputElement).value); if (v > 0) this._set('stock_speed', v); }}
-            ></ha-textfield>
-            <span class="editor-hint">Total scroll duration. Higher = slower. Default: 45</span>
+            <ha-entity-picker .hass=${this.hass} label="Stocks Summary (all-in-one)" .value=${this._config.stocks_summary_entity || ''}
+              .includeDomains=${['sensor']} @value-changed=${(e: CustomEvent) => this._set('stocks_summary_entity', e.detail.value)} allow-custom-entity></ha-entity-picker>
+            <span class="editor-hint">sensor.lumina_stocks_summary — or add individual stocks below</span>
           </div>
-        ` : nothing}
-
-        <!-- Custom Chips -->
-        <div class="editor-section">Custom Status Chips</div>
-        <span class="editor-hint">Add any sensor as a quick-glance chip</span>
-
-        ${(this._config.chips || []).map((chip, i) => html`
-          <div class="entity-block">
+          ${(this._config.stock_entities || []).map((id: string, i: number) => html`
             <div class="entity-row">
-              <ha-entity-picker .hass=${this.hass} label="Entity"
-                .value=${chip.entity}
-                @value-changed=${(e: CustomEvent) => this._chipChanged(i, 'entity', e.detail.value)}
-                allow-custom-entity></ha-entity-picker>
-              <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removeChip(i)}></ha-icon>
+              <ha-entity-picker .hass=${this.hass} label="Stock ${i + 1}" .value=${id} .includeDomains=${['sensor']}
+                @value-changed=${(e: CustomEvent) => this._stockChanged(i, e.detail.value)} allow-custom-entity></ha-entity-picker>
+              <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removeStock(i)}></ha-icon>
             </div>
-            <div class="entity-extras">
-              <ha-textfield label="Custom Name" .value=${chip.name || ''}
-                @input=${(e: Event) => this._chipChanged(i, 'name', (e.target as HTMLInputElement).value)}></ha-textfield>
-              <ha-icon-picker .hass=${this.hass} label="Icon" .value=${chip.icon || ''}
-                @value-changed=${(e: CustomEvent) => this._chipChanged(i, 'icon', e.detail.value)}></ha-icon-picker>
+          `)}
+          <div class="add-btn" @click=${this._addStock}>+ Add Stock</div>
+          <div class="toggle-row">
+            <span class="editor-label">Scrolling Stock Ticker</span>
+            <ha-switch .checked=${this._config.stock_scroll === true}
+              @change=${(e: Event) => this._set('stock_scroll', (e.target as HTMLInputElement).checked || undefined)}></ha-switch>
+          </div>
+          ${this._config.stock_scroll ? html`
+            <div class="editor-row">
+              <ha-textfield label="Scroll Speed (seconds)" type="number" min="10" max="300"
+                .value=${String(this._config.stock_speed || 45)}
+                @input=${(e: Event) => { const v = parseInt((e.target as HTMLInputElement).value); if (v > 0) this._set('stock_speed', v); }}></ha-textfield>
             </div>
+          ` : nothing}
+        `)}
+
+        <!-- ═══ Custom Chips ═══ -->
+        ${this._renderSection('chips', 'mdi:chip', 'Custom Status Chips', html`
+          <span class="editor-hint">Add any sensor as a quick-glance chip</span>
+          ${(this._config.chips || []).map((chip, i) => html`
+            <div class="entity-block">
+              <div class="entity-row">
+                <ha-entity-picker .hass=${this.hass} label="Entity" .value=${chip.entity}
+                  @value-changed=${(e: CustomEvent) => this._chipChanged(i, 'entity', e.detail.value)} allow-custom-entity></ha-entity-picker>
+                <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removeChip(i)}></ha-icon>
+              </div>
+              <div class="entity-extras">
+                <ha-textfield label="Custom Name" .value=${chip.name || ''}
+                  @input=${(e: Event) => this._chipChanged(i, 'name', (e.target as HTMLInputElement).value)}></ha-textfield>
+                <ha-icon-picker .hass=${this.hass} label="Icon" .value=${chip.icon || ''}
+                  @value-changed=${(e: CustomEvent) => this._chipChanged(i, 'icon', e.detail.value)}></ha-icon-picker>
+              </div>
+            </div>
+          `)}
+          <div class="add-btn" @click=${this._addChip}>+ Add Custom Chip</div>
+        `)}
+
+        <!-- ═══ Display ═══ -->
+        ${this._renderSection('display', 'mdi:palette-outline', 'Display', html`
+          <div class="toggle-row">
+            <span class="editor-label">Show Card Background</span>
+            <ha-switch .checked=${this._config.show_background !== false}
+              @change=${(e: Event) => this._set('show_background', (e.target as HTMLInputElement).checked)}></ha-switch>
           </div>
         `)}
-        <div class="add-btn" @click=${this._addChip}>+ Add Custom Chip</div>
 
-        <!-- Display -->
-        <div class="editor-section">Display</div>
-        <div class="toggle-row">
-          <span class="editor-label">Show Card Background</span>
-          <ha-switch .checked=${this._config.show_background !== false}
-            @change=${(e: Event) => this._set('show_background', (e.target as HTMLInputElement).checked)}
-          ></ha-switch>
+      </div>
+    `;
+  }
+
+  private _renderSection(key: string, icon: string, title: string, content: unknown) {
+    const isOpen = this._openSections[key] || false;
+    return html`
+      <div class="section-collapsible">
+        <div class="section-header" @click=${() => this._toggleSection(key)}>
+          <div class="section-header-left">
+            <ha-icon icon="${icon}"></ha-icon>
+            <span class="section-title">${title}</span>
+          </div>
+          <ha-icon class="section-chevron ${isOpen ? 'open' : ''}" icon="mdi:chevron-down"></ha-icon>
+        </div>
+        <div class="section-body ${isOpen ? 'open' : ''}">
+          ${content}
         </div>
       </div>
     `;
