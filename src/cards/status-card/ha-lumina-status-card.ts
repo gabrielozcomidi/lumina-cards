@@ -112,6 +112,14 @@ export class HaLuminaStatusCard extends LitElement {
 
   private _getActiveLightCount(): number {
     if (!this.hass) return 0;
+    // If specific lights configured, only count those
+    if (this._config.light_entities?.length) {
+      return this._config.light_entities.filter(id => {
+        const e = this.hass.states[id];
+        return e && e.state === 'on';
+      }).length;
+    }
+    // Fallback: count all light entities
     return Object.values(this.hass.states).filter(
       (e) => e.entity_id.startsWith('light.') && e.state === 'on',
     ).length;

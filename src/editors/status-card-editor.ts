@@ -86,6 +86,10 @@ export class HaLuminaStatusCardEditor extends LitElement {
   private _removePerson(i: number): void { const p = [...(this._config.person_entities || [])]; p.splice(i, 1); this._set('person_entities', p); }
   private _personChanged(i: number, v: string): void { const p = [...(this._config.person_entities || [])]; p[i] = v; this._set('person_entities', p); }
 
+  private _addLight(): void { this._set('light_entities', [...(this._config.light_entities || []), '']); }
+  private _removeLight(i: number): void { const l = [...(this._config.light_entities || [])]; l.splice(i, 1); this._set('light_entities', l); }
+  private _lightChanged(i: number, v: string): void { const l = [...(this._config.light_entities || [])]; l[i] = v; this._set('light_entities', l); }
+
   private _addStock(): void { this._set('stock_entities', [...(this._config.stock_entities || []), '']); }
   private _removeStock(i: number): void { const s = [...(this._config.stock_entities || [])]; s.splice(i, 1); this._set('stock_entities', s); }
   private _stockChanged(i: number, v: string): void { const s = [...(this._config.stock_entities || [])]; s[i] = v; this._set('stock_entities', s); }
@@ -171,6 +175,17 @@ export class HaLuminaStatusCardEditor extends LitElement {
             <ha-switch .checked=${this._config.show_lights_summary !== false}
               @change=${(e: Event) => this._set('show_lights_summary', (e.target as HTMLInputElement).checked)}></ha-switch>
           </div>
+          ${this._config.show_lights_summary !== false ? html`
+            <span class="editor-hint">Choose which lights to count (leave empty to count all)</span>
+            ${(this._config.light_entities || []).map((id: string, i: number) => html`
+              <div class="entity-row">
+                <ha-entity-picker .hass=${this.hass} label="Light ${i + 1}" .value=${id} .includeDomains=${['light']}
+                  @value-changed=${(e: CustomEvent) => this._lightChanged(i, e.detail.value)} allow-custom-entity></ha-entity-picker>
+                <ha-icon class="remove-btn" icon="mdi:close" @click=${() => this._removeLight(i)}></ha-icon>
+              </div>
+            `)}
+            <div class="add-btn" @click=${this._addLight}>+ Add Light</div>
+          ` : nothing}
           <div class="toggle-row">
             <span class="editor-label">Fade Between Status Chips</span>
             <ha-switch .checked=${this._config.chips_fade === true}

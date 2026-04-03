@@ -206,6 +206,7 @@ export interface LuminaStatusCardConfig extends LovelaceCardConfig {
   energy_entity?: string;
   // Lighting / summary rotator
   show_lights_summary?: boolean;
+  light_entities?: string[]; // specific lights to count (empty = all)
   summary_items?: SummaryItemConfig[];
   summary_speed?: number;
   // RSS Feeds (multiple with categories)
