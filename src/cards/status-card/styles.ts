@@ -196,7 +196,18 @@ export const statusCardStyles = css`
     color: var(--lumina-on-surface-variant);
   }
 
-  /* ── Fade Chip ── */
+  /* ── Rotating Chip (inside grid) ── */
+  .status-chip.rotating-chip {
+    overflow: hidden;
+  }
+  .rotating-chip-inner {
+    display: flex; align-items: center; gap: var(--lumina-space-2);
+    animation: fade-cycle var(--fade-speed, 4s) ease-in-out infinite;
+    width: 100%;
+  }
+  .rotating-chip-inner ha-icon { --mdc-icon-size: 20px; flex-shrink: 0; }
+
+  /* ── Fade Chip (legacy) ── */
   .fade-chip-item {
     animation: fade-cycle var(--fade-speed, 4s) ease-in-out infinite;
   }

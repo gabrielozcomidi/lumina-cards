@@ -147,7 +147,6 @@ export class HaLuminaStatusCard extends LitElement {
             ${this._renderGreeting()}
             ${this._renderPeople()}
             ${this._renderChips()}
-            ${this._renderSummaryRotator()}
             ${this._renderStocks()}
             ${this._renderFeed()}
             ${this._renderCalendar()}
@@ -254,8 +253,8 @@ export class HaLuminaStatusCard extends LitElement {
       }
     }
 
-    // Lights
-    if (this._config.show_lights_summary) {
+    // Lights (only if no summary_items configured)
+    if (this._config.show_lights_summary && !this._config.summary_items?.length) {
       const count = this._getActiveLightCount();
       chips.push({
         icon: 'mdi:lightbulb-group',
@@ -281,29 +280,11 @@ export class HaLuminaStatusCard extends LitElement {
       }
     }
 
-    if (!chips.length) return nothing;
+    // Build the rotating chip content (if summary_items configured)
+    const rotatingChip = this._buildRotatingChip();
 
-    // Fade mode: show one chip at a time with crossfade
-    if (this._config.chips_fade && chips.length > 1) {
-      const idx = this._fadeChipIndex % chips.length;
-      const c = chips[idx];
-      const fadeSpeed = this._config.chips_speed || 4;
-      return html`
-        <div class="fade-rotator" style="--fade-speed: ${fadeSpeed}s;">
-          <div class="fade-chip-item" .key=${idx}>
-            <div class="status-chip ${c.cls} fade-chip-active">
-              <ha-icon icon="${c.icon}"></ha-icon>
-              <div class="status-chip-info">
-                <span class="status-chip-label">${c.label}</span>
-                <span class="status-chip-value">${c.value}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
+    if (!chips.length && !rotatingChip) return nothing;
 
-    // Default: static grid
     return html`
       <div class="chips-grid">
         ${chips.map(c => html`
@@ -315,6 +296,73 @@ export class HaLuminaStatusCard extends LitElement {
             </div>
           </div>
         `)}
+        ${rotatingChip}
+      </div>
+    `;
+  }
+
+  private _buildRotatingChip() {
+    const items = this._config.summary_items;
+    if (!items?.length) return nothing;
+
+    const rendered = items.map(item => {
+      const entity = this.hass.states[item.entity];
+      if (!entity) return null;
+
+      const name = item.name || (entity.attributes.friendly_name as string) || item.entity;
+      const icon = item.icon || (entity.attributes.icon as string) || 'mdi:information';
+      const state = entity.state;
+      const attrs = entity.attributes;
+
+      const parts: string[] = [];
+      if (item.show_state !== false) {
+        const stateLabel = state === 'on' ? 'On' : state === 'off' ? 'Off' : state.charAt(0).toUpperCase() + state.slice(1);
+        parts.push(stateLabel);
+      }
+      if (item.show_brightness && attrs.brightness != null) {
+        parts.push(`${Math.round(((attrs.brightness as number) / 255) * 100)}%`);
+      }
+      if (item.show_unit) {
+        const val = parseFloat(state);
+        const unit = (attrs.unit_of_measurement as string) || '';
+        parts.push(!isNaN(val) ? `${val}${unit ? ` ${unit}` : ''}` : state);
+      }
+      const detail = parts.join(' · ');
+      const isOn = state === 'on' || state === 'playing' || state === 'home';
+
+      return { name, icon, detail, isOn };
+    }).filter(Boolean) as { name: string; icon: string; detail: string; isOn: boolean }[];
+
+    if (!rendered.length) return nothing;
+
+    const fadeSpeed = this._config.summary_speed || 4;
+
+    // Single item: static chip
+    if (rendered.length === 1) {
+      const s = rendered[0];
+      return html`
+        <div class="status-chip ${s.isOn ? 'lights' : ''}">
+          <ha-icon icon="${s.icon}"></ha-icon>
+          <div class="status-chip-info">
+            <span class="status-chip-label">${s.name}</span>
+            <span class="status-chip-value">${s.detail}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Multiple: fade inside the chip space
+    const idx = this._fadeSummaryIndex % rendered.length;
+    const s = rendered[idx];
+    return html`
+      <div class="status-chip rotating-chip ${s.isOn ? 'lights' : ''}" style="--fade-speed: ${fadeSpeed}s;">
+        <div class="rotating-chip-inner" .key=${idx}>
+          <ha-icon icon="${s.icon}"></ha-icon>
+          <div class="status-chip-info">
+            <span class="status-chip-label">${s.name}</span>
+            <span class="status-chip-value">${s.detail}</span>
+          </div>
+        </div>
       </div>
     `;
   }
