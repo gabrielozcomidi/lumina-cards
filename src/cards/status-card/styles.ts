@@ -18,6 +18,8 @@ export const statusCardStyles = css`
     border-radius: 0 !important;
     width: 100%;
     max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 
   .status-card {
@@ -36,6 +38,7 @@ export const statusCardStyles = css`
   .status-card.no-bg {
     background: transparent;
     border-color: transparent;
+    padding: 0;
   }
   .status-card.no-bg .status-tint {
     display: none;
