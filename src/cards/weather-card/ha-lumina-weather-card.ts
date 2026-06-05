@@ -1,87 +1,21 @@
-import { LitElement, html, nothing, PropertyValues } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { html, nothing, PropertyValues } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { luminaTokens } from '../../styles/tokens';
 import { sharedStyles } from '../../styles/shared';
 import { weatherCardStyles } from './styles';
 import { LuminaWeatherCardConfig } from '../../types';
-import { HomeAssistant, WeatherEntity, WeatherForecast } from '../../types/ha-types';
+import { WeatherEntity, WeatherForecast } from '../../types/ha-types';
+import { LuminaCardBase } from '../base';
 
-const CONDITION_ICONS: Record<string, string> = {
-  'sunny': 'mdi:weather-sunny',
-  'clear-night': 'mdi:weather-night',
-  'partlycloudy': 'mdi:weather-partly-cloudy',
-  'cloudy': 'mdi:weather-cloudy',
-  'rainy': 'mdi:weather-rainy',
-  'pouring': 'mdi:weather-pouring',
-  'snowy': 'mdi:weather-snowy',
-  'snowy-rainy': 'mdi:weather-snowy-rainy',
-  'fog': 'mdi:weather-fog',
-  'hail': 'mdi:weather-hail',
-  'lightning': 'mdi:weather-lightning',
-  'lightning-rainy': 'mdi:weather-lightning-rainy',
-  'windy': 'mdi:weather-windy',
-  'windy-variant': 'mdi:weather-windy-variant',
-  'exceptional': 'mdi:alert-circle-outline',
-};
-
-const CONDITION_ACCENTS: Record<string, string> = {
-  'sunny': 'rgba(254, 203, 0, 0.12)',
-  'clear-night': 'rgba(133, 173, 255, 0.08)',
-  'partlycloudy': 'rgba(133, 173, 255, 0.06)',
-  'cloudy': 'rgba(118, 117, 119, 0.08)',
-  'rainy': 'rgba(81, 145, 255, 0.12)',
-  'pouring': 'rgba(81, 145, 255, 0.15)',
-  'snowy': 'rgba(184, 255, 185, 0.08)',
-  'snowy-rainy': 'rgba(184, 255, 185, 0.06)',
-  'fog': 'rgba(172, 170, 173, 0.1)',
-  'hail': 'rgba(133, 173, 255, 0.1)',
-  'lightning': 'rgba(255, 113, 108, 0.12)',
-  'lightning-rainy': 'rgba(255, 113, 108, 0.10)',
-  'windy': 'rgba(108, 159, 255, 0.08)',
-  'windy-variant': 'rgba(108, 159, 255, 0.08)',
-  'exceptional': 'rgba(255, 113, 108, 0.1)',
-};
-
-const CONDITION_ICON_COLORS: Record<string, string> = {
-  'sunny': 'var(--lumina-secondary)',
-  'clear-night': 'var(--lumina-primary)',
-  'partlycloudy': 'var(--lumina-on-surface-variant)',
-  'cloudy': 'var(--lumina-outline)',
-  'rainy': 'var(--lumina-primary)',
-  'pouring': 'var(--lumina-primary)',
-  'snowy': 'var(--lumina-tertiary)',
-  'snowy-rainy': 'var(--lumina-tertiary)',
-  'fog': 'var(--lumina-outline)',
-  'hail': 'var(--lumina-primary)',
-  'lightning': 'var(--lumina-error)',
-  'lightning-rainy': 'var(--lumina-error)',
-  'windy': 'var(--lumina-primary)',
-  'windy-variant': 'var(--lumina-primary)',
-  'exceptional': 'var(--lumina-error)',
-};
-
-const CONDITION_LABELS: Record<string, string> = {
-  'sunny': 'Sunny',
-  'clear-night': 'Clear Night',
-  'partlycloudy': 'Partly Cloudy',
-  'cloudy': 'Cloudy',
-  'rainy': 'Rainy',
-  'pouring': 'Heavy Rain',
-  'snowy': 'Snowy',
-  'snowy-rainy': 'Sleet',
-  'fog': 'Foggy',
-  'hail': 'Hail',
-  'lightning': 'Thunderstorm',
-  'lightning-rainy': 'Thunderstorm',
-  'windy': 'Windy',
-  'windy-variant': 'Windy',
-  'exceptional': 'Exceptional',
-};
+import {
+  weatherConditionIcon,
+  weatherConditionTint,
+  weatherConditionIconColor,
+  weatherConditionLabel,
+} from '../../utils/mode-mappings';
 
 @customElement('ha-lumina-weather-card')
-export class HaLuminaWeatherCard extends LitElement {
-  @property({ attribute: false }) hass!: HomeAssistant;
-  @state() private _config!: LuminaWeatherCardConfig;
+export class HaLuminaWeatherCard extends LuminaCardBase<LuminaWeatherCardConfig> {
   @state() private _hourlyForecast: WeatherForecast[] = [];
   @state() private _dailyForecast: WeatherForecast[] = [];
 
@@ -101,16 +35,22 @@ export class HaLuminaWeatherCard extends LitElement {
     return { type: 'custom:ha-lumina-weather-card', entity: '' };
   }
 
-  public setConfig(config: LuminaWeatherCardConfig): void {
+  protected override validateConfig(config: LuminaWeatherCardConfig): void {
     if (!config.entity) throw new Error('Please select a weather entity');
-    this._config = {
+  }
+
+  protected override defaults(): Partial<LuminaWeatherCardConfig> {
+    return {
       show_forecast_hourly: true,
       show_forecast_daily: true,
       show_details: true,
       hourly_count: 8,
       daily_count: 5,
-      ...config,
     };
+  }
+
+  protected override trackedEntities(): string[] {
+    return this._config?.entity ? [this._config.entity] : [];
   }
 
   private get _layout(): string {
@@ -119,7 +59,7 @@ export class HaLuminaWeatherCard extends LitElement {
     return 'full';
   }
 
-  public getCardSize(): number {
+  public override getCardSize(): number {
     const l = this._layout;
     if (l === 'compact') return 1;
     if (l === 'room') return 4;
@@ -218,8 +158,8 @@ export class HaLuminaWeatherCard extends LitElement {
     if (!this._config || !this.hass || !this._entity) return nothing;
 
     const condition = this._condition;
-    const accent = CONDITION_ACCENTS[condition] || 'transparent';
-    const iconColor = CONDITION_ICON_COLORS[condition] || 'var(--lumina-on-surface-variant)';
+    const accent = weatherConditionTint(condition);
+    const iconColor = weatherConditionIconColor(condition);
 
     const layout = this._layout;
     if (layout === 'compact') return this._renderCompact(accent, iconColor);
@@ -242,8 +182,8 @@ export class HaLuminaWeatherCard extends LitElement {
   }
 
   private _renderCompact(accent: string, iconColor: string) {
-    const icon = CONDITION_ICONS[this._condition] || 'mdi:weather-cloudy';
-    const label = CONDITION_LABELS[this._condition] || this._condition;
+    const icon = weatherConditionIcon(this._condition);
+    const label = weatherConditionLabel(this._condition);
     const temp = this._temperature;
     const unit = this._tempUnit;
     const high = this._todayHigh;
@@ -281,8 +221,8 @@ export class HaLuminaWeatherCard extends LitElement {
   }
 
   private _renderRoom(accent: string, iconColor: string) {
-    const icon = CONDITION_ICONS[this._condition] || 'mdi:weather-cloudy';
-    const label = CONDITION_LABELS[this._condition] || this._condition;
+    const icon = weatherConditionIcon(this._condition);
+    const label = weatherConditionLabel(this._condition);
     const temp = this._temperature;
     const unit = this._tempUnit;
     const high = this._todayHigh;
@@ -344,7 +284,7 @@ export class HaLuminaWeatherCard extends LitElement {
                   const dt = new Date(f.datetime);
                   const isNow = i === 0 && Math.abs(dt.getTime() - now.getTime()) < 3600000;
                   const timeLabel = isNow ? 'Now' : dt.toLocaleTimeString([], { hour: 'numeric' });
-                  const fIcon = CONDITION_ICONS[f.condition] || 'mdi:weather-cloudy';
+                  const fIcon = weatherConditionIcon(f.condition);
                   return html`
                     <div class="hourly-slot ${isNow ? 'now' : ''}">
                       <span class="hourly-time">${timeLabel}</span>
@@ -362,7 +302,7 @@ export class HaLuminaWeatherCard extends LitElement {
   }
 
   private _renderHeader() {
-    const label = CONDITION_LABELS[this._condition] || this._condition;
+    const label = weatherConditionLabel(this._condition);
     return html`
       <div class="weather-header">
         <span class="location-name">${this._locationName}</span>
@@ -372,7 +312,7 @@ export class HaLuminaWeatherCard extends LitElement {
   }
 
   private _renderHero() {
-    const icon = CONDITION_ICONS[this._condition] || 'mdi:weather-cloudy';
+    const icon = weatherConditionIcon(this._condition);
     const temp = this._temperature;
     const unit = this._tempUnit;
     const high = this._todayHigh;
@@ -436,7 +376,7 @@ export class HaLuminaWeatherCard extends LitElement {
             const dt = new Date(f.datetime);
             const isNow = i === 0 && Math.abs(dt.getTime() - now.getTime()) < 3600000;
             const timeLabel = isNow ? 'Now' : dt.toLocaleTimeString([], { hour: 'numeric' });
-            const icon = CONDITION_ICONS[f.condition] || 'mdi:weather-cloudy';
+            const icon = weatherConditionIcon(f.condition);
             return html`
               <div class="hourly-slot ${isNow ? 'now' : ''}">
                 <span class="hourly-time">${timeLabel}</span>
@@ -474,7 +414,7 @@ export class HaLuminaWeatherCard extends LitElement {
           ${items.map((f, i) => {
             const dt = new Date(f.datetime);
             const dayLabel = i === 0 ? 'Today' : days[dt.getDay()];
-            const icon = CONDITION_ICONS[f.condition] || 'mdi:weather-cloudy';
+            const icon = weatherConditionIcon(f.condition);
             const low = f.templow ?? f.temperature;
             const high = f.temperature;
             const left = ((low - weekMin) / range) * 100;

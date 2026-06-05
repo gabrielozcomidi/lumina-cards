@@ -1,10 +1,9 @@
-import { LitElement, html, svg, PropertyValues, nothing } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { html, svg, nothing } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { luminaTokens } from '../../styles/tokens';
 import { sharedStyles } from '../../styles/shared';
 import { roomCardStyles } from './styles';
 import { LuminaRoomCardConfig, LightEntityConfig } from '../../types';
-import { HomeAssistant } from '../../types/ha-types';
 import {
   getEntity,
   isEntityAvailable,
@@ -15,18 +14,10 @@ import {
 } from '../../utils/ha-helpers';
 import { computeArcDash } from '../../utils/svg-helpers';
 import { resolveImageUrl } from '../../utils/assets-3d';
+import { climateModeColor } from '../../utils/mode-mappings';
+import { LuminaCardBase } from '../base';
 
 import '../../components/lumina-bottom-sheet';
-
-// Climate mode → ring color mapping (matches climate card MODE_COLORS)
-const CLIMATE_RING_COLORS: Record<string, string> = {
-  cool: 'var(--lumina-primary)',       // blue
-  heat: 'var(--lumina-secondary)',     // yellow
-  heat_cool: 'var(--lumina-tertiary)', // green
-  auto: 'var(--lumina-tertiary)',      // green
-  dry: 'var(--lumina-on-surface-variant)',
-  fan_only: 'var(--lumina-primary)',   // blue
-};
 
 // Ring geometry for the 52px action buttons
 const RING_SIZE = 60;
@@ -35,9 +26,7 @@ const RING_STROKE = 2;
 const RING_ARC_SPAN = 360;
 
 @customElement('ha-lumina-room-card')
-export class HaLuminaRoomCard extends LitElement {
-  @property({ attribute: false }) hass!: HomeAssistant;
-  @state() private _config!: LuminaRoomCardConfig;
+export class HaLuminaRoomCard extends LuminaCardBase<LuminaRoomCardConfig> {
   @state() private _activeSheet: 'lights' | 'climate' | 'media' | 'vacuum' | 'room' | null = null;
 
   // Cached sub-card configs to avoid creating new objects on every render
@@ -49,16 +38,24 @@ export class HaLuminaRoomCard extends LitElement {
 
   static styles = [luminaTokens, sharedStyles, roomCardStyles];
 
-  public setConfig(config: LuminaRoomCardConfig): void {
+  protected override validateConfig(config: LuminaRoomCardConfig): void {
     if (!config.name) {
       throw new Error('Please define a name for the room card');
     }
-    this._config = {
+  }
+
+  protected override defaults(): Partial<LuminaRoomCardConfig> {
+    return {
       show_climate: true,
       show_media: true,
       show_vacuum: true,
-      ...config,
     };
+  }
+
+  // setConfig also needs to rebuild the cached sub-card configs that the
+  // bottom-sheet popups render. Override + delegate to the base.
+  public override setConfig(config: LuminaRoomCardConfig): void {
+    super.setConfig(config);
     this._rebuildSubConfigs();
   }
 
@@ -84,7 +81,7 @@ export class HaLuminaRoomCard extends LitElement {
     };
   }
 
-  public getCardSize(): number {
+  public override getCardSize(): number {
     return this._config?.compact ? 2 : 4;
   }
 
@@ -104,27 +101,20 @@ export class HaLuminaRoomCard extends LitElement {
     };
   }
 
-  protected shouldUpdate(changed: PropertyValues): boolean {
-    if (changed.has('_config') || changed.has('_activeSheet')) return true;
-    if (!changed.has('hass') || !this._config) return false;
-
-    const oldHass = changed.get('hass') as HomeAssistant | undefined;
-    if (!oldHass) return true;
-
-    const trackedEntities = [
+  protected override trackedEntities(): string[] {
+    if (!this._config) return [];
+    return [
       this._config.temperature_entity,
       this._config.humidity_entity,
       ...this._lightEntityIds,
       this._config.climate_entity,
       this._config.media_entity,
-      ...(this._config.media_entities || []).map((e) => typeof e === 'string' ? e : e.entity),
+      ...(this._config.media_entities || []).map((e) =>
+        typeof e === 'string' ? e : e.entity,
+      ),
       this._config.audio_format_entity,
       this._config.vacuum_entity,
-    ].filter(Boolean) as string[];
-
-    return trackedEntities.some(
-      (id) => oldHass.states[id] !== this.hass.states[id],
-    );
+    ].filter((x): x is string => !!x);
   }
 
   // ─── Computed State ───────────────────────────────
@@ -225,7 +215,7 @@ export class HaLuminaRoomCard extends LitElement {
   }
 
   private get _climateRingColor(): string {
-    return CLIMATE_RING_COLORS[this._climateMode] || 'var(--lumina-primary)';
+    return climateModeColor(this._climateMode);
   }
 
   // ─── Ring SVG Helper ──────────────────────────────

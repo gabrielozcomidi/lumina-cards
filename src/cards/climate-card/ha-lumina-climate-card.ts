@@ -1,10 +1,11 @@
-import { LitElement, html, nothing } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { html, nothing } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { luminaTokens } from '../../styles/tokens';
 import { sharedStyles } from '../../styles/shared';
 import { climateCardStyles } from './styles';
 import { LuminaClimateCardConfig, ClimateEntityConfig } from '../../types';
-import { HomeAssistant, ClimateEntity, HvacMode } from '../../types/ha-types';
+import { ClimateEntity, HvacMode } from '../../types/ha-types';
+import { LuminaCardBase } from '../base';
 import { getEntity, isEntityAvailable, formatTemperature, callService } from '../../utils/ha-helpers';
 import { render3dBackground } from '../../utils/render-3d-bg';
 
@@ -12,35 +13,11 @@ import '../../components/lumina-ring';
 import '../../components/lumina-chip';
 import '../../components/lumina-icon-button';
 
-const MODE_ICONS: Record<string, string> = {
-  off: 'mdi:power',
-  heat: 'mdi:fire',
-  cool: 'mdi:snowflake',
-  heat_cool: 'mdi:autorenew',
-  auto: 'mdi:thermostat-auto',
-  dry: 'mdi:water-percent',
-  fan_only: 'mdi:fan',
-};
-
-const MODE_COLORS: Record<string, string> = {
-  cool: 'var(--lumina-primary)',
-  heat: 'var(--lumina-secondary)',
-  heat_cool: 'var(--lumina-tertiary)',
-  auto: 'var(--lumina-tertiary)',
-  dry: 'var(--lumina-on-surface-variant)',
-  fan_only: 'var(--lumina-primary)',
-  off: 'var(--lumina-outline)',
-};
-
-const MODE_LABELS: Record<string, string> = {
-  off: 'Off',
-  heat: 'Heating',
-  cool: 'Cooling',
-  heat_cool: 'Heat/Cool',
-  auto: 'Auto',
-  dry: 'Drying',
-  fan_only: 'Fan',
-};
+import {
+  CLIMATE_MODE_ICONS,
+  climateModeColor,
+  climateModeLabel,
+} from '../../utils/mode-mappings';
 
 interface NormalizedClimate {
   id: string;
@@ -53,30 +30,39 @@ function normalizeClimateEntity(cfg: string | ClimateEntityConfig): NormalizedCl
 }
 
 @customElement('ha-lumina-climate-card')
-export class HaLuminaClimateCard extends LitElement {
-  @property({ attribute: false }) hass!: HomeAssistant;
-  @property({ attribute: false }) config!: LuminaClimateCardConfig;
+export class HaLuminaClimateCard extends LuminaCardBase<LuminaClimateCardConfig> {
   @state() private _activeEntityId: string | null = null;
 
   static styles = [luminaTokens, sharedStyles, climateCardStyles];
 
-  public setConfig(config: LuminaClimateCardConfig): void {
-    const entities = this._getEntityList(config);
-    if (!entities.length) {
+  protected override validateConfig(config: LuminaClimateCardConfig): void {
+    if (!this._getEntityList(config).length) {
       throw new Error('Please define at least one climate entity');
-    }
-    this.config = {
-      show_humidity: true,
-      show_fan_speed: true,
-      ...config,
-    };
-    // Set active to first entity if not set
-    if (!this._activeEntityId || !entities.find(e => e.id === this._activeEntityId)) {
-      this._activeEntityId = entities[0].id;
     }
   }
 
-  public getCardSize(): number {
+  protected override defaults(): Partial<LuminaClimateCardConfig> {
+    return {
+      show_humidity: true,
+      show_fan_speed: true,
+    };
+  }
+
+  // setConfig also needs to pick a default active entity — keep that side
+  // effect by overriding setConfig and delegating to the base.
+  public override setConfig(config: LuminaClimateCardConfig): void {
+    super.setConfig(config);
+    const entities = this._getEntityList(this._config);
+    if (!this._activeEntityId || !entities.find((e) => e.id === this._activeEntityId)) {
+      this._activeEntityId = entities[0]?.id ?? null;
+    }
+  }
+
+  protected override trackedEntities(): string[] {
+    return this._getEntityList(this._config).map((e) => e.id);
+  }
+
+  public override getCardSize(): number {
     return 5;
   }
 
@@ -91,7 +77,7 @@ export class HaLuminaClimateCard extends LitElement {
   // ─── Entity List ────────────────────────────────────
 
   private _getEntityList(config?: LuminaClimateCardConfig): NormalizedClimate[] {
-    const c = config || this.config;
+    const c = config || this._config;
     if (c.entities?.length) {
       return c.entities.map(normalizeClimateEntity).filter(e => e.id);
     }
@@ -134,7 +120,7 @@ export class HaLuminaClimateCard extends LitElement {
   }
 
   private get _modeColor(): string {
-    return MODE_COLORS[this._mode] || 'var(--lumina-outline)';
+    return climateModeColor(this._mode);
   }
 
   private get _minTemp(): number {
@@ -182,7 +168,7 @@ export class HaLuminaClimateCard extends LitElement {
   }
 
   private get _statusLabel(): string {
-    return MODE_LABELS[this._mode] || this._mode.charAt(0).toUpperCase() + this._mode.slice(1).replaceAll('_', ' ');
+    return climateModeLabel(this._mode);
   }
 
   private _entityName(e: NormalizedClimate): string {
@@ -224,7 +210,7 @@ export class HaLuminaClimateCard extends LitElement {
   // ─── Render ───────────────────────────────────────
 
   protected render() {
-    if (!this.config || !this.hass) return nothing;
+    if (!this._config || !this.hass) return nothing;
     if (!this._entity || !this._isAvailable) {
       return html`<div class="climate-card"><span class="body-md text-muted">Climate entity unavailable</span></div>`;
     }
@@ -232,8 +218,8 @@ export class HaLuminaClimateCard extends LitElement {
     const isActive = this._mode !== 'off';
 
     return html`
-      <div class="climate-card ${this.config.show_background === false ? 'no-bg' : ''}" style="position:relative;">
-        ${render3dBackground(this.config.image, true)}
+      <div class="climate-card ${this._config.show_background === false ? 'no-bg' : ''}" style="position:relative;">
+        ${render3dBackground(this._config.image, true)}
         <div class="lumina-3d-content">
 
         <!-- Entity Tabs (multi-entity) -->
@@ -254,7 +240,7 @@ export class HaLuminaClimateCard extends LitElement {
         <div class="climate-header">
           <div class="header-left">
             <span class="header-title">${this._isMulti ? this._entityName(this._entities.find(e => e.id === this._activeId)!) : 'HVAC Control'}</span>
-            ${this.config.show_humidity && this._humidity !== undefined
+            ${this._config.show_humidity && this._humidity !== undefined
               ? html`
                 <div class="header-humidity">
                   <ha-icon icon="mdi:water-percent"></ha-icon>
@@ -312,11 +298,11 @@ export class HaLuminaClimateCard extends LitElement {
           <span class="section-label">Mode</span>
           <div class="mode-buttons">
             ${this._hvacModes.map((mode) => {
-              const icon = MODE_ICONS[mode] || 'mdi:thermostat';
+              const icon = CLIMATE_MODE_ICONS[mode] || 'mdi:thermostat';
               const label = mode.charAt(0).toUpperCase() + mode.slice(1).replaceAll('_', ' ');
               return html`
                 <div class="mode-btn ${this._mode === mode ? 'active' : ''}"
-                     style="--mode-color: ${MODE_COLORS[mode] || 'var(--lumina-outline)'}"
+                     style="--mode-color: ${climateModeColor(mode)}"
                      @click=${() => this._setMode(mode)}>
                   <div class="mode-btn-circle">
                     <ha-icon icon="${icon}"></ha-icon>
@@ -329,7 +315,7 @@ export class HaLuminaClimateCard extends LitElement {
         </div>
 
         <!-- Fan Speed -->
-        ${this.config.show_fan_speed && this._fanModes.length
+        ${this._config.show_fan_speed && this._fanModes.length
           ? html`
               <div class="fan-section">
                 <span class="section-label">Fan Speed</span>

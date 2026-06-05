@@ -1,44 +1,41 @@
-import { LitElement, html, nothing } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { html, nothing } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { luminaTokens } from '../../styles/tokens';
 import { sharedStyles } from '../../styles/shared';
 import { vacuumCardStyles } from './styles';
 import { LuminaVacuumCardConfig } from '../../types';
-import { HomeAssistant, VacuumEntity } from '../../types/ha-types';
+import { VacuumEntity } from '../../types/ha-types';
+import { LuminaCardBase } from '../base';
 import { getEntity, isEntityAvailable, callService } from '../../utils/ha-helpers';
 import { render3dBackground } from '../../utils/render-3d-bg';
 
 import '../../components/lumina-ring';
 import '../../components/lumina-chip';
 
-const STATE_ICONS: Record<string, string> = {
-  cleaning: 'mdi:robot-vacuum',
-  docked: 'mdi:battery-charging',
-  paused: 'mdi:pause-circle',
-  idle: 'mdi:robot-vacuum-off',
-  returning: 'mdi:home',
-  error: 'mdi:alert-circle',
-};
+import { vacuumStateIcon } from '../../utils/mode-mappings';
 
 @customElement('ha-lumina-vacuum-card')
-export class HaLuminaVacuumCard extends LitElement {
-  @property({ attribute: false }) hass!: HomeAssistant;
-  @property({ attribute: false }) config!: LuminaVacuumCardConfig;
-
+export class HaLuminaVacuumCard extends LuminaCardBase<LuminaVacuumCardConfig> {
   static styles = [luminaTokens, sharedStyles, vacuumCardStyles];
 
-  public setConfig(config: LuminaVacuumCardConfig): void {
+  protected override validateConfig(config: LuminaVacuumCardConfig): void {
     if (!config.entity) {
       throw new Error('Please define a vacuum entity');
     }
-    this.config = {
+  }
+
+  protected override defaults(): Partial<LuminaVacuumCardConfig> {
+    return {
       show_fan_speed: true,
       show_map: false,
-      ...config,
     };
   }
 
-  public getCardSize(): number {
+  protected override trackedEntities(): string[] {
+    return this._config?.entity ? [this._config.entity] : [];
+  }
+
+  public override getCardSize(): number {
     return 5;
   }
 
@@ -53,7 +50,7 @@ export class HaLuminaVacuumCard extends LitElement {
   // ─── Computed ─────────────────────────────────────
 
   private get _entity(): VacuumEntity | undefined {
-    return getEntity(this.hass, this.config.entity) as VacuumEntity | undefined;
+    return getEntity(this.hass, this._config.entity) as VacuumEntity | undefined;
   }
 
   private get _state(): string {
@@ -75,7 +72,7 @@ export class HaLuminaVacuumCard extends LitElement {
   }
 
   private get _stateIcon(): string {
-    return STATE_ICONS[this._state] || 'mdi:robot-vacuum';
+    return vacuumStateIcon(this._state);
   }
 
   private get _statusBadgeClass(): string {
@@ -105,20 +102,20 @@ export class HaLuminaVacuumCard extends LitElement {
   // ─── Actions ──────────────────────────────────────
 
   private _start(): void {
-    callService(this.hass, 'vacuum', 'start', { entity_id: this.config.entity });
+    callService(this.hass, 'vacuum', 'start', { entity_id: this._config.entity });
   }
 
   private _pause(): void {
-    callService(this.hass, 'vacuum', 'pause', { entity_id: this.config.entity });
+    callService(this.hass, 'vacuum', 'pause', { entity_id: this._config.entity });
   }
 
   private _dock(): void {
-    callService(this.hass, 'vacuum', 'return_to_base', { entity_id: this.config.entity });
+    callService(this.hass, 'vacuum', 'return_to_base', { entity_id: this._config.entity });
   }
 
   private _setFanSpeed(speed: string): void {
     callService(this.hass, 'vacuum', 'set_fan_speed', {
-      entity_id: this.config.entity,
+      entity_id: this._config.entity,
       fan_speed: speed,
     });
   }
@@ -126,7 +123,7 @@ export class HaLuminaVacuumCard extends LitElement {
   // ─── Render ───────────────────────────────────────
 
   protected render() {
-    if (!this.config || !this.hass) return nothing;
+    if (!this._config || !this.hass) return nothing;
 
     const entity = this._entity;
     if (!entity || !isEntityAvailable(entity)) {
@@ -136,8 +133,8 @@ export class HaLuminaVacuumCard extends LitElement {
     const isCleaning = this._state === 'cleaning';
 
     return html`
-      <div class="vacuum-card ${this.config.show_background === false ? 'no-bg' : ''}" style="position:relative;">
-        ${render3dBackground(this.config.image, true)}
+      <div class="vacuum-card ${this._config.show_background === false ? 'no-bg' : ''}" style="position:relative;">
+        ${render3dBackground(this._config.image, true)}
         <div class="lumina-3d-content">
         <!-- Hero Battery Ring -->
         <div class="hero-section">
@@ -192,7 +189,7 @@ export class HaLuminaVacuumCard extends LitElement {
         </div>
 
         <!-- Fan Speed -->
-        ${this.config.show_fan_speed && this._fanSpeeds.length
+        ${this._config.show_fan_speed && this._fanSpeeds.length
           ? html`
               <div class="fan-section">
                 <span class="section-label">Suction Power</span>

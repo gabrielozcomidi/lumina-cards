@@ -1,10 +1,11 @@
-import { LitElement, html, nothing, PropertyValues } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { html, nothing, PropertyValues } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { luminaTokens } from '../../styles/tokens';
 import { sharedStyles } from '../../styles/shared';
 import { mediaCardStyles } from './styles';
 import { LuminaMediaCardConfig, MediaEntityConfig, MediaShortcut, MediaPlayerType } from '../../types';
-import { HomeAssistant, MediaPlayerEntity, MediaPlayerItem } from '../../types/ha-types';
+import { MediaPlayerEntity, MediaPlayerItem } from '../../types/ha-types';
+import { LuminaCardBase } from '../base';
 import {
   getEntity,
   isEntityAvailable,
@@ -82,10 +83,7 @@ function getSpeakerSourceIcon(source: string): string {
 }
 
 @customElement('ha-lumina-media-card')
-export class HaLuminaMediaCard extends LitElement {
-  @property({ attribute: false }) hass!: HomeAssistant;
-  @property({ attribute: false }) config!: LuminaMediaCardConfig;
-
+export class HaLuminaMediaCard extends LuminaCardBase<LuminaMediaCardConfig> {
   @state() private _currentPosition = 0;
   @state() private _activeEntityId: string | null = null;
   @state() private _sourcesExpanded = false;
@@ -110,7 +108,8 @@ export class HaLuminaMediaCard extends LitElement {
     });
   }, 150);
 
-  public setConfig(config: LuminaMediaCardConfig): void {
+  public override setConfig(config: LuminaMediaCardConfig): void {
+    // Legacy: a single `entity` field gets folded into the `entities` array.
     let resolved = config;
     if (config.entity && !config.entities?.length) {
       const { entity, ...rest } = config as Record<string, unknown>;
@@ -119,17 +118,25 @@ export class HaLuminaMediaCard extends LitElement {
     if (!resolved.entities?.length && !resolved.entity) {
       throw new Error('Please define at least one media_player entity');
     }
-    this.config = { show_source: true, show_progress: true, show_speaker_management: true, ...resolved };
+    super.setConfig(resolved);
   }
 
-  public getCardSize(): number { return 6; }
+  protected override defaults(): Partial<LuminaMediaCardConfig> {
+    return { show_source: true, show_progress: true, show_speaker_management: true };
+  }
+
+  protected override trackedEntities(): string[] {
+    const c = this._config;
+    if (!c) return [];
+    const direct = c.entities?.length
+      ? c.entities.map((e) => (typeof e === 'string' ? e : e.entity))
+      : c.entity ? [c.entity] : [];
+    return [...direct, c.audio_format_entity].filter((x): x is string => !!x);
+  }
+
+  public override getCardSize(): number { return 6; }
   static getConfigElement(): HTMLElement { return document.createElement('ha-lumina-media-card-editor'); }
   static getStubConfig() { return { type: 'custom:ha-lumina-media-card', entities: [], show_source: true, show_progress: true }; }
-
-  connectedCallback(): void {
-    super.connectedCallback();
-    this._startPositionTracking();
-  }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
@@ -139,6 +146,13 @@ export class HaLuminaMediaCard extends LitElement {
   protected updated(changed: PropertyValues): void {
     if (changed.has('hass')) {
       this._syncPosition();
+      // The position timer is expensive (1Hz). Only run it while actually
+      // playing — pause/stop/idle states don't move the clock.
+      if (this._isPlaying && this._duration > 0) {
+        if (!this._positionTimer) this._startPositionTracking();
+      } else if (this._positionTimer) {
+        this._stopPositionTracking();
+      }
       // Reset art error when URL changes
       const url = this._artUrl;
       if (url !== this._lastArtUrl) {
@@ -151,8 +165,8 @@ export class HaLuminaMediaCard extends LitElement {
   // ─── Entity Resolution ─────────────────────────────
 
   private get _allEntities(): NormalizedMedia[] {
-    if (this.config.entities?.length) return this.config.entities.map(normalizeMediaEntity);
-    if (this.config.entity) return [{ id: this.config.entity, playerType: 'speaker' as MediaPlayerType }];
+    if (this._config.entities?.length) return this._config.entities.map(normalizeMediaEntity);
+    if (this._config.entity) return [{ id: this._config.entity, playerType: 'speaker' as MediaPlayerType }];
     return [];
   }
 
@@ -194,8 +208,14 @@ export class HaLuminaMediaCard extends LitElement {
 
   private _startPositionTracking(): void {
     this._stopPositionTracking();
+    // Stops itself when state leaves 'playing' — the updated() hook gates
+    // (re)starting based on _isPlaying, so this is just the steady-state tick.
     this._positionTimer = setInterval(() => {
-      if (this._entity?.state === 'playing' && this._duration > 0) this._currentPosition += 1;
+      if (this._entity?.state === 'playing' && this._duration > 0) {
+        this._currentPosition += 1;
+      } else {
+        this._stopPositionTracking();
+      }
     }, 1000);
   }
 
@@ -232,8 +252,8 @@ export class HaLuminaMediaCard extends LitElement {
 
   private get _audioFormat(): string | null {
     // Primary: read from configured audio format sensor entity
-    if (this.config.audio_format_entity) {
-      const sensor = getEntity(this.hass, this.config.audio_format_entity);
+    if (this._config.audio_format_entity) {
+      const sensor = getEntity(this.hass, this._config.audio_format_entity);
       if (sensor && sensor.state && sensor.state !== 'unknown' && sensor.state !== 'unavailable') {
         return sensor.state;
       }
@@ -433,7 +453,7 @@ export class HaLuminaMediaCard extends LitElement {
     }
 
     // If Music Assistant config entry is set, do server-side search
-    const massId = this.config.mass_config_entry_id;
+    const massId = this._config.mass_config_entry_id;
     if (massId) {
       this._searchLoading = true;
       this._searchTimer = setTimeout(() => this._doMassSearch(value.trim(), massId), 400);
@@ -494,14 +514,14 @@ export class HaLuminaMediaCard extends LitElement {
   // ─── Render ───────────────────────────────────────
 
   protected render() {
-    if (!this.config || !this.hass) return nothing;
+    if (!this._config || !this.hass) return nothing;
     if (!this._allEntities.length) {
-      return html`<div class="media-card ${this.config.show_background === false ? 'no-bg' : ''}"><span class="body-md text-muted">No media players configured</span></div>`;
+      return html`<div class="media-card ${this._config.show_background === false ? 'no-bg' : ''}"><span class="body-md text-muted">No media players configured</span></div>`;
     }
 
     const entity = this._entity;
     if (!entity || !isEntityAvailable(entity)) {
-      return html`<div class="media-card ${this.config.show_background === false ? 'no-bg' : ''}">
+      return html`<div class="media-card ${this._config.show_background === false ? 'no-bg' : ''}">
         ${this._hasMultiple ? this._renderPlayerSelector() : nothing}
         <div class="idle-state">
           <ha-icon icon="mdi:speaker-off"></ha-icon>
@@ -518,7 +538,7 @@ export class HaLuminaMediaCard extends LitElement {
       const sourceList = (entity.attributes.source_list as string[]) || [];
       const currentSource = entity.attributes.source as string | undefined;
       return html`
-        <div class="media-card ${this.config.show_background === false ? 'no-bg' : ''}" style="position:relative;">
+        <div class="media-card ${this._config.show_background === false ? 'no-bg' : ''}" style="position:relative;">
           ${this._hasMultiple ? this._renderPlayerSelector() : nothing}
 
           <!-- Idle header with actions on the right -->
@@ -527,7 +547,7 @@ export class HaLuminaMediaCard extends LitElement {
               <span class="now-playing-label">Idle</span>
             </div>
             <div class="now-playing-right">
-              ${this.config.show_source && sourceList.length ? html`
+              ${this._config.show_source && sourceList.length ? html`
                 <div class="header-action-wrapper">
                   <button class="header-action-btn" @click=${() => { this._sourcesExpanded = !this._sourcesExpanded; }}>
                     <ha-icon icon="${isSpeaker ? 'mdi:speaker' : 'mdi:apps'}"></ha-icon>
@@ -570,7 +590,7 @@ export class HaLuminaMediaCard extends LitElement {
             ` : html`<span class="idle-text">No media playing</span>`}
           </div>
           ${isSpeaker ? this._renderShortcuts() : nothing}
-          ${isSpeaker && this.config.show_speaker_management !== false ? this._renderSpeakerManagement() : nothing}
+          ${isSpeaker && this._config.show_speaker_management !== false ? this._renderSpeakerManagement() : nothing}
           ${this._renderBrowseOverlay()}
         </div>
       `;
@@ -586,8 +606,8 @@ export class HaLuminaMediaCard extends LitElement {
     const showArt = this._artUrl && !this._artError;
 
     return html`
-      <div class="media-card ${this.config.show_background === false ? 'no-bg' : ''}" style="position:relative;">
-        ${render3dBackground(this.config.image, true)}
+      <div class="media-card ${this._config.show_background === false ? 'no-bg' : ''}" style="position:relative;">
+        ${render3dBackground(this._config.image, true)}
         <div class="lumina-3d-content">
 
         ${this._hasMultiple ? this._renderPlayerSelector() : nothing}
@@ -601,7 +621,7 @@ export class HaLuminaMediaCard extends LitElement {
             </div>
             <div class="now-playing-right">
               ${this._isGrouped ? html`<span class="grouped-badge"><ha-icon icon="mdi:speaker-multiple"></ha-icon> Grouped</span>` : nothing}
-              ${this.config.show_source && sourceList.length ? html`
+              ${this._config.show_source && sourceList.length ? html`
                 <div class="header-action-wrapper">
                   <button class="header-action-btn" @click=${() => { this._sourcesExpanded = !this._sourcesExpanded; }}>
                     <ha-icon icon="${isSpeaker ? 'mdi:speaker' : 'mdi:apps'}"></ha-icon>
@@ -650,7 +670,7 @@ export class HaLuminaMediaCard extends LitElement {
         </div>
 
         <!-- Seekable Progress Bar -->
-        ${this.config.show_progress && this._duration > 0 ? html`
+        ${this._config.show_progress && this._duration > 0 ? html`
           <div class="progress-section">
             <span class="progress-time">${formatDuration(this._currentPosition)}</span>
             <div class="progress-bar ${this._hasFeature(SUPPORT_SEEK) ? 'seekable' : ''}"
@@ -697,7 +717,7 @@ export class HaLuminaMediaCard extends LitElement {
         </div>
 
         ${isSpeaker ? this._renderShortcuts() : nothing}
-        ${isSpeaker && this.config.show_speaker_management !== false ? this._renderSpeakerManagement() : nothing}
+        ${isSpeaker && this._config.show_speaker_management !== false ? this._renderSpeakerManagement() : nothing}
 
       </div>
       ${this._renderBrowseOverlay()}
@@ -763,7 +783,7 @@ export class HaLuminaMediaCard extends LitElement {
           </div>
 
           <!-- Search bar (always shown if MA configured, or inside folders) -->
-          ${!isRoot || this.config.mass_config_entry_id ? html`
+          ${!isRoot || this._config.mass_config_entry_id ? html`
             <div class="browse-search">
               <ha-icon icon="mdi:magnify"></ha-icon>
               <input type="text" class="browse-search-input"
@@ -922,12 +942,12 @@ export class HaLuminaMediaCard extends LitElement {
   // ─── Render: Shortcuts ──────────────────────────────
 
   private _renderShortcuts() {
-    if (!this.config.shortcuts?.length) return nothing;
+    if (!this._config.shortcuts?.length) return nothing;
     return html`
       <div class="shortcuts-section">
         <span class="shortcuts-label">Shortcuts</span>
         <div class="shortcuts-list">
-          ${this.config.shortcuts.map((shortcut) => html`
+          ${this._config.shortcuts.map((shortcut) => html`
             <lumina-chip .icon=${shortcut.icon || 'mdi:play-circle'} .label=${shortcut.name}
               @click=${() => this._playShortcut(shortcut)}></lumina-chip>
           `)}
