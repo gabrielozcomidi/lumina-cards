@@ -1,10 +1,10 @@
-import { LitElement, html, nothing } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { html, nothing } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { luminaTokens } from '../../styles/tokens';
 import { sharedStyles } from '../../styles/shared';
 import { roomPopupStyles } from './styles';
 import { LuminaRoomPopupConfig } from '../../types';
-import { HomeAssistant } from '../../types/ha-types';
+import { LuminaCardBase } from '../base';
 import { render3dBackground } from '../../utils/render-3d-bg';
 import {
   getEntity,
@@ -23,27 +23,38 @@ import '../../components/lumina-slider';
 import '../../components/lumina-icon-button';
 
 @customElement('ha-lumina-room-popup')
-export class HaLuminaRoomPopup extends LitElement {
-  @property({ attribute: false }) hass!: HomeAssistant;
-  @property({ attribute: false }) config!: LuminaRoomPopupConfig;
-
+export class HaLuminaRoomPopup extends LuminaCardBase<LuminaRoomPopupConfig> {
   static styles = [luminaTokens, sharedStyles, roomPopupStyles];
 
-  public setConfig(config: LuminaRoomPopupConfig): void {
-    this.config = {
+  protected override defaults(): Partial<LuminaRoomPopupConfig> {
+    return {
       sections: ['lights', 'climate', 'media', 'vacuum'],
-      ...config,
     };
   }
 
-  public getCardSize(): number {
+  protected override trackedEntities(): string[] {
+    const c = this._config;
+    if (!c) return [];
+    const lightIds = (c.light_entities || []).map((e) =>
+      typeof e === 'string' ? e : e.entity,
+    );
+    return [
+      ...lightIds,
+      c.climate_entity,
+      c.media_entity,
+      c.vacuum_entity,
+      c.temperature_entity,
+    ].filter((x): x is string => !!x);
+  }
+
+  public override getCardSize(): number {
     return 6;
   }
 
   // ─── Lights ───────────────────────────────────────
 
   private _renderLightsSection() {
-    const rawEntities = this.config.light_entities || [];
+    const rawEntities = this._config.light_entities || [];
     if (!rawEntities.length) return nothing;
 
     const entityIds = rawEntities.map((e) => typeof e === 'string' ? e : e.entity);
@@ -104,8 +115,8 @@ export class HaLuminaRoomPopup extends LitElement {
   // ─── Climate ──────────────────────────────────────
 
   private _renderClimateSection() {
-    if (!this.config.climate_entity) return nothing;
-    const entity = getEntity(this.hass, this.config.climate_entity);
+    if (!this._config.climate_entity) return nothing;
+    const entity = getEntity(this.hass, this._config.climate_entity);
     if (!entity || !isEntityAvailable(entity)) return nothing;
 
     const currentTemp = entity.attributes.current_temperature as number | undefined;
@@ -158,7 +169,7 @@ export class HaLuminaRoomPopup extends LitElement {
               ?active=${mode === m}
               size="sm"
               @click=${() => callService(this.hass, 'climate', 'set_hvac_mode', {
-                entity_id: this.config.climate_entity,
+                entity_id: this._config.climate_entity,
                 hvac_mode: m,
               })}
             ></lumina-chip>
@@ -175,7 +186,7 @@ export class HaLuminaRoomPopup extends LitElement {
                   ?active=${currentFanMode === fm}
                   size="sm"
                   @click=${() => callService(this.hass, 'climate', 'set_fan_mode', {
-                    entity_id: this.config.climate_entity,
+                    entity_id: this._config.climate_entity,
                     fan_mode: fm,
                   })}
                 ></lumina-chip>
@@ -190,8 +201,8 @@ export class HaLuminaRoomPopup extends LitElement {
   // ─── Media ────────────────────────────────────────
 
   private _renderMediaSection() {
-    if (!this.config.media_entity) return nothing;
-    const entity = getEntity(this.hass, this.config.media_entity);
+    if (!this._config.media_entity) return nothing;
+    const entity = getEntity(this.hass, this._config.media_entity);
     if (!entity || !isEntityAvailable(entity)) return nothing;
 
     const isPlaying = entity.state === 'playing';
@@ -232,18 +243,18 @@ export class HaLuminaRoomPopup extends LitElement {
                   <lumina-icon-button
                     icon="mdi:skip-previous"
                     size="sm"
-                    @click=${() => callService(this.hass, 'media_player', 'media_previous_track', { entity_id: this.config.media_entity })}
+                    @click=${() => callService(this.hass, 'media_player', 'media_previous_track', { entity_id: this._config.media_entity })}
                   ></lumina-icon-button>
                   <lumina-icon-button
                     icon=${isPlaying ? 'mdi:pause' : 'mdi:play'}
                     size="sm"
                     variant="filled"
-                    @click=${() => callService(this.hass, 'media_player', 'media_play_pause', { entity_id: this.config.media_entity })}
+                    @click=${() => callService(this.hass, 'media_player', 'media_play_pause', { entity_id: this._config.media_entity })}
                   ></lumina-icon-button>
                   <lumina-icon-button
                     icon="mdi:skip-next"
                     size="sm"
-                    @click=${() => callService(this.hass, 'media_player', 'media_next_track', { entity_id: this.config.media_entity })}
+                    @click=${() => callService(this.hass, 'media_player', 'media_next_track', { entity_id: this._config.media_entity })}
                   ></lumina-icon-button>
                 </div>
               </div>
@@ -256,8 +267,8 @@ export class HaLuminaRoomPopup extends LitElement {
   // ─── Vacuum ───────────────────────────────────────
 
   private _renderVacuumSection() {
-    if (!this.config.vacuum_entity) return nothing;
-    const entity = getEntity(this.hass, this.config.vacuum_entity);
+    if (!this._config.vacuum_entity) return nothing;
+    const entity = getEntity(this.hass, this._config.vacuum_entity);
     if (!entity || !isEntityAvailable(entity)) return nothing;
 
     const state = entity.state;
@@ -296,17 +307,17 @@ export class HaLuminaRoomPopup extends LitElement {
             label="Start"
             ?active=${isCleaning}
             variant="tertiary"
-            @click=${() => callService(this.hass, 'vacuum', 'start', { entity_id: this.config.vacuum_entity })}
+            @click=${() => callService(this.hass, 'vacuum', 'start', { entity_id: this._config.vacuum_entity })}
           ></lumina-chip>
           <lumina-chip
             icon="mdi:pause"
             label="Pause"
-            @click=${() => callService(this.hass, 'vacuum', 'pause', { entity_id: this.config.vacuum_entity })}
+            @click=${() => callService(this.hass, 'vacuum', 'pause', { entity_id: this._config.vacuum_entity })}
           ></lumina-chip>
           <lumina-chip
             icon="mdi:home"
             label="Dock"
-            @click=${() => callService(this.hass, 'vacuum', 'return_to_base', { entity_id: this.config.vacuum_entity })}
+            @click=${() => callService(this.hass, 'vacuum', 'return_to_base', { entity_id: this._config.vacuum_entity })}
           ></lumina-chip>
         </div>
       </div>
@@ -316,13 +327,13 @@ export class HaLuminaRoomPopup extends LitElement {
   // ─── Render ───────────────────────────────────────
 
   protected render() {
-    if (!this.config || !this.hass) return nothing;
+    if (!this._config || !this.hass) return nothing;
 
-    const sections = this.config.sections || ['lights', 'climate', 'media', 'vacuum'];
+    const sections = this._config.sections || ['lights', 'climate', 'media', 'vacuum'];
 
     return html`
       <div class="room-popup" style="position:relative;">
-        ${render3dBackground(this.config.image, true)}
+        ${render3dBackground(this._config.image, true)}
         <div class="lumina-3d-content">
         ${sections.map((section) => {
           switch (section) {

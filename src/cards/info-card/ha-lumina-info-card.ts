@@ -1,10 +1,10 @@
-import { LitElement, html, svg, nothing } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { html, svg, nothing } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { luminaTokens } from '../../styles/tokens';
 import { sharedStyles } from '../../styles/shared';
 import { infoCardStyles } from './styles';
 import { LuminaInfoCardConfig, InfoCardMode } from '../../types';
-import { HomeAssistant } from '../../types/ha-types';
+import { LuminaCardBase } from '../base';
 
 const MODE_CONFIG: Record<InfoCardMode, { icon: string; title: string; accent: string; iconColor: string }> = {
   air_quality: { icon: 'mdi:leaf', title: 'Air Quality', accent: 'rgba(111, 251, 133, 0.12)', iconColor: 'var(--lumina-tertiary-container)' },
@@ -36,10 +36,7 @@ const MOON_PHASES: Record<string, { label: string; illumination: number }> = {
 };
 
 @customElement('ha-lumina-info-card')
-export class HaLuminaInfoCard extends LitElement {
-  @property({ attribute: false }) hass!: HomeAssistant;
-  @state() private _config!: LuminaInfoCardConfig;
-
+export class HaLuminaInfoCard extends LuminaCardBase<LuminaInfoCardConfig> {
   static styles = [luminaTokens, sharedStyles, infoCardStyles];
 
   static getConfigElement(): HTMLElement {
@@ -50,13 +47,17 @@ export class HaLuminaInfoCard extends LitElement {
     return { type: 'custom:ha-lumina-info-card', mode: 'sun_cycle', entity: 'sun.sun' };
   }
 
-  public setConfig(config: LuminaInfoCardConfig): void {
+  protected override validateConfig(config: LuminaInfoCardConfig): void {
     if (!config.mode) throw new Error('Please select a mode');
     if (!config.entity) throw new Error('Please select an entity');
-    this._config = { ...config };
   }
 
-  public getCardSize(): number { return this._config?.compact ? 1 : 4; }
+  protected override trackedEntities(): string[] {
+    const c = this._config;
+    return [c?.entity, c?.moon_entity].filter((x): x is string => !!x);
+  }
+
+  public override getCardSize(): number { return this._config?.compact ? 1 : 4; }
 
   private get _entity() {
     if (!this.hass || !this._config?.entity) return undefined;

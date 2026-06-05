@@ -1,10 +1,10 @@
-import { LitElement, html, nothing } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { html, nothing } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { luminaTokens } from '../../styles/tokens';
 import { sharedStyles } from '../../styles/shared';
 import { clockCardStyles } from './styles';
 import { LuminaClockCardConfig, WorldClockEntry } from '../../types';
-import { HomeAssistant } from '../../types/ha-types';
+import { LuminaCardBase } from '../base';
 
 function getGreeting(hour: number): string {
   if (hour < 5) return 'Night';
@@ -56,9 +56,7 @@ function getWorldClockTime(tz: string, is24h: boolean): { time: string; hour: nu
 }
 
 @customElement('ha-lumina-clock-card')
-export class HaLuminaClockCard extends LitElement {
-  @property({ attribute: false }) hass!: HomeAssistant;
-  @state() private _config!: LuminaClockCardConfig;
+export class HaLuminaClockCard extends LuminaCardBase<LuminaClockCardConfig> {
   @state() private _time = new Date();
 
   private _timer?: ReturnType<typeof setInterval>;
@@ -78,17 +76,21 @@ export class HaLuminaClockCard extends LitElement {
     };
   }
 
-  public setConfig(config: LuminaClockCardConfig): void {
-    this._config = {
+  protected override defaults(): Partial<LuminaClockCardConfig> {
+    return {
       time_format: '24h',
       show_date: true,
       show_greeting: true,
       show_seconds: false,
-      ...config,
     };
   }
 
-  public getCardSize(): number {
+  // Purely visual — ticks from a timer, doesn't read any HA entity.
+  protected override trackedEntities(): string[] {
+    return [];
+  }
+
+  public override getCardSize(): number {
     const l = this._config?.layout || 'full';
     if (l === 'compact') return 1;
     if (l === 'room') return 4;

@@ -1,10 +1,11 @@
-import { LitElement, html, nothing, PropertyValues } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { html, nothing, PropertyValues } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { luminaTokens } from '../../styles/tokens';
 import { sharedStyles } from '../../styles/shared';
 import { weatherCardStyles } from './styles';
 import { LuminaWeatherCardConfig } from '../../types';
-import { HomeAssistant, WeatherEntity, WeatherForecast } from '../../types/ha-types';
+import { WeatherEntity, WeatherForecast } from '../../types/ha-types';
+import { LuminaCardBase } from '../base';
 
 const CONDITION_ICONS: Record<string, string> = {
   'sunny': 'mdi:weather-sunny',
@@ -79,9 +80,7 @@ const CONDITION_LABELS: Record<string, string> = {
 };
 
 @customElement('ha-lumina-weather-card')
-export class HaLuminaWeatherCard extends LitElement {
-  @property({ attribute: false }) hass!: HomeAssistant;
-  @state() private _config!: LuminaWeatherCardConfig;
+export class HaLuminaWeatherCard extends LuminaCardBase<LuminaWeatherCardConfig> {
   @state() private _hourlyForecast: WeatherForecast[] = [];
   @state() private _dailyForecast: WeatherForecast[] = [];
 
@@ -101,16 +100,22 @@ export class HaLuminaWeatherCard extends LitElement {
     return { type: 'custom:ha-lumina-weather-card', entity: '' };
   }
 
-  public setConfig(config: LuminaWeatherCardConfig): void {
+  protected override validateConfig(config: LuminaWeatherCardConfig): void {
     if (!config.entity) throw new Error('Please select a weather entity');
-    this._config = {
+  }
+
+  protected override defaults(): Partial<LuminaWeatherCardConfig> {
+    return {
       show_forecast_hourly: true,
       show_forecast_daily: true,
       show_details: true,
       hourly_count: 8,
       daily_count: 5,
-      ...config,
     };
+  }
+
+  protected override trackedEntities(): string[] {
+    return this._config?.entity ? [this._config.entity] : [];
   }
 
   private get _layout(): string {
@@ -119,7 +124,7 @@ export class HaLuminaWeatherCard extends LitElement {
     return 'full';
   }
 
-  public getCardSize(): number {
+  public override getCardSize(): number {
     const l = this._layout;
     if (l === 'compact') return 1;
     if (l === 'room') return 4;
