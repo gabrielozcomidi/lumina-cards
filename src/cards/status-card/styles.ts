@@ -445,4 +445,113 @@ export const statusCardStyles = css`
     15%, 85% { opacity: 1; transform: translateY(0); }
     92%, 100% { opacity: 0; transform: translateY(-8px); }
   }
+
+  /* ─── Clickable chip + lights popup ──────────────── */
+  .status-chip.clickable {
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+  .status-chip.clickable:hover {
+    background: var(--lumina-surface-container-high);
+    transform: translateY(-1px);
+  }
+  .status-chip.clickable:active { transform: translateY(0); }
+  .status-chip-chevron {
+    --mdc-icon-size: 16px;
+    color: var(--lumina-on-surface-variant);
+    margin-left: auto;
+  }
+
+  .lights-popup {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px 16px 20px;
+    color: var(--lumina-on-surface);
+    font-family: var(--lumina-font-body);
+  }
+  .lights-popup-empty {
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--lumina-on-surface-variant);
+    font-family: var(--lumina-font-body);
+  }
+  .lights-popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 4px 12px;
+    border-bottom: 1px solid var(--lumina-ghost-border);
+    margin-bottom: 8px;
+  }
+  .lights-popup-count {
+    font-size: 0.8125rem;
+    color: var(--lumina-on-surface-variant);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .lights-popup-action {
+    background: transparent;
+    border: 1px solid var(--lumina-outline-variant);
+    color: var(--lumina-on-surface);
+    font-family: var(--lumina-font-body);
+    font-size: 0.8125rem;
+    padding: 6px 12px;
+    border-radius: var(--lumina-radius-full);
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .lights-popup-action:hover { background: var(--lumina-surface-container-high); }
+  .lights-popup-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 65vh;
+    overflow-y: auto;
+  }
+  .lights-popup-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: var(--lumina-radius-md);
+    background: var(--lumina-surface-container);
+    transition: background 0.15s ease;
+  }
+  .lights-popup-row.on {
+    background: rgba(254, 203, 0, 0.08);
+    border: 1px solid rgba(254, 203, 0, 0.18);
+  }
+  .lights-popup-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--lumina-radius-full);
+    background: var(--lumina-surface-container-high);
+    flex-shrink: 0;
+  }
+  .lights-popup-row.on .lights-popup-icon {
+    background: rgba(254, 203, 0, 0.16);
+    color: var(--lumina-secondary);
+  }
+  .lights-popup-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+  .lights-popup-name {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--lumina-on-surface);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .lights-popup-detail {
+    font-size: 0.75rem;
+    color: var(--lumina-on-surface-variant);
+  }
 `;

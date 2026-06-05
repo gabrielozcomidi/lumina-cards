@@ -735,7 +735,10 @@ export class HaLuminaMediaCard extends LuminaCardBase<LuminaMediaCardConfig> {
           const isActive = id === this._activeId;
           const isPlaying = ent?.state === 'playing';
           const name = this._getDisplayName(id, customName);
-          const icon = playerType === 'tv' ? 'mdi:television' : 'mdi:speaker';
+          const icon =
+            playerType === 'tv' ? 'mdi:television' :
+            playerType === 'streamer' ? 'mdi:movie-open-play' :
+            'mdi:speaker';
           return html`
             <button class="player-tab ${isActive ? 'active' : ''}" @click=${() => this._selectPlayer(id)}>
               <ha-icon class="player-tab-icon" icon="${icon}"></ha-icon>
@@ -859,8 +862,8 @@ export class HaLuminaMediaCard extends LuminaCardBase<LuminaMediaCardConfig> {
               <ha-icon icon="mdi:folder-open-outline"></ha-icon>
               <span>${query ? 'No results found' : 'No items found'}</span>
             </div>
-          ` : html`
-            <!-- Folder: item list -->
+          ` : this._config.library_layout === 'list' ? html`
+            <!-- Folder: compact list (opt-in) -->
             <div class="browse-list">
               ${filteredChildren!.map((item) => {
                 const thumb = this._getBrowseThumb(item.thumbnail);
@@ -881,6 +884,45 @@ export class HaLuminaMediaCard extends LuminaCardBase<LuminaMediaCardConfig> {
                         </button>
                       ` : nothing}
                       ${item.can_expand ? html`<ha-icon class="browse-chevron" icon="mdi:chevron-right"></ha-icon>` : nothing}
+                    </div>
+                  </div>
+                `;
+              })}
+            </div>
+          ` : html`
+            <!-- Folder: graphic grid (default — content is the art) -->
+            <div class="browse-tiles">
+              ${filteredChildren!.map((item) => {
+                const thumb = this._getBrowseThumb(item.thumbnail);
+                return html`
+                  <div class="browse-tile ${item.can_play ? 'playable' : ''}"
+                       @click=${() => this._handleBrowseItem(item)}>
+                    <div class="browse-tile-art">
+                      ${thumb
+                        ? html`<img src="${thumb}" alt="${item.title}" loading="lazy"
+                            @error=${(e: Event) => { (e.target as HTMLImageElement).classList.add('failed'); }} />`
+                        : html`<div class="browse-tile-fallback">
+                            <ha-icon icon="${this._mediaClassIcon(item.media_class)}"></ha-icon>
+                          </div>`
+                      }
+                      ${item.can_play ? html`
+                        <button class="browse-tile-play"
+                          @click=${(e: Event) => { e.stopPropagation(); this._playBrowseItem(item); }}
+                          title="Play">
+                          <ha-icon icon="mdi:play"></ha-icon>
+                        </button>
+                      ` : nothing}
+                      ${item.can_expand ? html`
+                        <div class="browse-tile-folder-badge">
+                          <ha-icon icon="mdi:folder"></ha-icon>
+                        </div>
+                      ` : nothing}
+                    </div>
+                    <div class="browse-tile-meta">
+                      <span class="browse-tile-title">${item.title}</span>
+                      ${item.children_media_class ? html`
+                        <span class="browse-tile-subtitle">${item.children_media_class}</span>
+                      ` : nothing}
                     </div>
                   </div>
                 `;

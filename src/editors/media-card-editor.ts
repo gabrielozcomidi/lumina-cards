@@ -160,7 +160,8 @@ export class HaLuminaMediaCardEditor extends LitElement {
                   <select class="type-select"
                     @change=${(e: Event) => this._playerTypeChanged(i, (e.target as HTMLSelectElement).value)}>
                     <option value="speaker" ?selected=${this._getPlayerType(entry) === 'speaker'}>Speaker</option>
-                    <option value="tv" ?selected=${this._getPlayerType(entry) === 'tv'}>TV / Streamer</option>
+                    <option value="tv" ?selected=${this._getPlayerType(entry) === 'tv'}>TV</option>
+                    <option value="streamer" ?selected=${this._getPlayerType(entry) === 'streamer'}>Streamer (Stremio / Plex / Kodi)</option>
                   </select>
                 </div>
               </div>
@@ -194,6 +195,16 @@ export class HaLuminaMediaCardEditor extends LitElement {
           <span class="toggle-label">Show Speaker Management</span>
           <ha-switch .checked=${this._config.show_speaker_management !== false}
             @change=${(e: Event) => this._set('show_speaker_management', (e.target as HTMLInputElement).checked)}></ha-switch>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">Library Layout</span>
+          <div class="type-select-wrapper">
+            <select class="type-select"
+              @change=${(e: Event) => this._set('library_layout', (e.target as HTMLSelectElement).value)}>
+              <option value="grid" ?selected=${(this._config.library_layout || 'grid') === 'grid'}>Grid (album art tiles)</option>
+              <option value="list" ?selected=${this._config.library_layout === 'list'}>List (compact rows)</option>
+            </select>
+          </div>
         </div>
 
         <div class="editor-section">Media Shortcuts</div>

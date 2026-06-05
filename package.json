@@ -1,6 +1,6 @@
 {
   "name": "lumina-cards",
-  "version": "2.8.1",
+  "version": "2.9.0",
   "description": "Premium Home Assistant card collection with glassmorphism design, SVG arc indication rings, and atmospheric dark theme",
   "type": "module",
   "main": "dist/lumina-cards.js",

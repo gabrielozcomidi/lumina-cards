@@ -103,7 +103,19 @@ export interface LuminaClimateCardConfig extends LovelaceCardConfig {
 
 // ─── Media Card Config ───────────────────────────────────────
 
-export type MediaPlayerType = 'speaker' | 'tv';
+// How the media browse view renders folder contents.
+// 'grid' (default): responsive tiles with big album art, title overlaid.
+//                   Best for music libraries — content IS the art.
+// 'list':           original compact list, one row per item with small thumb.
+//                   Best for narrow cards or text-heavy content.
+export type LibraryLayout = 'grid' | 'list';
+
+// 'streamer' is for content-streaming players like Stremio, Plex, Jellyfin,
+// Kodi etc — anything where the relevant browsing surface is movies/shows
+// rather than music. Renders with a different icon and is excluded from the
+// "group with other speakers" grouping list (you don't pair a TV's audio
+// with a Stremio session).
+export type MediaPlayerType = 'speaker' | 'tv' | 'streamer';
 
 export interface MediaEntityConfig {
   entity: string;
@@ -130,6 +142,8 @@ export interface LuminaMediaCardConfig extends LovelaceCardConfig {
   show_speaker_management?: boolean;
   shortcuts?: MediaShortcut[];
   show_background?: boolean;
+  /** Browse view layout for folder contents. Defaults to 'grid' (album-art tiles). */
+  library_layout?: LibraryLayout;
 }
 
 // ─── Vacuum Card Config ──────────────────────────────────────

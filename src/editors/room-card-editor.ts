@@ -65,15 +65,17 @@ export class HaLuminaRoomCardEditor extends LitElement {
     .section-chevron.open {
       transform: rotate(180deg);
     }
+    /* Sections collapse with display:none rather than max-height. Some HA
+       themes ship CSS that interferes with the max-height transition and
+       leaves children measured at zero — they end up rendered into the DOM
+       but visually clipped to 0px, which reads as "section is open but
+       fields are missing/blank". */
     .section-body {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease, padding 0.3s ease;
-      padding: 0 14px;
+      display: none;
+      padding: 12px 14px 16px;
     }
     .section-body.open {
-      max-height: 2000px;
-      padding: 12px 14px 16px;
+      display: block;
     }
 
     .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }

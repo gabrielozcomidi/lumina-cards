@@ -5,6 +5,8 @@ import { sharedStyles } from '../../styles/shared';
 import { statusCardStyles } from './styles';
 import { LuminaStatusCardConfig, StatusChipConfig } from '../../types';
 import { LuminaCardBase } from '../base';
+import { callService } from '../../utils/ha-helpers';
+import '../../components/lumina-bottom-sheet';
 
 function getGreeting(hour: number): string {
   if (hour < 5) return 'Good Night';
@@ -24,6 +26,7 @@ export class HaLuminaStatusCard extends LuminaCardBase<LuminaStatusCardConfig> {
   @state() private _fadeStockIndex = 0;
   @state() private _fadeChipIndex = 0;
   @state() private _fadeSummaryIndex = 0;
+  @state() private _showLightsPopup = false;
   private _timer?: ReturnType<typeof setInterval>;
   private _fadeTimer?: ReturnType<typeof setInterval>;
   private _fadeStockTimer?: ReturnType<typeof setInterval>;
@@ -54,6 +57,13 @@ export class HaLuminaStatusCard extends LuminaCardBase<LuminaStatusCardConfig> {
   protected override trackedEntities(): string[] {
     const c = this._config;
     if (!c) return [];
+    // When light_entities isn't configured, the card falls back to counting
+    // every light.* entity (and the popup shows every light too). In that
+    // case we want every light.* in the tracked set so the count / popup
+    // stay reactive. Other entity refs are explicit config so they're cheap.
+    const allLights = (c.light_entities?.length || !this.hass)
+      ? []
+      : Object.keys(this.hass.states).filter((id) => id.startsWith('light.'));
     const ids: string[] = [
       c.weather_entity,
       c.alarm_entity,
@@ -68,6 +78,7 @@ export class HaLuminaStatusCard extends LuminaCardBase<LuminaStatusCardConfig> {
       ...(c.chips || []).map((x) => x.entity),
       ...(c.summary_items || []).map((x) => x.entity),
       ...(c.rss_feeds || []).map((x) => x.entity),
+      ...allLights,
     ].filter((x): x is string => !!x);
     return ids;
   }
@@ -168,6 +179,85 @@ export class HaLuminaStatusCard extends LuminaCardBase<LuminaStatusCardConfig> {
           </div>
         </div>
       </ha-card>
+
+      <lumina-bottom-sheet
+        .open=${this._showLightsPopup}
+        title="Lights On"
+        @sheet-closed=${() => { this._showLightsPopup = false; }}
+      >
+        ${this._renderLightsList()}
+      </lumina-bottom-sheet>
+    `;
+  }
+
+  /** Build the list of lights for the popup. If the user configured
+   *  light_entities, scope to those; otherwise scope to every light.* in HA.
+   *  Sort: on (with brightness desc) first, then off alphabetically. */
+  private _getLightsList(): Array<{ id: string; name: string; on: boolean; brightness: number }> {
+    if (!this.hass) return [];
+    const configured = this._config?.light_entities?.length ? this._config.light_entities : null;
+    const ids: string[] = configured
+      ? configured
+      : Object.keys(this.hass.states).filter((id) => id.startsWith('light.'));
+
+    const rows = ids.map((id) => {
+      const e = this.hass.states[id];
+      if (!e) return null;
+      const on = e.state === 'on';
+      const brightness = on ? Math.round((((e.attributes.brightness as number) || 0) / 255) * 100) : 0;
+      const name = (e.attributes.friendly_name as string) || id.split('.').pop() || id;
+      return { id, name, on, brightness };
+    }).filter(Boolean) as Array<{ id: string; name: string; on: boolean; brightness: number }>;
+
+    rows.sort((a, b) => {
+      if (a.on !== b.on) return a.on ? -1 : 1;
+      if (a.on) return b.brightness - a.brightness;
+      return a.name.localeCompare(b.name);
+    });
+    return rows;
+  }
+
+  private _renderLightsList() {
+    if (!this.hass) return nothing;
+    const lights = this._getLightsList();
+    const onCount = lights.filter((l) => l.on).length;
+
+    if (!lights.length) {
+      return html`<div class="lights-popup-empty">No light entities configured.</div>`;
+    }
+
+    return html`
+      <div class="lights-popup">
+        <div class="lights-popup-header">
+          <span class="lights-popup-count">${onCount} of ${lights.length} on</span>
+          ${onCount > 0 ? html`
+            <button class="lights-popup-action"
+              @click=${() => callService(this.hass, 'light', 'turn_off', { entity_id: lights.filter(l => l.on).map(l => l.id) })}>
+              Turn all off
+            </button>
+          ` : nothing}
+        </div>
+        <div class="lights-popup-list">
+          ${lights.map((l) => html`
+            <div class="lights-popup-row ${l.on ? 'on' : 'off'}">
+              <div class="lights-popup-icon">
+                <ha-icon icon=${l.on ? 'mdi:lightbulb' : 'mdi:lightbulb-outline'}></ha-icon>
+              </div>
+              <div class="lights-popup-info">
+                <span class="lights-popup-name">${l.name}</span>
+                <span class="lights-popup-detail">${l.on ? `${l.brightness}% brightness` : 'Off'}</span>
+              </div>
+              <ha-switch
+                .checked=${l.on}
+                @change=${(e: Event) => {
+                  const checked = (e.target as HTMLInputElement).checked;
+                  callService(this.hass, 'light', checked ? 'turn_on' : 'turn_off', { entity_id: l.id });
+                }}
+              ></ha-switch>
+            </div>
+          `)}
+        </div>
+      </div>
     `;
   }
 
@@ -220,7 +310,7 @@ export class HaLuminaStatusCard extends LuminaCardBase<LuminaStatusCardConfig> {
   }
 
   private _renderChips() {
-    const chips: { icon: string; label: string; value: string; cls: string }[] = [];
+    const chips: { icon: string; label: string; value: string; cls: string; kind?: string }[] = [];
 
     // Security
     if (this._config.alarm_entity) {
@@ -269,6 +359,8 @@ export class HaLuminaStatusCard extends LuminaCardBase<LuminaStatusCardConfig> {
     }
 
     // Lights (only if no summary_items configured)
+    // Marked with kind='lights' so the renderer can wire a click handler
+    // that opens the lights popup (so users can SEE which N are on).
     if (this._config.show_lights_summary && !this._config.summary_items?.length) {
       const count = this._getActiveLightCount();
       chips.push({
@@ -276,6 +368,7 @@ export class HaLuminaStatusCard extends LuminaCardBase<LuminaStatusCardConfig> {
         label: 'Lighting',
         value: `${count} Active`,
         cls: 'lights',
+        kind: 'lights',
       });
     }
 
@@ -302,15 +395,22 @@ export class HaLuminaStatusCard extends LuminaCardBase<LuminaStatusCardConfig> {
 
     return html`
       <div class="chips-grid">
-        ${chips.map(c => html`
-          <div class="status-chip ${c.cls}">
-            <ha-icon icon="${c.icon}"></ha-icon>
-            <div class="status-chip-info">
-              <span class="status-chip-label">${c.label}</span>
-              <span class="status-chip-value">${c.value}</span>
+        ${chips.map(c => {
+          const isClickable = (c as { kind?: string }).kind === 'lights';
+          return html`
+            <div class="status-chip ${c.cls} ${isClickable ? 'clickable' : ''}"
+                 @click=${isClickable ? () => { this._showLightsPopup = true; } : undefined}
+                 role=${isClickable ? 'button' : nothing}
+                 tabindex=${isClickable ? '0' : nothing}>
+              <ha-icon icon="${c.icon}"></ha-icon>
+              <div class="status-chip-info">
+                <span class="status-chip-label">${c.label}</span>
+                <span class="status-chip-value">${c.value}</span>
+              </div>
+              ${isClickable ? html`<ha-icon class="status-chip-chevron" icon="mdi:chevron-right"></ha-icon>` : nothing}
             </div>
-          </div>
-        `)}
+          `;
+        })}
         ${rotatingChip}
       </div>
     `;

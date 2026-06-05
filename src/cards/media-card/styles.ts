@@ -688,7 +688,125 @@ export const mediaCardStyles = css`
     text-transform: capitalize;
   }
 
-  /* Browse: item list (Stitch playlist style) */
+  /* Browse: graphic grid (default — content IS the art) */
+  .browse-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 14px;
+    padding: 8px 16px 20px;
+    overflow-y: auto;
+    max-height: calc(100% - 100px);
+    align-content: start;
+  }
+  .browse-tiles::-webkit-scrollbar { width: 3px; }
+  .browse-tiles::-webkit-scrollbar-track { background: transparent; }
+  .browse-tiles::-webkit-scrollbar-thumb { background: var(--lumina-outline-variant); border-radius: 9999px; }
+
+  .browse-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    cursor: pointer;
+    transition: transform 0.18s ease;
+  }
+  .browse-tile:hover { transform: translateY(-2px); }
+
+  .browse-tile-art {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--lumina-radius-md);
+    overflow: hidden;
+    background: var(--lumina-surface-container-high);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+  .browse-tile-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease, filter 0.18s ease;
+  }
+  .browse-tile-art img.failed { display: none; }
+  .browse-tile:hover .browse-tile-art img { transform: scale(1.04); filter: brightness(0.85); }
+
+  .browse-tile-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--lumina-on-surface-variant);
+  }
+  .browse-tile-fallback ha-icon { --mdc-icon-size: 48px; }
+
+  .browse-tile-play {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--lumina-radius-full);
+    border: none;
+    background: var(--lumina-primary);
+    color: var(--lumina-on-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.18s ease, transform 0.18s ease, background 0.18s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+  .browse-tile:hover .browse-tile-play,
+  .browse-tile:focus-within .browse-tile-play {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .browse-tile-play:hover { background: var(--lumina-primary-container); }
+  .browse-tile-play ha-icon { --mdc-icon-size: 22px; }
+
+  .browse-tile-folder-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--lumina-radius-full);
+    background: rgba(0, 0, 0, 0.55);
+    color: var(--lumina-on-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  .browse-tile-folder-badge ha-icon { --mdc-icon-size: 16px; }
+
+  .browse-tile-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .browse-tile-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--lumina-on-surface);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .browse-tile-subtitle {
+    font-size: 0.6875rem;
+    color: var(--lumina-on-surface-variant);
+    text-transform: capitalize;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Browse: item list (compact opt-in via library_layout: 'list') */
   .browse-list {
     display: flex;
     flex-direction: column;
