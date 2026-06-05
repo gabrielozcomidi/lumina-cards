@@ -1,16 +1,14 @@
-import { LitElement, html, nothing } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { html, nothing } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { luminaTokens } from '../../styles/tokens';
 import { bottomBarStyles } from './styles';
 import { LuminaBottomBarConfig, BottomBarItem, BottomBarAction } from '../../types';
-import { HomeAssistant } from '../../types/ha-types';
+import { LuminaCardBase } from '../base';
 
 const MAX_ITEMS = 5;
 
 @customElement('ha-lumina-bottom-bar')
-export class HaLuminaBottomBar extends LitElement {
-  @property({ attribute: false }) hass!: HomeAssistant;
-  @state() private _config!: LuminaBottomBarConfig;
+export class HaLuminaBottomBar extends LuminaCardBase<LuminaBottomBarConfig> {
   @state() private _currentPath = '';
   @state() private _confirmIndex: number | null = null;
   @state() private _editMode = false;
@@ -39,17 +37,29 @@ export class HaLuminaBottomBar extends LitElement {
     };
   }
 
-  public setConfig(config: LuminaBottomBarConfig): void {
+  protected override validateConfig(config: LuminaBottomBarConfig): void {
     if (!config.items || !Array.isArray(config.items)) {
       throw new Error('Please define at least one navigation item');
     }
     if (config.items.length > MAX_ITEMS) {
       throw new Error(`Maximum ${MAX_ITEMS} items allowed`);
     }
-    this._config = { ...config };
   }
 
-  public getCardSize(): number {
+  protected override trackedEntities(): string[] {
+    const items = this._config?.items || [];
+    const ids: string[] = [];
+    for (const item of items) {
+      // notification_entity drives badge dot + count
+      if (item.notification_entity) ids.push(item.notification_entity);
+      // entity drives badge color/state for items that bind one
+      const e = (item as { entity?: string }).entity;
+      if (e) ids.push(e);
+    }
+    return ids;
+  }
+
+  public override getCardSize(): number {
     return 0;
   }
 

@@ -1,10 +1,10 @@
-import { LitElement, html, nothing } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { html, nothing } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { luminaTokens } from '../../styles/tokens';
 import { sharedStyles } from '../../styles/shared';
 import { statusCardStyles } from './styles';
 import { LuminaStatusCardConfig, StatusChipConfig } from '../../types';
-import { HomeAssistant } from '../../types/ha-types';
+import { LuminaCardBase } from '../base';
 
 function getGreeting(hour: number): string {
   if (hour < 5) return 'Good Night';
@@ -28,9 +28,7 @@ const WEATHER_ICONS: Record<string, string> = {
 };
 
 @customElement('ha-lumina-status-card')
-export class HaLuminaStatusCard extends LitElement {
-  @property({ attribute: false }) hass!: HomeAssistant;
-  @state() private _config!: LuminaStatusCardConfig;
+export class HaLuminaStatusCard extends LuminaCardBase<LuminaStatusCardConfig> {
   @state() private _time = new Date();
   @state() private _activeFeedIndex = 0;
   @state() private _fadeItemIndex = 0;
@@ -57,15 +55,35 @@ export class HaLuminaStatusCard extends LitElement {
     };
   }
 
-  public setConfig(config: LuminaStatusCardConfig): void {
-    this._config = {
+  protected override defaults(): Partial<LuminaStatusCardConfig> {
+    return {
       show_greeting: true,
       show_lights_summary: true,
-      ...config,
     };
   }
 
-  public getCardSize(): number { return 4; }
+  protected override trackedEntities(): string[] {
+    const c = this._config;
+    if (!c) return [];
+    const ids: string[] = [
+      c.weather_entity,
+      c.alarm_entity,
+      c.energy_entity,
+      c.calendar_entity,
+      c.greeting_entity,
+      c.rss_entity,
+      c.stocks_summary_entity,
+      ...(c.person_entities || []),
+      ...(c.light_entities || []),
+      ...(c.stock_entities || []),
+      ...(c.chips || []).map((x) => x.entity),
+      ...(c.summary_items || []).map((x) => x.entity),
+      ...(c.rss_feeds || []).map((x) => x.entity),
+    ].filter((x): x is string => !!x);
+    return ids;
+  }
+
+  public override getCardSize(): number { return 4; }
 
   connectedCallback(): void {
     super.connectedCallback();
