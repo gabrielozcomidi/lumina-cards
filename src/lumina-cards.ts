@@ -1,4 +1,5 @@
 import { injectFonts } from './utils/ha-helpers';
+import { CARD_VERSION } from './version';
 
 // ─── Shared Components ───────────────────────────────────────
 import './components/lumina-ring';
@@ -39,9 +40,6 @@ import './cards/clock-card/ha-lumina-clock-card';
 import './editors/clock-card-editor';
 import './cards/status-card/ha-lumina-status-card';
 import './editors/status-card-editor';
-
-// ─── Version ─────────────────────────────────────────────────
-const CARD_VERSION = '2.7.2';
 
 // ─── Inject Fonts ────────────────────────────────────────────
 injectFonts();

@@ -22,7 +22,13 @@
 | **Climate Card** | HVAC modes, fan speed, humidity, and temperature ring |
 | **Media Card** | Playback controls, album art, volume ring, and source selector |
 | **Vacuum Card** | Battery ring, status, suction power, and actions |
+| **Weather Card** | Premium weather card with condition-tinted glassmorphism and forecasts |
+| **Status Card** | Morning briefing with greeting, people, security, weather, energy, news, and calendar |
+| **Info Card** | Air quality, moon phase, precipitation, sun cycle, and weather alerts |
+| **Clock Card** | Greeting, date, and world clocks |
 | **Bottom Bar** | Glassmorphism navigation bar with actions, hero button, and notification glow |
+
+> Looking for live news, headlines, and stock tickers in the Status Card? Pair this with the companion [**Lumina Feeds**](https://github.com/gabrielozcomidi/lumina-feeds) integration — keyword-based news from Google News and live quotes from Yahoo Finance, no API keys.
 
 ## Design
 
