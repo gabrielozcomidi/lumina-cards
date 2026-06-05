@@ -5,12 +5,14 @@
   "type": "module",
   "main": "dist/lumina-cards.js",
   "scripts": {
-    "prebuild": "node scripts/gen-version.mjs && node scripts/inline-fonts.mjs",
+    "codegen": "node scripts/gen-version.mjs && node scripts/inline-fonts.mjs",
+    "prebuild": "npm run codegen",
     "build": "rollup -c",
-    "prewatch": "node scripts/gen-version.mjs && node scripts/inline-fonts.mjs",
+    "prewatch": "npm run codegen",
     "watch": "rollup -c --watch",
-    "prestart": "node scripts/gen-version.mjs && node scripts/inline-fonts.mjs",
+    "prestart": "npm run codegen",
     "start": "rollup -c --watch --environment SERVE",
+    "pretypecheck": "npm run codegen",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
