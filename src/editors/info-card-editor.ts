@@ -50,12 +50,11 @@ export class HaLuminaInfoCardEditor extends LitElement {
       transition: transform 0.25s ease;
     }
     .section-chevron.open { transform: rotate(180deg); }
-    .section-body {
-      max-height: 0; overflow: hidden;
-      transition: max-height 0.3s ease, padding 0.3s ease;
-      padding: 0 14px;
-    }
-    .section-body.open { max-height: 2000px; padding: 12px 14px 16px; }
+    /* Collapse via display rather than max-height — some HA themes ship CSS
+       that interferes with the max-height transition and leaves children
+       measured at 0px (section opens but fields render blank). */
+    .section-body { display: none; padding: 12px 14px 16px; }
+    .section-body.open { display: block; }
 
     /* ─── Mode Grid ──────────────────────── */
     .mode-grid {

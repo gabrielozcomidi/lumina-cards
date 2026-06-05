@@ -173,6 +173,37 @@ export class HaLuminaRoomCardEditor extends LitElement {
       grid-template-columns: 1fr 1fr;
       gap: 8px;
     }
+
+    /* ─── Type dropdown (per-entity player type, etc.) ─── */
+    .type-select {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--card-background-color, #1a1a1d);
+      border: 1px solid var(--divider-color);
+      border-radius: 8px;
+      color: var(--primary-text-color);
+      font-size: 0.875rem;
+      font-family: inherit;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+    .type-select-wrapper { position: relative; }
+    .type-select-wrapper::after {
+      content: '▾';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--secondary-text-color);
+      pointer-events: none;
+      font-size: 0.75rem;
+    }
+    .type-select-label {
+      font-size: 0.75rem;
+      color: var(--secondary-text-color);
+      margin-bottom: 4px;
+    }
   `;
 
   public setConfig(config: LuminaRoomCardConfig): void {
@@ -299,7 +330,8 @@ export class HaLuminaRoomCardEditor extends LitElement {
 
   private _mediaTypeChanged(i: number, v: string): void {
     const e = [...this._getMediaEntities()].map((x) => this._toMediaObj(x));
-    e[i] = { ...e[i], player_type: (v === 'tv' ? 'tv' : 'speaker') as MediaPlayerType };
+    const t: MediaPlayerType = v === 'tv' ? 'tv' : v === 'streamer' ? 'streamer' : 'speaker';
+    e[i] = { ...e[i], player_type: t };
     this._setMediaEntities(e);
   }
 
@@ -542,8 +574,17 @@ export class HaLuminaRoomCardEditor extends LitElement {
                   <div class="entity-extras">
                     <ha-textfield label="Custom Name" .value=${this._getMediaName(entry)}
                       @input=${(e: Event) => this._mediaNameChanged(i, (e.target as HTMLInputElement).value)}></ha-textfield>
-                    <ha-textfield label="Type (speaker / tv)" .value=${this._getMediaType(entry)}
-                      @input=${(e: Event) => this._mediaTypeChanged(i, (e.target as HTMLInputElement).value)}></ha-textfield>
+                    <div>
+                      <div class="type-select-label">Type</div>
+                      <div class="type-select-wrapper">
+                        <select class="type-select"
+                          @change=${(e: Event) => this._mediaTypeChanged(i, (e.target as HTMLSelectElement).value)}>
+                          <option value="speaker" ?selected=${this._getMediaType(entry) === 'speaker'}>Speaker</option>
+                          <option value="tv" ?selected=${this._getMediaType(entry) === 'tv'}>TV</option>
+                          <option value="streamer" ?selected=${this._getMediaType(entry) === 'streamer'}>Streamer (Stremio / Plex / Kodi)</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
                 </div>
               `)}

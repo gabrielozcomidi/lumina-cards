@@ -53,12 +53,9 @@ export class HaLuminaStatusCardEditor extends LitElement {
       transition: transform 0.25s ease;
     }
     .section-chevron.open { transform: rotate(180deg); }
-    .section-body {
-      max-height: 0; overflow: hidden;
-      transition: max-height 0.3s ease, padding 0.3s ease;
-      padding: 0 14px;
-    }
-    .section-body.open { max-height: 3000px; padding: 12px 14px 16px; }
+    /* Collapse via display rather than max-height — see info-card-editor. */
+    .section-body { display: none; padding: 12px 14px 16px; }
+    .section-body.open { display: block; }
   `;
 
   public setConfig(config: LuminaStatusCardConfig): void {

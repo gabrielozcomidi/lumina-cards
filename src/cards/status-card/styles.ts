@@ -446,10 +446,10 @@ export const statusCardStyles = css`
     92%, 100% { opacity: 0; transform: translateY(-8px); }
   }
 
-  /* ─── Clickable chip + lights popup ──────────────── */
+  /* ─── Clickable Lighting chip on the status card ─── */
   .status-chip.clickable {
     cursor: pointer;
-    transition: background 0.15s ease, transform 0.15s ease;
+    transition: background var(--lumina-transition-fast), transform var(--lumina-transition-fast);
   }
   .status-chip.clickable:hover {
     background: var(--lumina-surface-container-high);
@@ -460,89 +460,147 @@ export const statusCardStyles = css`
     --mdc-icon-size: 16px;
     color: var(--lumina-on-surface-variant);
     margin-left: auto;
+    opacity: 0.7;
   }
+
+  /* ──────────────────────────────────────────────────
+     Lights popup
+     Matches the room-popup visual language: glass hero,
+     section labels, lumina-ring per row, yellow accent
+     (--lumina-secondary), Manrope headlines + Inter body,
+     consistent token spacing.
+     ────────────────────────────────────────────────── */
 
   .lights-popup {
     display: flex;
     flex-direction: column;
+    gap: var(--lumina-space-5);
+    padding: var(--lumina-space-2) var(--lumina-space-5) var(--lumina-space-6);
+    font-family: var(--lumina-font-body);
+    color: var(--lumina-on-surface);
+  }
+
+  /* ── Hero summary card ── */
+  .lights-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--lumina-space-5);
+    padding: var(--lumina-space-5) var(--lumina-space-5);
+    background: var(--lumina-glass-bg);
+    backdrop-filter: blur(var(--lumina-glass-blur));
+    -webkit-backdrop-filter: blur(var(--lumina-glass-blur));
+    border: 1px solid var(--lumina-ghost-border);
+    border-radius: var(--lumina-radius-xl);
+    /* Subtle warm wash behind it so the lighting context is obvious */
+    background-image:
+      radial-gradient(circle at 18% 50%, rgba(254, 203, 0, 0.10), transparent 55%),
+      linear-gradient(180deg, rgba(254, 203, 0, 0.02), transparent);
+  }
+  .lights-hero-text {
+    display: flex;
+    flex-direction: column;
     gap: 4px;
-    padding: 4px 16px 20px;
-    color: var(--lumina-on-surface);
-    font-family: var(--lumina-font-body);
-  }
-  .lights-popup-empty {
-    padding: 32px 16px;
-    text-align: center;
-    color: var(--lumina-on-surface-variant);
-    font-family: var(--lumina-font-body);
-  }
-  .lights-popup-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 4px 4px 12px;
-    border-bottom: 1px solid var(--lumina-ghost-border);
-    margin-bottom: 8px;
-  }
-  .lights-popup-count {
-    font-size: 0.8125rem;
-    color: var(--lumina-on-surface-variant);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-  .lights-popup-action {
-    background: transparent;
-    border: 1px solid var(--lumina-outline-variant);
-    color: var(--lumina-on-surface);
-    font-family: var(--lumina-font-body);
-    font-size: 0.8125rem;
-    padding: 6px 12px;
-    border-radius: var(--lumina-radius-full);
-    cursor: pointer;
-    transition: background 0.15s ease;
-  }
-  .lights-popup-action:hover { background: var(--lumina-surface-container-high); }
-  .lights-popup-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    max-height: 65vh;
-    overflow-y: auto;
-  }
-  .lights-popup-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
-    border-radius: var(--lumina-radius-md);
-    background: var(--lumina-surface-container);
-    transition: background 0.15s ease;
-  }
-  .lights-popup-row.on {
-    background: rgba(254, 203, 0, 0.08);
-    border: 1px solid rgba(254, 203, 0, 0.18);
-  }
-  .lights-popup-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: var(--lumina-radius-full);
-    background: var(--lumina-surface-container-high);
-    flex-shrink: 0;
-  }
-  .lights-popup-row.on .lights-popup-icon {
-    background: rgba(254, 203, 0, 0.16);
-    color: var(--lumina-secondary);
-  }
-  .lights-popup-info {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
     min-width: 0;
   }
-  .lights-popup-name {
+  .lights-hero-count {
+    display: flex;
+    align-items: baseline;
+    gap: var(--lumina-space-2);
+  }
+  .lights-hero-num {
+    font-family: var(--lumina-font-headline);
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--lumina-on-surface);
+  }
+  .lights-hero-of {
+    font-family: var(--lumina-font-body);
+    font-size: 0.9375rem;
+    color: var(--lumina-on-surface-variant);
+  }
+  .lights-hero-sub {
+    font-size: 0.8125rem;
+    color: var(--lumina-on-surface-variant);
+    letter-spacing: 0.01em;
+  }
+
+  /* ── "Turn all off" action ── */
+  .lights-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  /* ── Active / Off sections ── */
+  .lights-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--lumina-space-2);
+  }
+  .lights-section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0 var(--lumina-space-2) var(--lumina-space-2);
+    border-bottom: 1px solid var(--lumina-ghost-border);
+  }
+  .lights-section-header .label-sm {
+    font-family: var(--lumina-font-body);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--lumina-on-surface-variant);
+  }
+  .lights-section-count {
+    font-family: var(--lumina-font-body);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--lumina-on-surface-variant);
+    opacity: 0.7;
+  }
+
+  /* ── Light row ── */
+  .light-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .light-item {
+    display: flex;
+    align-items: center;
+    gap: var(--lumina-space-4);
+    padding: var(--lumina-space-3) var(--lumina-space-2);
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-family: var(--lumina-font-body);
+    text-align: left;
+    cursor: pointer;
+    border-radius: var(--lumina-radius-md);
+    transition: background var(--lumina-transition-fast);
+  }
+  .light-item:hover { background: rgba(254, 251, 254, 0.04); }
+  .light-item:active { background: rgba(254, 251, 254, 0.06); }
+  .light-item + .light-item {
+    border-top: 1px solid rgba(72, 71, 74, 0.18);
+    border-radius: 0;
+  }
+  .light-item:first-child { padding-top: var(--lumina-space-4); }
+  .light-item:last-child { padding-bottom: var(--lumina-space-4); }
+
+  .light-item-icon {
+    --mdc-icon-size: 18px;
+    color: var(--lumina-on-surface-variant);
+    transition: color var(--lumina-transition-fast);
+  }
+  .light-item.on .light-item-icon { color: var(--lumina-secondary); }
+
+  .light-name {
+    flex: 1;
+    min-width: 0;
     font-size: 0.9375rem;
     font-weight: 500;
     color: var(--lumina-on-surface);
@@ -550,8 +608,38 @@ export const statusCardStyles = css`
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .lights-popup-detail {
-    font-size: 0.75rem;
+  .light-state {
+    font-family: var(--lumina-font-headline);
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
     color: var(--lumina-on-surface-variant);
+    letter-spacing: 0.01em;
+  }
+  .light-state.on { color: var(--lumina-secondary); }
+
+  /* ── Empty state ── */
+  .lights-popup-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--lumina-space-2);
+    padding: var(--lumina-space-10) var(--lumina-space-6);
+    text-align: center;
+  }
+  .lights-popup-empty ha-icon {
+    --mdc-icon-size: 48px;
+    color: var(--lumina-outline-variant);
+  }
+  .lights-popup-empty-title {
+    font-family: var(--lumina-font-headline);
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--lumina-on-surface);
+  }
+  .lights-popup-empty-sub {
+    font-size: 0.8125rem;
+    color: var(--lumina-on-surface-variant);
+    max-width: 280px;
   }
 `;

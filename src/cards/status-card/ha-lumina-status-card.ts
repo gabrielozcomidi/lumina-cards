@@ -7,6 +7,8 @@ import { LuminaStatusCardConfig, StatusChipConfig } from '../../types';
 import { LuminaCardBase } from '../base';
 import { callService } from '../../utils/ha-helpers';
 import '../../components/lumina-bottom-sheet';
+import '../../components/lumina-ring';
+import '../../components/lumina-chip';
 
 function getGreeting(hour: number): string {
   if (hour < 5) return 'Good Night';
@@ -220,44 +222,110 @@ export class HaLuminaStatusCard extends LuminaCardBase<LuminaStatusCardConfig> {
   private _renderLightsList() {
     if (!this.hass) return nothing;
     const lights = this._getLightsList();
-    const onCount = lights.filter((l) => l.on).length;
 
     if (!lights.length) {
-      return html`<div class="lights-popup-empty">No light entities configured.</div>`;
+      return html`
+        <div class="lights-popup">
+          <div class="lights-popup-empty">
+            <ha-icon icon="mdi:lightbulb-off-outline"></ha-icon>
+            <span class="lights-popup-empty-title">No light entities</span>
+            <span class="lights-popup-empty-sub">Add lights via the status card editor or HA's light domain.</span>
+          </div>
+        </div>
+      `;
     }
+
+    const onLights = lights.filter((l) => l.on);
+    const offLights = lights.filter((l) => !l.on);
+    const onCount = onLights.length;
+    const ratio = lights.length ? Math.round((onCount / lights.length) * 100) : 0;
+    const avgBright = onCount > 0
+      ? Math.round(onLights.reduce((s, l) => s + l.brightness, 0) / onCount)
+      : 0;
+    const subtitle = onCount > 0
+      ? `Avg ${avgBright}% brightness`
+      : 'All lights off';
 
     return html`
       <div class="lights-popup">
-        <div class="lights-popup-header">
-          <span class="lights-popup-count">${onCount} of ${lights.length} on</span>
-          ${onCount > 0 ? html`
-            <button class="lights-popup-action"
-              @click=${() => callService(this.hass, 'light', 'turn_off', { entity_id: lights.filter(l => l.on).map(l => l.id) })}>
-              Turn all off
-            </button>
-          ` : nothing}
+        <!-- ─── Hero: glass card with summary ring + count ─── -->
+        <div class="lights-hero">
+          <lumina-ring
+            .value=${ratio}
+            .size=${88}
+            .strokeWidth=${4}
+            color="var(--lumina-secondary)"
+            ?inactive=${onCount === 0}
+          ></lumina-ring>
+          <div class="lights-hero-text">
+            <span class="lights-hero-count">
+              <span class="lights-hero-num">${onCount}</span>
+              <span class="lights-hero-of">of ${lights.length}</span>
+            </span>
+            <span class="lights-hero-sub">${subtitle}</span>
+          </div>
         </div>
-        <div class="lights-popup-list">
-          ${lights.map((l) => html`
-            <div class="lights-popup-row ${l.on ? 'on' : 'off'}">
-              <div class="lights-popup-icon">
-                <ha-icon icon=${l.on ? 'mdi:lightbulb' : 'mdi:lightbulb-outline'}></ha-icon>
-              </div>
-              <div class="lights-popup-info">
-                <span class="lights-popup-name">${l.name}</span>
-                <span class="lights-popup-detail">${l.on ? `${l.brightness}% brightness` : 'Off'}</span>
-              </div>
-              <ha-switch
-                .checked=${l.on}
-                @change=${(e: Event) => {
-                  const checked = (e.target as HTMLInputElement).checked;
-                  callService(this.hass, 'light', checked ? 'turn_on' : 'turn_off', { entity_id: l.id });
-                }}
-              ></ha-switch>
+
+        <!-- ─── Action: turn all off ─── -->
+        ${onCount > 0 ? html`
+          <div class="lights-actions">
+            <lumina-chip
+              icon="mdi:power-off"
+              label="Turn all off"
+              @click=${() => callService(this.hass, 'light', 'turn_off',
+                { entity_id: onLights.map(l => l.id) })}
+            ></lumina-chip>
+          </div>
+        ` : nothing}
+
+        <!-- ─── Active lights ─── -->
+        ${onCount > 0 ? html`
+          <div class="lights-section">
+            <div class="lights-section-header">
+              <span class="label-sm">Active</span>
+              <span class="lights-section-count">${onCount}</span>
             </div>
-          `)}
-        </div>
+            <div class="light-list">
+              ${onLights.map((l) => this._renderLightRow(l))}
+            </div>
+          </div>
+        ` : nothing}
+
+        <!-- ─── Off lights ─── -->
+        ${offLights.length > 0 ? html`
+          <div class="lights-section">
+            <div class="lights-section-header">
+              <span class="label-sm">Off</span>
+              <span class="lights-section-count">${offLights.length}</span>
+            </div>
+            <div class="light-list">
+              ${offLights.map((l) => this._renderLightRow(l))}
+            </div>
+          </div>
+        ` : nothing}
       </div>
+    `;
+  }
+
+  private _renderLightRow(l: { id: string; name: string; on: boolean; brightness: number }) {
+    return html`
+      <button
+        class="light-item ${l.on ? 'on' : 'off'}"
+        @click=${() => callService(this.hass, 'light', l.on ? 'turn_off' : 'turn_on', { entity_id: l.id })}
+      >
+        <lumina-ring
+          .value=${l.on ? l.brightness : 0}
+          .size=${36}
+          .strokeWidth=${2}
+          color="var(--lumina-secondary)"
+          ?inactive=${!l.on}
+          .showGlow=${false}
+        >
+          <ha-icon class="light-item-icon" icon=${l.on ? 'mdi:lightbulb' : 'mdi:lightbulb-outline'}></ha-icon>
+        </lumina-ring>
+        <span class="light-name">${l.name}</span>
+        <span class="light-state ${l.on ? 'on' : ''}">${l.on ? `${l.brightness}%` : 'Off'}</span>
+      </button>
     `;
   }
 
