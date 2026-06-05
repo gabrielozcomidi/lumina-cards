@@ -14,18 +14,7 @@ function getGreeting(hour: number): string {
   return 'Good Night';
 }
 
-const WEATHER_ICONS: Record<string, string> = {
-  'sunny': 'mdi:weather-sunny',
-  'clear-night': 'mdi:weather-night',
-  'partlycloudy': 'mdi:weather-partly-cloudy',
-  'cloudy': 'mdi:weather-cloudy',
-  'rainy': 'mdi:weather-rainy',
-  'pouring': 'mdi:weather-pouring',
-  'snowy': 'mdi:weather-snowy',
-  'fog': 'mdi:weather-fog',
-  'lightning': 'mdi:weather-lightning',
-  'windy': 'mdi:weather-windy',
-};
+import { weatherConditionIcon } from '../../utils/mode-mappings';
 
 @customElement('ha-lumina-status-card')
 export class HaLuminaStatusCard extends LuminaCardBase<LuminaStatusCardConfig> {
@@ -256,7 +245,7 @@ export class HaLuminaStatusCard extends LuminaCardBase<LuminaStatusCardConfig> {
         const unit = weather.attributes.temperature_unit || '°';
         const condition = weather.state;
         chips.push({
-          icon: WEATHER_ICONS[condition] || 'mdi:weather-cloudy',
+          icon: weatherConditionIcon(condition),
           label: 'Weather',
           value: temp != null ? `${Math.round(temp as number)}${unit}` : condition,
           cls: 'weather',

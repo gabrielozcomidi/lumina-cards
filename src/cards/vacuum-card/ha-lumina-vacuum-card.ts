@@ -12,14 +12,7 @@ import { render3dBackground } from '../../utils/render-3d-bg';
 import '../../components/lumina-ring';
 import '../../components/lumina-chip';
 
-const STATE_ICONS: Record<string, string> = {
-  cleaning: 'mdi:robot-vacuum',
-  docked: 'mdi:battery-charging',
-  paused: 'mdi:pause-circle',
-  idle: 'mdi:robot-vacuum-off',
-  returning: 'mdi:home',
-  error: 'mdi:alert-circle',
-};
+import { vacuumStateIcon } from '../../utils/mode-mappings';
 
 @customElement('ha-lumina-vacuum-card')
 export class HaLuminaVacuumCard extends LuminaCardBase<LuminaVacuumCardConfig> {
@@ -79,7 +72,7 @@ export class HaLuminaVacuumCard extends LuminaCardBase<LuminaVacuumCardConfig> {
   }
 
   private get _stateIcon(): string {
-    return STATE_ICONS[this._state] || 'mdi:robot-vacuum';
+    return vacuumStateIcon(this._state);
   }
 
   private get _statusBadgeClass(): string {

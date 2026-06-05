@@ -13,35 +13,11 @@ import '../../components/lumina-ring';
 import '../../components/lumina-chip';
 import '../../components/lumina-icon-button';
 
-const MODE_ICONS: Record<string, string> = {
-  off: 'mdi:power',
-  heat: 'mdi:fire',
-  cool: 'mdi:snowflake',
-  heat_cool: 'mdi:autorenew',
-  auto: 'mdi:thermostat-auto',
-  dry: 'mdi:water-percent',
-  fan_only: 'mdi:fan',
-};
-
-const MODE_COLORS: Record<string, string> = {
-  cool: 'var(--lumina-primary)',
-  heat: 'var(--lumina-secondary)',
-  heat_cool: 'var(--lumina-tertiary)',
-  auto: 'var(--lumina-tertiary)',
-  dry: 'var(--lumina-on-surface-variant)',
-  fan_only: 'var(--lumina-primary)',
-  off: 'var(--lumina-outline)',
-};
-
-const MODE_LABELS: Record<string, string> = {
-  off: 'Off',
-  heat: 'Heating',
-  cool: 'Cooling',
-  heat_cool: 'Heat/Cool',
-  auto: 'Auto',
-  dry: 'Drying',
-  fan_only: 'Fan',
-};
+import {
+  CLIMATE_MODE_ICONS,
+  climateModeColor,
+  climateModeLabel,
+} from '../../utils/mode-mappings';
 
 interface NormalizedClimate {
   id: string;
@@ -144,7 +120,7 @@ export class HaLuminaClimateCard extends LuminaCardBase<LuminaClimateCardConfig>
   }
 
   private get _modeColor(): string {
-    return MODE_COLORS[this._mode] || 'var(--lumina-outline)';
+    return climateModeColor(this._mode);
   }
 
   private get _minTemp(): number {
@@ -192,7 +168,7 @@ export class HaLuminaClimateCard extends LuminaCardBase<LuminaClimateCardConfig>
   }
 
   private get _statusLabel(): string {
-    return MODE_LABELS[this._mode] || this._mode.charAt(0).toUpperCase() + this._mode.slice(1).replaceAll('_', ' ');
+    return climateModeLabel(this._mode);
   }
 
   private _entityName(e: NormalizedClimate): string {
@@ -322,11 +298,11 @@ export class HaLuminaClimateCard extends LuminaCardBase<LuminaClimateCardConfig>
           <span class="section-label">Mode</span>
           <div class="mode-buttons">
             ${this._hvacModes.map((mode) => {
-              const icon = MODE_ICONS[mode] || 'mdi:thermostat';
+              const icon = CLIMATE_MODE_ICONS[mode] || 'mdi:thermostat';
               const label = mode.charAt(0).toUpperCase() + mode.slice(1).replaceAll('_', ' ');
               return html`
                 <div class="mode-btn ${this._mode === mode ? 'active' : ''}"
-                     style="--mode-color: ${MODE_COLORS[mode] || 'var(--lumina-outline)'}"
+                     style="--mode-color: ${climateModeColor(mode)}"
                      @click=${() => this._setMode(mode)}>
                   <div class="mode-btn-circle">
                     <ha-icon icon="${icon}"></ha-icon>
