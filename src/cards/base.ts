@@ -42,6 +42,40 @@ export abstract class LuminaCardBase<
   @property({ attribute: false }) public hass!: HomeAssistant;
   @state() protected _config!: C;
 
+  /**
+   * Public `config` accessor — restores `.config=${...}` property binding
+   * for cards composed into other cards (room-card → light-card etc.).
+   *
+   * HA's standard pattern is `cardElement.setConfig(config)`, which Lovelace
+   * calls directly. But composed cards typically bind via Lit's
+   * `.config=${childConfig}` syntax — that needs a public `config` property
+   * to land on. Without this accessor a composed child gets no config and
+   * silently renders nothing.
+   *
+   * Implementation notes:
+   *   • Tracks the last input by reference (_lastConfigInput) so identity-
+   *     stable parent re-renders don't re-run setConfig.
+   *   • Catches validation errors — composed parents often build minimal
+   *     configs (e.g. light-card with empty entities) that would throw if
+   *     setConfig ran them through validateConfig. The catch lets such
+   *     children fall through to their render() empty-guards instead of
+   *     crashing the parent's render.
+   */
+  private _lastConfigInput?: C;
+  public get config(): C | undefined {
+    return this._config;
+  }
+  public set config(value: C | undefined) {
+    if (!value || value === this._lastConfigInput) return;
+    this._lastConfigInput = value;
+    try {
+      this.setConfig(value);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn(`${this.tagName.toLowerCase()}: ${(e as Error).message}`);
+    }
+  }
+
   /** Override to throw on invalid config. Called from setConfig before defaults merge. */
   protected validateConfig(_config: C): void {
     /* default: nothing to validate */
