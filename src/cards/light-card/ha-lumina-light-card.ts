@@ -1,10 +1,11 @@
-import { LitElement, html, nothing, PropertyValues } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { html, nothing } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { luminaTokens } from '../../styles/tokens';
 import { sharedStyles } from '../../styles/shared';
 import { lightCardStyles } from './styles';
 import { LuminaLightCardConfig, LightEntityConfig } from '../../types';
-import { HomeAssistant, LightEntity } from '../../types/ha-types';
+import { LightEntity } from '../../types/ha-types';
+import { LuminaCardBase } from '../base';
 import { render3dBackground } from '../../utils/render-3d-bg';
 import {
   getEntity,
@@ -38,10 +39,7 @@ function normalizeEntity(cfg: string | LightEntityConfig): { id: string; customN
 }
 
 @customElement('ha-lumina-light-card')
-export class HaLuminaLightCard extends LitElement {
-  @property({ attribute: false }) hass!: HomeAssistant;
-  @property({ attribute: false }) config!: LuminaLightCardConfig;
-
+export class HaLuminaLightCard extends LuminaCardBase<LuminaLightCardConfig> {
   @state() private _expandedId: string | null = null;
   @state() private _collapsedGroups: Set<string> = new Set();
 
@@ -73,27 +71,28 @@ export class HaLuminaLightCard extends LitElement {
     });
   }, 150);
 
-  public setConfig(config: LuminaLightCardConfig): void {
-    if (!config.entities || !config.entities.length) throw new Error('Please define at least one light entity');
-    this.config = { show_color_temp: true, show_individual_controls: true, ...config };
+  protected override validateConfig(config: LuminaLightCardConfig): void {
+    if (!config.entities || !config.entities.length) {
+      throw new Error('Please define at least one light entity');
+    }
   }
 
-  public getCardSize(): number { return 5; }
+  protected override defaults(): Partial<LuminaLightCardConfig> {
+    return { show_color_temp: true, show_individual_controls: true };
+  }
+
+  protected override trackedEntities(): string[] {
+    return this._entityIds;
+  }
+
+  public override getCardSize(): number { return 5; }
   static getConfigElement(): HTMLElement { return document.createElement('ha-lumina-light-card-editor'); }
   static getStubConfig() { return { type: 'custom:ha-lumina-light-card', entities: [], show_color_temp: true }; }
-
-  protected shouldUpdate(changed: PropertyValues): boolean {
-    if (changed.has('config') || changed.has('_expandedId')) return true;
-    if (!changed.has('hass') || !this.config) return false;
-    const oldHass = changed.get('hass') as HomeAssistant | undefined;
-    if (!oldHass) return true;
-    return this._entityIds.some((id) => oldHass.states[id] !== this.hass.states[id]);
-  }
 
   // ─── Normalized entities ──────────────────────────
 
   private get _normalized(): Array<{ id: string; customName?: string; customIcon?: string; group?: string }> {
-    return (this.config.entities || []).map(normalizeEntity);
+    return (this._config.entities || []).map(normalizeEntity);
   }
 
   private get _entityIds(): string[] {
@@ -393,15 +392,15 @@ export class HaLuminaLightCard extends LitElement {
   // ─── Render ───────────────────────────────────────
 
   protected render() {
-    if (!this.config || !this.hass) return nothing;
+    if (!this._config || !this.hass) return nothing;
 
     const avgBrightness = this._avgBrightness;
     const onCount = this._onCount;
     const total = this._entityIds.length;
 
     return html`
-      <div class="light-card ${this.config.show_background === false ? 'no-bg' : ''}" style="position:relative;">
-        ${render3dBackground(this.config.image, true)}
+      <div class="light-card ${this._config.show_background === false ? 'no-bg' : ''}" style="position:relative;">
+        ${render3dBackground(this._config.image, true)}
         <div class="lumina-3d-content">
         <!-- Hero Ring + All On/Off underneath -->
         <div class="hero-section">
@@ -430,7 +429,7 @@ export class HaLuminaLightCard extends LitElement {
             ></lumina-slider>
           </div>
 
-          ${this.config.show_color_temp && this._hasColorTemp ? html`
+          ${this._config.show_color_temp && this._hasColorTemp ? html`
             <div class="slider-row">
               <div class="slider-label">
                 <span class="slider-label-text"><ha-icon icon="mdi:thermometer"></ha-icon> Color Temperature</span>
@@ -445,7 +444,7 @@ export class HaLuminaLightCard extends LitElement {
         </div>
 
         <!-- Individual Lights -->
-        ${this.config.show_individual_controls !== false ? html`
+        ${this._config.show_individual_controls !== false ? html`
           <div class="lights-section">
             <span class="lights-section-header">${onCount}/${total} Lights On</span>
             ${this._renderGroupedLights()}
@@ -453,11 +452,11 @@ export class HaLuminaLightCard extends LitElement {
         ` : nothing}
 
         <!-- Scenes -->
-        ${this.config.scenes?.length ? html`
+        ${this._config.scenes?.length ? html`
           <div class="scenes-section">
             <span class="scenes-header">Scenes</span>
             <div class="scenes-row">
-              ${this.config.scenes.map((scene) => html`
+              ${this._config.scenes.map((scene) => html`
                 <lumina-chip .icon=${scene.icon} .label=${scene.name}
                   @click=${() => this._activateScene(scene.entity_id)}></lumina-chip>
               `)}
